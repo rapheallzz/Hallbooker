@@ -23,7 +23,7 @@ const HomePage = () => {
   useEffect(() => {
     const fetchHalls = async () => {
       try {
-        const response = await api.get('/halls');
+        const response = await api.get('/api/halls');
         const hallsData = response.data.data || response.data;
 
         if (Array.isArray(hallsData)) {
