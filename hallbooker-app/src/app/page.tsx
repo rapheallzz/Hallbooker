@@ -23,10 +23,17 @@ const HomePage = () => {
   useEffect(() => {
     const fetchVenues = async () => {
       try {
-        const response = await api.get('/venues');
-        setVenues(response.data.data);
+        const response = await api.get('/api/venues');
+        const venuesData = response.data.data || response.data;
+
+        if (Array.isArray(venuesData)) {
+          setVenues(venuesData);
+        } else {
+          throw new Error('Invalid data format');
+        }
       } catch (err) {
-        setError('Failed to fetch venues.');
+        console.error('Failed to fetch venues:', err);
+        setError('Failed to fetch venues. See console for details.');
       } finally {
         setLoading(false);
       }
