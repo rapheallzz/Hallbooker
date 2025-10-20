@@ -23,7 +23,7 @@ const HomePage = () => {
   useEffect(() => {
     const fetchVenues = async () => {
       try {
-        const response = await api.get('/api/venues');
+        const response = await api.get('/auth/venues');
         const venuesData = response.data.data || response.data;
 
         if (Array.isArray(venuesData)) {
