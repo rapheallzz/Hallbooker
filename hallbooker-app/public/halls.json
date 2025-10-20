@@ -1,0 +1,50 @@
+[
+  {
+    "id": "1",
+    "name": "The Grand Hall",
+    "description": "A luxurious hall for grand events.",
+    "media": [{ "url": "https://via.placeholder.com/400x250" }],
+    "price": 1000,
+    "location": "New York, NY"
+  },
+  {
+    "id": "2",
+    "name": "The Royal Hall",
+    "description": "A royal hall for royal events.",
+    "media": [{ "url": "https://via.placeholder.com/400x250" }],
+    "price": 2000,
+    "location": "Los Angeles, CA"
+  },
+  {
+    "id": "3",
+    "name": "The Modern Hall",
+    "description": "A modern hall for modern events.",
+    "media": [{ "url": "https://via.placeholder.com/400x250" }],
+    "price": 3000,
+    "location": "Chicago, IL"
+  },
+  {
+    "id": "4",
+    "name": "The Classic Hall",
+    "description": "A classic hall for classic events.",
+    "media": [{ "url": "https://via.placeholder.com/400x250" }],
+    "price": 4000,
+    "location": "Houston, TX"
+  },
+  {
+    "id": "5",
+    "name": "The Vintage Hall",
+    "description": "A vintage hall for vintage events.",
+    "media": [{ "url": "https://via.placeholder.com/400x250" }],
+    "price": 5000,
+    "location": "Phoenix, AZ"
+  },
+  {
+    "id": "6",
+    "name": "The Rustic Hall",
+    "description": "A rustic hall for rustic events.",
+    "media": [{ "url": "https://via.placeholder.com/400x250" }],
+    "price": 6000,
+    "location": "Philadelphia, PA"
+  }
+]

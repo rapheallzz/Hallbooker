@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import api from '@/services/api';
 import HallCard from '@/components/HallCard';
+import SkeletonCard from '@/components/SkeletonCard';
 
 interface Hall {
   id: string;
@@ -21,8 +21,8 @@ const HomePage = () => {
   useEffect(() => {
     const fetchHalls = async () => {
       try {
-        const response = await api.get('/api/halls');
-        const hallsData = response.data.data || response.data;
+        const response = await fetch('/halls.json');
+        const hallsData = await response.json();
 
         if (Array.isArray(hallsData)) {
           setHalls(hallsData);
@@ -79,7 +79,31 @@ const HomePage = () => {
           </div>
         </div>
 
-        {loading && <p className="mt-8 text-center">Loading halls...</p>}
+        {loading && (
+          <div>
+            <section>
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                Popular Halls
+              </h2>
+              <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+                {[...Array(3)].map((_, i) => (
+                  <SkeletonCard key={i} />
+                ))}
+              </div>
+            </section>
+            <section className="mt-12">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                Recommended for You
+              </h2>
+              <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+                {[...Array(3)].map((_, i) => (
+                  <SkeletonCard key={i} />
+                ))}
+              </div>
+            </section>
+          </div>
+        )}
+
         {error && <p className="mt-8 text-center text-red-600">{error}</p>}
 
         {!loading && !error && (
@@ -107,11 +131,6 @@ const HomePage = () => {
           </div>
         )}
       </main>
-      <footer className="bg-white mt-16">
-        <div className="container mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center text-gray-500">
-          <p>&copy; {new Date().getFullYear()} HallBooker. All rights reserved.</p>
-        </div>
-      </footer>
     </div>
   );
 };

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import api from '@/services/api';
 
 interface Venue {
   id: string;
@@ -23,6 +22,27 @@ interface Review {
   };
 }
 
+const mockedReviews: Review[] = [
+  {
+    id: '1',
+    rating: 5,
+    comment: 'This hall is amazing! It was the perfect venue for our wedding. The staff was incredibly helpful and the hall itself is beautiful. I would highly recommend it to anyone looking for a venue for their next event.',
+    user: {
+      firstName: 'John',
+      lastName: 'Doe',
+    },
+  },
+  {
+    id: '2',
+    rating: 4,
+    comment: 'We hosted a corporate event at this hall and it was a great experience. The hall is spacious and the staff is very professional. The only downside is that the parking is a bit limited, but other than that, everything was perfect.',
+    user: {
+      firstName: 'Jane',
+      lastName: 'Doe',
+    },
+  },
+];
+
 const VenueDetailPage = () => {
   const { id } = useParams();
   const [venue, setVenue] = useState<Venue | null>(null);
@@ -36,12 +56,11 @@ const VenueDetailPage = () => {
     const fetchVenueDetails = async () => {
       try {
         setLoading(true);
-        const [venueRes, reviewsRes] = await Promise.all([
-          api.get(`/venues/${id}`),
-          api.get(`/reviews/venue/${id}`),
-        ]);
-        setVenue(venueRes.data.data);
-        setReviews(reviewsRes.data.data);
+        const response = await fetch('/halls.json');
+        const hallsData = await response.json();
+        const currentVenue = hallsData.find((hall: Venue) => hall.id === id);
+        setVenue(currentVenue);
+        setReviews(mockedReviews);
       } catch (err) {
         setError('Failed to fetch venue details.');
       } finally {
@@ -140,11 +159,6 @@ const VenueDetailPage = () => {
           )}
         </div>
       </main>
-      <footer className="bg-white mt-16">
-        <div className="container mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center text-gray-500">
-          <p>&copy; {new Date().getFullYear()} HallBooker. All rights reserved.</p>
-        </div>
-      </footer>
     </div>
   );
 };
