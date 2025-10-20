@@ -2,9 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import Link from 'next/link';
 import api from '@/services/api';
-import { useAuth } from '@/context/AuthContext';
 
 interface Venue {
   id: string;
@@ -31,7 +29,6 @@ const VenueDetailPage = () => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const { user, logout } = useAuth();
 
   useEffect(() => {
     if (!id) return;
@@ -69,66 +66,50 @@ const VenueDetailPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm">
-        <nav className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex-shrink-0">
-              <Link href="/" className="text-2xl font-bold text-indigo-600">
-                HallBooker
-              </Link>
-            </div>
-            <div className="flex items-center">
-              {user ? (
-                <>
-                  <span className="mr-4 text-gray-700">Welcome, {user.firstName}</span>
-                  <button
-                    onClick={logout}
-                    className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md shadow-sm hover:bg-red-700"
-                  >
-                    Logout
-                  </button>
-                </>
-              ) : (
-                <Link
-                  href="/auth/login"
-                  className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700"
-                >
-                  Login
-                </Link>
-              )}
-            </div>
-          </div>
-        </nav>
-      </header>
-
       <main className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-lg shadow-xl overflow-hidden">
-          <div className="grid grid-cols-1 md:grid-cols-2">
-            <div className="p-6">
-              <h1 className="text-4xl font-extrabold text-gray-900">{venue.name}</h1>
-              <p className="mt-2 text-lg text-gray-500">{venue.location}</p>
-              <p className="mt-4 text-gray-700">{venue.description}</p>
-              <p className="mt-6 text-3xl font-bold text-indigo-600">${venue.price} / day</p>
-              <button className="mt-8 w-full px-6 py-3 text-lg font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700">
+        <div>
+          <h1 className="text-4xl font-extrabold text-gray-900">{venue.name}</h1>
+          <p className="mt-2 text-lg text-gray-500">{venue.location}</p>
+        </div>
+        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {venue.media.slice(0, 3).map((media, index) => (
+            <div key={index} className="overflow-hidden rounded-lg shadow-lg">
+              <img
+                className="w-full h-full object-cover"
+                src={media.url}
+                alt={`${venue.name} image ${index + 1}`}
+              />
+            </div>
+          ))}
+        </div>
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="md:col-span-2">
+            <h2 className="text-2xl font-bold text-gray-900">About this hall</h2>
+            <p className="mt-4 text-gray-700">{venue.description}</p>
+          </div>
+          <div>
+            <div className="bg-white p-6 rounded-lg shadow-lg">
+              <h3 className="text-xl font-bold text-primary">
+                ${venue.price} / day
+              </h3>
+              <div className="mt-4">
+                <label htmlFor="booking-date" className="block text-sm font-medium text-gray-700">
+                  Select a date
+                </label>
+                <input
+                  type="date"
+                  id="booking-date"
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                />
+              </div>
+              <button
+                className="mt-6 w-full px-6 py-3 text-lg font-medium text-white rounded-md shadow-sm bg-secondary"
+              >
                 Book Now
               </button>
             </div>
-            <div className="p-4">
-                {venue.media.length > 0 ? (
-                    <img
-                    className="w-full h-full object-cover rounded-md"
-                    src={venue.media[0].url}
-                    alt={venue.name}
-                    />
-                ) : (
-                    <div className="w-full h-full bg-gray-200 flex items-center justify-center rounded-md">
-                        <p className="text-gray-500">No Image Available</p>
-                    </div>
-                )}
-            </div>
           </div>
         </div>
-
         <div className="mt-12">
           <h2 className="text-2xl font-bold text-gray-900">Reviews</h2>
           {reviews.length > 0 ? (
@@ -159,7 +140,6 @@ const VenueDetailPage = () => {
           )}
         </div>
       </main>
-
       <footer className="bg-white mt-16">
         <div className="container mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center text-gray-500">
           <p>&copy; {new Date().getFullYear()} HallBooker. All rights reserved.</p>
