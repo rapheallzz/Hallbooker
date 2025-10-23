@@ -25,9 +25,9 @@ const LoginPage = () => {
 
     try {
       const response = await api.post('/auth/login', formData);
-      const { token, user } = response.data.data || response.data;
+      const { accessToken, user } = response.data.data || response.data;
 
-      login(token, user);
+      login(accessToken, user);
 
       // Redirect based on role
       if (user.role === 'super-admin') {
