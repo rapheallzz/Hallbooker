@@ -27,7 +27,7 @@ const Header = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex-shrink-0">
-            <Link href="/" className="text-2xl font-bold text-primary">
+            <Link href="/" className="text-2xl font-bold text-[theme(colors.primary)]">
               HallBooker
             </Link>
           </div>
@@ -38,14 +38,14 @@ const Header = () => {
                 disabled={loading}
                 className="text-gray-600 hover:text-gray-900"
               >
-                {loading ? "Applying..." : "Become a owner"}
+                {loading ? "Applying..." : "Become an owner"}
               </button>
             ) : (
               <Link
                 href="/auth/register"
                 className="text-gray-600 hover:text-gray-900"
               >
-                Become a owner
+                Become an owner
               </Link>
             )}
 
@@ -55,7 +55,7 @@ const Header = () => {
                 <span className="text-gray-700">Welcome, {user.firstName}</span>
                 <button
                   onClick={logout}
-                  className="px-4 py-2 text-sm font-medium text-white rounded-md shadow-sm bg-secondary"
+                  className="px-4 py-2 text-sm font-medium text-white rounded-md shadow-sm bg-[theme(colors.secondary)]"
                 >
                   Logout
                 </button>
@@ -63,7 +63,7 @@ const Header = () => {
             ) : (
               <Link
                 href="/auth/login"
-                className="px-4 py-2 text-sm font-medium text-white rounded-md shadow-sm bg-primary"
+                className="px-4 py-2 text-sm font-medium text-white rounded-md shadow-sm bg-[theme(colors.primary)]"
               >
                 Login
               </Link>
