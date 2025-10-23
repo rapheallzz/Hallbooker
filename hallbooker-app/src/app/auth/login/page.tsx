@@ -25,7 +25,7 @@ const LoginPage = () => {
 
     try {
       const response = await api.post('/auth/login', formData);
-      const { token, user } = response.data.data;
+      const { token, user } = response.data.data || response.data;
 
       login(token, user);
 

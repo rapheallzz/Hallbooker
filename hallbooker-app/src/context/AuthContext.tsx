@@ -35,7 +35,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (storedToken && storedUser) {
       setToken(storedToken);
       setUser(JSON.parse(storedUser));
-      api.defaults.headers.Authorization = `Bearer ${storedToken}`;
     }
     setLoading(false);
   }, []);
@@ -45,7 +44,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(newUser);
     localStorage.setItem('token', newToken);
     localStorage.setItem('user', JSON.stringify(newUser));
-    api.defaults.headers.Authorization = `Bearer ${newToken}`;
   };
 
   const logout = () => {
