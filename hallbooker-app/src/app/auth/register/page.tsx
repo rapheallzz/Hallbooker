@@ -8,6 +8,7 @@ const RegisterPage = () => {
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
+    phone:'',
     password: '',
     role: 'user',
   });
@@ -57,6 +58,17 @@ const RegisterPage = () => {
               type="email"
               name="email"
               value={formData.email}
+              onChange={handleChange}
+              required
+              className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            />
+          </div>
+                              <div>
+            <label className="block text-sm font-medium text-gray-700">Phone</label>
+            <input
+              type="tel"
+              name="phone"
+              value={formData.phone}
               onChange={handleChange}
               required
               className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
