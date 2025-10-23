@@ -1,9 +1,26 @@
 "use client";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
+import api from "@/services/api";
+import { useState } from "react";
 
 const Header = () => {
   const { user, logout } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+
+  const handleApply = async () => {
+    setLoading(true);
+    setMessage("");
+    try {
+      await api.post("/users/apply-hall-owner");
+      setMessage("Application successful!");
+    } catch (error) {
+      setMessage("An error occurred. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <header className="bg-white shadow-md">
@@ -15,9 +32,24 @@ const Header = () => {
             </Link>
           </div>
           <div className="flex items-center space-x-4">
-            <Link href="/auth/register" className="text-gray-600 hover:text-gray-900">
-              Become a owner
-            </Link>
+            {user ? (
+              <button
+                onClick={handleApply}
+                disabled={loading}
+                className="text-gray-600 hover:text-gray-900"
+              >
+                {loading ? "Applying..." : "Become a owner"}
+              </button>
+            ) : (
+              <Link
+                href="/auth/register"
+                className="text-gray-600 hover:text-gray-900"
+              >
+                Become a owner
+              </Link>
+            )}
+
+            {message && <p>{message}</p>}
             {user ? (
               <>
                 <span className="text-gray-700">Welcome, {user.firstName}</span>
