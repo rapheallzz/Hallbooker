@@ -16,7 +16,7 @@ const Header = () => {
           </div>
           <div className="flex items-center space-x-4">
             <Link href="/auth/register" className="text-gray-600 hover:text-gray-900">
-              Become a owner
+              Become a Hall Owner 
             </Link>
             {user ? (
               <>
