@@ -17,7 +17,11 @@ const HallCard = ({ hall }: HallCardProps) => {
       <div className="block bg-white rounded-lg shadow-lg overflow-hidden transform hover:scale-105 transition-transform duration-300">
         <img
           className="h-56 w-full object-cover"
-          src={hall.media[0]?.url || "https://via.placeholder.com/400x250"}
+          src={
+            hall.media && hall.media.length > 0
+              ? hall.media[0].url
+              : "https://via.placeholder.com/400x250"
+          }
           alt={hall.name}
         />
         <div className="p-4">
