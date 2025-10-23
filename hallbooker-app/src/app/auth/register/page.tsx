@@ -10,6 +10,7 @@ const RegisterPage = () => {
     email: '',
     phone:'',
     password: '',
+    confirmPassword: '',
     role: 'user',
   });
   const [error, setError] = useState('');
@@ -24,6 +25,11 @@ const RegisterPage = () => {
     e.preventDefault();
     setError('');
     setSuccess('');
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
 
     try {
       await api.post('/auth/register', formData);
@@ -80,6 +86,17 @@ const RegisterPage = () => {
               type="password"
               name="password"
               value={formData.password}
+              onChange={handleChange}
+              required
+              className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Confirm Password</label>
+            <input
+              type="password"
+              name="confirmPassword"
+              value={formData.confirmPassword}
               onChange={handleChange}
               required
               className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
