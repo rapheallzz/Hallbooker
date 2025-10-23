@@ -6,8 +6,7 @@ import api from '@/services/api';
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
+    fullName: '',
     email: '',
     password: '',
     role: 'user',
@@ -42,22 +41,11 @@ const RegisterPage = () => {
         <h2 className="text-2xl font-bold text-center text-gray-900">Create an Account</h2>
         <form className="space-y-6" onSubmit={handleSubmit}>
           <div>
-            <label className="block text-sm font-medium text-gray-700">First Name</label>
+            <label className="block text-sm font-medium text-gray-700">Full Name</label>
             <input
               type="text"
-              name="firstName"
-              value={formData.firstName}
-              onChange={handleChange}
-              required
-              className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Last Name</label>
-            <input
-              type="text"
-              name="lastName"
-              value={formData.lastName}
+              name="fullName"
+              value={formData.fullName}
               onChange={handleChange}
               required
               className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
