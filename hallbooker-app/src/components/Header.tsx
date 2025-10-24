@@ -5,12 +5,20 @@ import api from "@/services/api";
 import { useState, useRef } from "react";
 import useOnClickOutside from "@/hooks/useOnClickOutside";
 
-const Header = () => {
+import useScroll from "@/hooks/useScroll";
+import CollapsedSearchBar from "./CollapsedSearchBar";
+
+interface HeaderProps {
+  onSearchClick: () => void;
+}
+
+const Header = ({ onSearchClick }: HeaderProps) => {
   const { user, logout } = useAuth();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const scrolled = useScroll(100);
   useOnClickOutside(dropdownRef, () => setDropdownOpen(false));
 
   const handleApply = async () => {
@@ -29,19 +37,34 @@ const Header = () => {
   const dashboardUrl = user?.role === 'venue-owner' ? '/vendor/dashboard' : '/bookings';
 
   return (
-    <header className="bg-white shadow-md">
+    <header
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        scrolled ? 'bg-white shadow-md' : 'bg-transparent'
+      }`}
+    >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div
+          className={`flex items-center justify-between transition-all duration-300 ${
+            scrolled ? 'h-16' : 'h-20'
+          }`}
+        >
           <div className="flex-shrink-0">
-            <Link href="/" className="text-2xl font-bold text-[theme(colors.primary)]">
+            <Link href="/" className={`text-2xl font-bold transition-colors ${scrolled ? 'text-primary' : 'text-white'}`}>
               HallBooker
             </Link>
           </div>
+
+          {scrolled && (
+            <div className="flex-grow">
+              <CollapsedSearchBar onSearchClick={onSearchClick} />
+            </div>
+          )}
+
           <div className="flex items-center space-x-4">
             {!user ? (
               <Link
                 href="/auth/register"
-                className="text-gray-600 hover:text-gray-900"
+                className={`transition-colors ${scrolled ? 'text-gray-600 hover:text-gray-900' : 'text-white hover:text-gray-200'}`}
               >
                 Become an owner
               </Link>
@@ -49,7 +72,7 @@ const Header = () => {
               <button
                 onClick={handleApply}
                 disabled={loading}
-                className="text-gray-600 hover:text-gray-900"
+                className={`transition-colors ${scrolled ? 'text-gray-600 hover:text-gray-900' : 'text-white hover:text-gray-200'}`}
               >
                 {loading ? "Applying..." : "Become an owner"}
               </button>
@@ -106,7 +129,7 @@ const Header = () => {
             ) : (
               <Link
                 href="/auth/login"
-                className="px-4 py-2 text-sm font-medium text-white rounded-md shadow-sm bg-[theme(colors.primary)]"
+                className="px-4 py-2 text-sm font-medium text-white rounded-md shadow-sm bg-primary"
               >
                 Login
               </Link>

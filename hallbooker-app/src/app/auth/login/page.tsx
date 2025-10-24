@@ -27,6 +27,11 @@ const LoginPage = () => {
       const response = await api.post('/auth/login', formData);
       const { accessToken, user } = response.data.data || response.data;
 
+      // Ensure the user object has a fullName property
+      if (user && !user.fullName && user.firstName && user.lastName) {
+        user.fullName = `${user.firstName} ${user.lastName}`;
+      }
+
       login(accessToken, user);
 
       // Redirect based on role
