@@ -63,7 +63,7 @@ const Header = () => {
                   className="flex items-center justify-center w-10 h-10 bg-gray-200 rounded-full"
                 >
                   <span className="text-lg font-semibold text-gray-600">
-                    {user.firstName.charAt(0)}
+                    {(user.firstName || user.email || '').charAt(0).toUpperCase()}
                   </span>
                 </button>
                 {dropdownOpen && (
