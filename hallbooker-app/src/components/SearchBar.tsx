@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { DateRangePicker } from 'react-date-range';
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
 import { format } from 'date-fns';
+import useOnClickOutside from '@/hooks/useOnClickOutside';
 
 interface SearchBarProps {
   onSearch: (filters: { location: string; dateRange: any; capacity: string }) => void;
@@ -23,6 +24,14 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
     },
   ]);
   const [capacity, setCapacity] = useState('');
+
+  const locationRef = useRef<HTMLDivElement>(null);
+  const calendarRef = useRef<HTMLDivElement>(null);
+  const capacityRef = useRef<HTMLDivElement>(null);
+
+  useOnClickOutside(locationRef, () => setShowLocations(false));
+  useOnClickOutside(calendarRef, () => setShowCalendar(false));
+  useOnClickOutside(capacityRef, () => setShowCapacity(false));
 
   const locations = [
     'New York, NY',
@@ -55,7 +64,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
 
   return (
     <div className="bg-white rounded-full shadow-lg p-2 flex items-center w-full max-w-4xl mx-auto">
-      <div className="flex-1 relative group">
+      <div className="flex-1 relative group" ref={locationRef}>
         <div
           className="p-4 rounded-full hover:bg-gray-100 cursor-pointer"
           onClick={() => setShowLocations(true)}
@@ -71,7 +80,6 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
             id="location"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
-            onBlur={() => setTimeout(() => setShowLocations(false), 100)}
             placeholder="Where are you going?"
             className="w-full bg-transparent border-none focus:ring-0 text-gray-600 placeholder-gray-400"
           />
@@ -96,7 +104,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
         )}
       </div>
 
-      <div className="flex-1 relative group">
+      <div className="flex-1 relative group" ref={calendarRef}>
         <div
           className="p-4 rounded-full hover:bg-gray-100 cursor-pointer"
           onClick={() => setShowCalendar(!showCalendar)}
@@ -127,12 +135,13 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
               ranges={dateRange}
               direction="horizontal"
               className="rounded-xl shadow-lg"
+              minDate={new Date()}
             />
           </div>
         )}
       </div>
 
-      <div className="flex-1 relative group">
+      <div className="flex-1 relative group" ref={capacityRef}>
         <div
           className="p-4 rounded-full hover:bg-gray-100 cursor-pointer"
           onClick={() => setShowCapacity(!showCapacity)}
@@ -159,7 +168,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
                   className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
                   onClick={() => {
                     setCapacity(cap);
-setShowCapacity(false);
+                    setShowCapacity(false);
                   }}
                 >
                   {cap}
