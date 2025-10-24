@@ -4,15 +4,10 @@ import { useAuth } from "@/context/AuthContext";
 import api from "@/services/api";
 import { useState, useRef } from "react";
 import useOnClickOutside from "@/hooks/useOnClickOutside";
-
 import useScroll from "@/hooks/useScroll";
 import CollapsedSearchBar from "./CollapsedSearchBar";
 
-interface HeaderProps {
-  onSearchClick: () => void;
-}
-
-const Header = ({ onSearchClick }: HeaderProps) => {
+const Header = () => {
   const { user, logout } = useAuth();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -39,7 +34,7 @@ const Header = ({ onSearchClick }: HeaderProps) => {
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled ? 'bg-white shadow-md' : 'bg-transparent'
+        scrolled ? 'bg-white shadow-md' : 'bg-transparent shadow-none'
       }`}
     >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -49,34 +44,36 @@ const Header = ({ onSearchClick }: HeaderProps) => {
           }`}
         >
           <div className="flex-shrink-0">
-            <Link href="/" className={`text-2xl font-bold transition-colors ${scrolled ? 'text-primary' : 'text-white'}`}>
+            <Link href="/" className="text-2xl font-bold text-primary">
               HallBooker
             </Link>
           </div>
 
           {scrolled && (
             <div className="flex-grow">
-              <CollapsedSearchBar onSearchClick={onSearchClick} />
+              <CollapsedSearchBar onSearchClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} />
             </div>
           )}
 
           <div className="flex items-center space-x-4">
-            {!user ? (
+            {user ? (
+              user.role !== 'venue-owner' && (
+                <button
+                  onClick={handleApply}
+                  disabled={loading}
+                  className="text-gray-600 hover:text-gray-900"
+                >
+                  {loading ? "Applying..." : "Become an owner"}
+                </button>
+              )
+            ) : (
               <Link
                 href="/auth/register"
-                className={`transition-colors ${scrolled ? 'text-gray-600 hover:text-gray-900' : 'text-white hover:text-gray-200'}`}
+                className="text-gray-600 hover:text-gray-900"
               >
                 Become an owner
               </Link>
-            ) : user.role !== 'venue-owner' ? (
-              <button
-                onClick={handleApply}
-                disabled={loading}
-                className={`transition-colors ${scrolled ? 'text-gray-600 hover:text-gray-900' : 'text-white hover:text-gray-200'}`}
-              >
-                {loading ? "Applying..." : "Become an owner"}
-              </button>
-            ) : null}
+            )}
 
             {message && <p>{message}</p>}
             {user ? (
