@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import HallCard from '@/components/HallCard';
 import SkeletonCard from '@/components/SkeletonCard';
+import SearchComponent from '@/components/SearchComponent';
 import api from '@/services/api';
 
 interface Hall {
@@ -12,10 +13,13 @@ interface Hall {
   media: { url: string }[];
   price: number;
   location: string;
+  capacity: number;
+  date: string;
 }
 
 const HomePage = () => {
   const [halls, setHalls] = useState<Hall[]>([]);
+  const [filteredHalls, setFilteredHalls] = useState<Hall[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -27,6 +31,7 @@ const HomePage = () => {
 
         if (Array.isArray(hallsData)) {
           setHalls(hallsData);
+          setFilteredHalls(hallsData);
         } else {
           throw new Error('Invalid data format');
         }
@@ -41,6 +46,33 @@ const HomePage = () => {
     fetchHalls();
   }, []);
 
+  const handleSearch = (location: string, date: string, capacity: string) => {
+    let filtered = halls;
+
+    if (location) {
+      filtered = filtered.filter((hall) =>
+        hall.location.toLowerCase().includes(location.toLowerCase())
+      );
+    }
+
+    if (date) {
+      filtered = filtered.filter((hall) => hall.date === date);
+    }
+
+    if (capacity) {
+      const [min, max] = capacity.split('-').map(Number);
+      if (max) {
+        filtered = filtered.filter(
+          (hall) => hall.capacity >= min && hall.capacity <= max
+        );
+      } else {
+        filtered = filtered.filter((hall) => hall.capacity >= min);
+      }
+    }
+
+    setFilteredHalls(filtered);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <main className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
@@ -51,32 +83,8 @@ const HomePage = () => {
           <p className="mt-4 text-lg text-gray-600">
             Browse through our curated list of halls and book with ease.
           </p>
-          <div className="mt-8 max-w-2xl mx-auto">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search for a hall..."
-                className="w-full px-4 py-3 border border-gray-300 rounded-full shadow-sm focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-              />
-              <button
-                className="absolute right-0 top-0 mt-3 mr-4"
-              >
-                <svg
-                  className="w-6 h-6 text-gray-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M21 21l-4.35-4.35m1.35-5.65a7 7 0 11-14 0 7 7 0 0114 0z"
-                  ></path>
-                </svg>
-              </button>
-            </div>
+          <div className="mt-8 max-w-4xl mx-auto">
+            <SearchComponent onSearch={handleSearch} />
           </div>
         </div>
 
@@ -114,7 +122,7 @@ const HomePage = () => {
                 Popular Halls
               </h2>
               <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-                {halls.slice(0, 3).map((hall) => (
+                {filteredHalls.slice(0, 3).map((hall) => (
                   <HallCard key={hall.id} hall={hall} />
                 ))}
               </div>
@@ -124,7 +132,7 @@ const HomePage = () => {
                 Recommended for You
               </h2>
               <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-                {halls.slice(3, 6).map((hall) => (
+                {filteredHalls.slice(3, 6).map((hall) => (
                   <HallCard key={hall.id} hall={hall} />
                 ))}
               </div>
