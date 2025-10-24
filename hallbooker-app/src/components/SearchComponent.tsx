@@ -33,12 +33,12 @@ const SearchComponent = ({ onSearch }: SearchComponentProps) => {
           className={`flex-1 rounded-full p-3 cursor-pointer ${activeSection === 'location' ? 'bg-gray-100 shadow-inner' : 'hover:bg-gray-50'}`}
           onClick={() => handleSectionClick('location')}
         >
-          <label htmlFor="location" className="block text-xs font-bold text-gray-600 px-4">Where</label>
+          <label htmlFor="location" className="block text-xs font-bold text-primary px-4">Where</label>
           <input
             id="location"
             type="text"
             placeholder="Search destinations"
-            className="w-full text-sm text-gray-900 bg-transparent focus:outline-none px-4"
+            className="w-full text-sm text-gray-700 bg-transparent focus:outline-none px-4"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
           />
@@ -48,12 +48,12 @@ const SearchComponent = ({ onSearch }: SearchComponentProps) => {
           className={`flex-1 rounded-full p-3 cursor-pointer ${activeSection === 'date' ? 'bg-gray-100 shadow-inner' : 'hover:bg-gray-50'}`}
           onClick={() => handleSectionClick('date')}
         >
-          <label htmlFor="date" className="block text-xs font-bold text-gray-600 px-4">Date</label>
+          <label htmlFor="date" className="block text-xs font-bold text-primary px-4">Date</label>
           <input
             id="date"
             type="text"
             placeholder="Add dates"
-            className="w-full text-sm text-gray-900 bg-transparent focus:outline-none px-4"
+            className="w-full text-sm text-gray-700 bg-transparent focus:outline-none px-4"
             value={`${format(dateRange.startDate, 'MM/dd/yyyy')} - ${format(dateRange.endDate, 'MM/dd/yyyy')}`}
             readOnly
           />
@@ -63,19 +63,19 @@ const SearchComponent = ({ onSearch }: SearchComponentProps) => {
           className={`flex-1 rounded-full p-3 cursor-pointer ${activeSection === 'capacity' ? 'bg-gray-100 shadow-inner' : 'hover:bg-gray-50'}`}
           onClick={() => handleSectionClick('capacity')}
         >
-          <label htmlFor="capacity" className="block text-xs font-bold text-gray-600 px-4">Capacity</label>
+          <label htmlFor="capacity" className="block text-xs font-bold text-primary px-4">Capacity</label>
           <input
             id="capacity"
             type="text"
             placeholder="Add capacity"
-            className="w-full text-sm text-gray-900 bg-transparent focus:outline-none px-4"
+            className="w-full text-sm text-gray-700 bg-transparent focus:outline-none px-4"
             value={capacity}
             onChange={(e) => setCapacity(e.target.value)}
           />
         </div>
         <div className="p-2">
           <button
-            className="bg-primary text-white rounded-full p-3 hover:bg-primary-dark transition-colors"
+            className="bg-primary text-white rounded-full p-3 hover:bg-opacity-90 transition-opacity"
             onClick={() => onSearch(location, `${format(dateRange.startDate, 'MM/dd/yyyy')} - ${format(dateRange.endDate, 'MM/dd/yyyy')}`, capacity)}
           >
             <svg
