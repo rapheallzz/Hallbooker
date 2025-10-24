@@ -58,9 +58,9 @@ const Header = () => {
             {message && <p>{message}</p>}
             {user ? (
               <div className="flex items-center" ref={dropdownRef}>
-                <div className="flex items-center justify-center w-10 h-10 bg-gray-200 rounded-full">
+                <div className="flex items-center justify-center w-10 h-10 bg-gray-200 rounded-full" title={user.fullName || user.email}>
                   <span className="text-lg font-semibold text-gray-600">
-                    {(user.firstName || user.email || '').charAt(0).toUpperCase()}
+                    {(user.fullName || user.email || '').charAt(0).toUpperCase()}
                   </span>
                 </div>
                 <div className="relative">

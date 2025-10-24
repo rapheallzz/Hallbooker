@@ -6,8 +6,7 @@ import api from '@/services/api';
 
 interface User {
   id: string;
-  firstName: string;
-  lastName: string;
+  fullName: string;
   email: string;
   role: 'user' | 'venue-owner' | 'super-admin';
 }
@@ -33,8 +32,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const storedUser = localStorage.getItem('user');
 
     if (storedToken && storedUser) {
+      const parsedUser = JSON.parse(storedUser) as User;
       setToken(storedToken);
-      setUser(JSON.parse(storedUser));
+      setUser(parsedUser);
     }
     setLoading(false);
   }, []);
