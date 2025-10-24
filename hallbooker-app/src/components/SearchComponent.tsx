@@ -30,52 +30,52 @@ const SearchComponent = ({ onSearch }: SearchComponentProps) => {
     <div className="w-full max-w-4xl mx-auto relative">
       <div className="bg-white rounded-full shadow-md flex items-center transition-all duration-300 border border-gray-200">
         <div
-          className={`flex-1 rounded-full p-3 cursor-pointer ${activeSection === 'location' ? 'bg-gray-100 shadow-inner' : 'hover:bg-gray-50'}`}
+          className={`flex-1 rounded-full p-3 cursor-pointer ${activeSection === 'location' ? 'bg-secondary text-white shadow-inner' : 'hover:bg-gray-50'}`}
           onClick={() => handleSectionClick('location')}
         >
-          <label htmlFor="location" className="block text-xs font-bold text-primary px-4">Where</label>
+          <label htmlFor="location" className="block text-xs font-bold px-4 text-gray-700">Where</label>
           <input
             id="location"
             type="text"
             placeholder="Search destinations"
-            className="w-full text-sm text-gray-700 bg-transparent focus:outline-none px-4"
+            className="w-full text-sm bg-white text-gray-800 focus:outline-none px-4"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
           />
         </div>
         <div className="h-8 border-l border-gray-200"></div>
         <div
-          className={`flex-1 rounded-full p-3 cursor-pointer ${activeSection === 'date' ? 'bg-gray-100 shadow-inner' : 'hover:bg-gray-50'}`}
+          className={`flex-1 rounded-full p-3 cursor-pointer ${activeSection === 'date' ? 'bg-secondary text-white shadow-inner' : 'hover:bg-gray-50'}`}
           onClick={() => handleSectionClick('date')}
         >
-          <label htmlFor="date" className="block text-xs font-bold text-primary px-4">Date</label>
+          <label htmlFor="date" className="block text-xs font-bold px-4 text-gray-700">Date</label>
           <input
             id="date"
             type="text"
             placeholder="Add dates"
-            className="w-full text-sm text-gray-700 bg-transparent focus:outline-none px-4"
+            className="w-full text-sm bg-white text-gray-800 focus:outline-none px-4"
             value={`${format(dateRange.startDate, 'MM/dd/yyyy')} - ${format(dateRange.endDate, 'MM/dd/yyyy')}`}
             readOnly
           />
         </div>
         <div className="h-8 border-l border-gray-200"></div>
         <div
-          className={`flex-1 rounded-full p-3 cursor-pointer ${activeSection === 'capacity' ? 'bg-gray-100 shadow-inner' : 'hover:bg-gray-50'}`}
+          className={`flex-1 rounded-full p-3 cursor-pointer ${activeSection === 'capacity' ? 'bg-secondary text-white shadow-inner' : 'hover:bg-gray-50'}`}
           onClick={() => handleSectionClick('capacity')}
         >
-          <label htmlFor="capacity" className="block text-xs font-bold text-primary px-4">Capacity</label>
+          <label htmlFor="capacity" className="block text-xs font-bold px-4 text-gray-700">Capacity</label>
           <input
             id="capacity"
             type="text"
             placeholder="Add capacity"
-            className="w-full text-sm text-gray-700 bg-transparent focus:outline-none px-4"
+            className="w-full text-sm bg-white text-gray-800 focus:outline-none px-4"
             value={capacity}
             onChange={(e) => setCapacity(e.target.value)}
           />
         </div>
         <div className="p-2">
           <button
-            className="bg-primary text-white rounded-full p-3 hover:bg-opacity-90 transition-opacity"
+            className="bg-primary text-white rounded-full p-3 hover:bg-primary/90 transition-colors"
             onClick={() => onSearch(location, `${format(dateRange.startDate, 'MM/dd/yyyy')} - ${format(dateRange.endDate, 'MM/dd/yyyy')}`, capacity)}
           >
             <svg
