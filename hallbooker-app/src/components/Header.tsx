@@ -2,12 +2,16 @@
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import api from "@/services/api";
-import { useState } from "react";
+import { useState, useRef } from "react";
+import useOnClickOutside from "@/hooks/useOnClickOutside";
 
 const Header = () => {
   const { user, logout } = useAuth();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  useOnClickOutside(dropdownRef, () => setDropdownOpen(false));
 
   const handleApply = async () => {
     setLoading(true);
@@ -21,6 +25,8 @@ const Header = () => {
       setLoading(false);
     }
   };
+
+  const dashboardUrl = user?.role === 'venue-owner' ? '/vendor/dashboard' : '/bookings';
 
   return (
     <header className="bg-white shadow-md">
@@ -51,15 +57,34 @@ const Header = () => {
 
             {message && <p>{message}</p>}
             {user ? (
-              <>
-                <span className="text-gray-700">Welcome, {user.firstName}</span>
+              <div className="relative" ref={dropdownRef}>
                 <button
-                  onClick={logout}
-                  className="px-4 py-2 text-sm font-medium text-white rounded-md shadow-sm bg-[theme(colors.secondary)]"
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                  className="flex items-center justify-center w-10 h-10 bg-gray-200 rounded-full"
                 >
-                  Logout
+                  <span className="text-lg font-semibold text-gray-600">
+                    {user.firstName.charAt(0)}
+                  </span>
                 </button>
-              </>
+                {dropdownOpen && (
+                  <div className="absolute right-0 w-48 mt-2 origin-top-right bg-white rounded-md shadow-lg">
+                    <div className="py-1">
+                      <Link
+                        href={dashboardUrl}
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        Dashboard
+                      </Link>
+                      <button
+                        onClick={logout}
+                        className="block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100"
+                      >
+                        Logout
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             ) : (
               <Link
                 href="/auth/login"

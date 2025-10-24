@@ -1,23 +1,15 @@
-'use client';
+"use client";
+import withAuth from "@/components/auth/withAuth";
+import type { NextPage } from "next";
 
-import withAuth from '@/components/auth/withAuth';
-import { useAuth } from '@/context/AuthContext';
 
-const VendorDashboardPage = () => {
-  const { logout } = useAuth();
-
+const VendorDashboardPage: NextPage = () => {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen">
-      <h1 className="text-4xl font-bold">Vendor Dashboard</h1>
-      <p className="mt-4">Welcome, Venue Owner/Staff!</p>
-      <button
-        onClick={logout}
-        className="px-4 py-2 mt-8 text-white bg-red-600 rounded-md hover:bg-red-700"
-      >
-        Logout
-      </button>
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-4">Vendor Dashboard</h1>
+      <p>This is where you can manage your venues.</p>
     </div>
   );
 };
 
-export default withAuth(VendorDashboardPage, ['venue-owner', 'staff']);
+export default withAuth(VendorDashboardPage, ["venue-owner"]);
