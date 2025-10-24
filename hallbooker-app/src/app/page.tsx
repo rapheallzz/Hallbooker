@@ -13,8 +13,6 @@ interface Hall {
   media: { url: string }[];
   price: number;
   location: string;
-  capacity: number;
-  date: string;
 }
 
 const HomePage = () => {
@@ -55,20 +53,8 @@ const HomePage = () => {
       );
     }
 
-    if (date) {
-      filtered = filtered.filter((hall) => hall.date === date);
-    }
-
-    if (capacity) {
-      const [min, max] = capacity.split('-').map(Number);
-      if (max) {
-        filtered = filtered.filter(
-          (hall) => hall.capacity >= min && hall.capacity <= max
-        );
-      } else {
-        filtered = filtered.filter((hall) => hall.capacity >= min);
-      }
-    }
+    // Date and capacity filtering is not implemented as the API does not support it.
+    // The UI is for demonstration purposes only.
 
     setFilteredHalls(filtered);
   };
