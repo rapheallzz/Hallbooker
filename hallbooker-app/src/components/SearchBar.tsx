@@ -126,7 +126,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
           />
         </div>
         {showCalendar && (
-          <div className="absolute z-10 mt-2">
+          <div className="absolute z-10 mt-2 left-1/2 transform -translate-x-1/2">
             <DateRangePicker
               onChange={handleDateChange}
               showSelectionPreview={true}

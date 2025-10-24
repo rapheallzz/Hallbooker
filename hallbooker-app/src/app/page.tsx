@@ -13,7 +13,6 @@ interface Hall {
   media: { url: string }[];
   price: number;
   location: string;
-  capacity: number; // Added for filtering
 }
 
 const HomePage = () => {
@@ -26,18 +25,8 @@ const HomePage = () => {
   useEffect(() => {
     const fetchHalls = async () => {
       try {
-        // Using a local halls.json for mock data as per memory
-        const response = await fetch('/halls.json');
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        let hallsData = await response.json();
-
-        // Augment with mock capacity for filtering
-        hallsData = hallsData.map((hall: Hall, index: number) => ({
-          ...hall,
-          capacity: 50 + (index * 50), // Mock capacity: 50, 100, 150, etc.
-        }));
+        const response = await api.get('/halls');
+        const hallsData = response.data.data;
 
         if (Array.isArray(hallsData)) {
           setAllHalls(hallsData);
@@ -47,7 +36,7 @@ const HomePage = () => {
         }
       } catch (err) {
         console.error('Failed to fetch halls:', err);
-        setError('Failed to fetch halls. Using mock data failed.');
+        setError('Failed to fetch halls. See console for details.');
       } finally {
         setLoading(false);
       }
@@ -57,7 +46,7 @@ const HomePage = () => {
   }, []);
 
   const handleSearch = (filters: { location: string; dateRange: any; capacity: string }) => {
-    const { location, capacity } = filters;
+    const { location } = filters;
     setSearchPerformed(true);
 
     let filtered = allHalls;
@@ -67,17 +56,6 @@ const HomePage = () => {
         filtered = filtered.filter((hall) =>
             hall.location.toLowerCase().includes(location.toLowerCase().split(',')[0])
         );
-    }
-
-    // Capacity filtering
-    if (capacity && capacity !== 'Any') {
-        const [min, max] = capacity.split('-').map(c => c.replace('+', ''));
-        filtered = filtered.filter(hall => {
-            if (max) {
-                return hall.capacity >= parseInt(min) && hall.capacity <= parseInt(max);
-            }
-            return hall.capacity >= parseInt(min); // For '500+' case
-        });
     }
 
     setFilteredHalls(filtered);
@@ -119,7 +97,7 @@ const HomePage = () => {
           <div>
             <section>
               <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                {searchPerformed ? 'Search Results' : 'Popular Halls'}
+                {searchPerformed && filteredHalls.length > 0 ? 'Search Results' : 'Popular Halls'}
               </h2>
               <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
                 {filteredHalls.length > 0 ? (
