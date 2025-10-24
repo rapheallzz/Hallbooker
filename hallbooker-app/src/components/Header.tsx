@@ -38,7 +38,14 @@ const Header = () => {
             </Link>
           </div>
           <div className="flex items-center space-x-4">
-            {user ? (
+            {!user ? (
+              <Link
+                href="/auth/register"
+                className="text-gray-600 hover:text-gray-900"
+              >
+                Become an owner
+              </Link>
+            ) : user.role !== 'venue-owner' ? (
               <button
                 onClick={handleApply}
                 disabled={loading}
@@ -46,25 +53,32 @@ const Header = () => {
               >
                 {loading ? "Applying..." : "Become an owner"}
               </button>
-            ) : (
-              <Link
-                href="/auth/register"
-                className="text-gray-600 hover:text-gray-900"
-              >
-                Become an owner
-              </Link>
-            )}
+            ) : null}
 
             {message && <p>{message}</p>}
             {user ? (
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setDropdownOpen(!dropdownOpen)}
-                  className="flex items-center justify-center w-10 h-10 bg-gray-200 rounded-full"
+                  className="flex items-center justify-center px-3 py-2 space-x-2 bg-gray-200 rounded-full"
                 >
                   <span className="text-lg font-semibold text-gray-600">
                     {(user.firstName || user.email || '').charAt(0).toUpperCase()}
                   </span>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                    className="w-4 h-4"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="m19.5 8.25-7.5 7.5-7.5-7.5"
+                    />
+                  </svg>
                 </button>
                 {dropdownOpen && (
                   <div className="absolute right-0 w-48 mt-2 origin-top-right bg-white rounded-md shadow-lg">
