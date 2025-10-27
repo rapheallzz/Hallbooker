@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import api from "@/services/api";
 import HallModal from "@/components/vendor/HallModal";
+import ReservationModal from "@/components/vendor/ReservationModal";
 
 interface Hall {
   id: string;
@@ -17,6 +18,8 @@ const HallsPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isReservationModalOpen, setIsReservationModalOpen] = useState(false);
+  const [selectedHallId, setSelectedHallId] = useState<string | null>(null);
   const [editingHall, setEditingHall] = useState<Hall | undefined>(undefined);
 
   const fetchHalls = async () => {
@@ -28,6 +31,17 @@ const HallsPage = () => {
       setError('Failed to fetch your halls.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCreateReservation = async (reservationData: any) => {
+    try {
+      await api.post(`/halls/${reservationData.hallId}/reservations`, reservationData);
+      setIsReservationModalOpen(false);
+      alert('Reservation created successfully!');
+    } catch (error) {
+      console.error('Failed to create reservation:', error);
+      alert('Failed to create reservation.');
     }
   };
 
@@ -76,6 +90,11 @@ const HallsPage = () => {
   const openEditModal = (hall: Hall) => {
     setEditingHall(hall);
     setIsModalOpen(true);
+  };
+
+  const openReservationModal = (hallId: string) => {
+    setSelectedHallId(hallId);
+    setIsReservationModalOpen(true);
   };
 
   if (loading) return <div>Loading...</div>;
@@ -142,6 +161,12 @@ const HallsPage = () => {
                     Edit
                   </button>
                   <button
+                    onClick={() => openReservationModal(hall.id)}
+                    className="ml-2 px-5 py-2 border-yellow-500 border text-yellow-500 rounded transition duration-300 hover:bg-yellow-500 hover:text-white focus:outline-none"
+                  >
+                    Block Dates
+                  </button>
+                  <button
                     onClick={() => handleDelete(hall.id)}
                     className="ml-2 px-5 py-2 border-red-500 border text-red-500 rounded transition duration-300 hover:bg-red-500 hover:text-white focus:outline-none"
                   >
@@ -153,12 +178,20 @@ const HallsPage = () => {
           </tbody>
         </table>
       </div>
-       <HallModal
+      <HallModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubmit={editingHall ? handleUpdate : handleCreate}
         hall={editingHall}
       />
+      {selectedHallId && (
+        <ReservationModal
+          isOpen={isReservationModalOpen}
+          onClose={() => setIsReservationModalOpen(false)}
+          onSubmit={handleCreateReservation}
+          hallId={selectedHallId}
+        />
+      )}
     </div>
   );
 };

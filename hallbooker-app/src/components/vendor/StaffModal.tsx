@@ -1,29 +1,83 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import api from '@/services/api'; // Assuming you have an API service to fetch halls
+
+interface Hall {
+  _id: string;
+  name: string;
+}
 
 interface StaffModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (formData: any) => void;
+  staff?: any; // For editing existing staff
 }
 
-const StaffModal: React.FC<StaffModalProps> = ({ isOpen, onClose, onSubmit }) => {
+const StaffModal: React.FC<StaffModalProps> = ({ isOpen, onClose, onSubmit, staff }) => {
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
+    fullName: '',
     email: '',
-    role: 'staff', // Default role
+    phone: '',
+    password: '',
+    hallIds: [] as string[],
   });
+  const [allHalls, setAllHalls] = useState<Hall[]>([]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  useEffect(() => {
+    // Fetch all halls to populate the multi-select dropdown
+    const fetchHalls = async () => {
+      try {
+        const response = await api.get('/halls/by-owner');
+        setAllHalls(response.data.data);
+      } catch (error) {
+        console.error('Failed to fetch halls:', error);
+      }
+    };
+    if (isOpen) {
+      fetchHalls();
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (staff) {
+      setFormData({
+        fullName: staff.fullName || '',
+        email: staff.email || '',
+        phone: staff.phone || '',
+        password: '', // Password should not be pre-filled
+        hallIds: staff.hallIds || [],
+      });
+    } else {
+      setFormData({
+        fullName: '',
+        email: '',
+        phone: '',
+        password: '',
+        hallIds: [],
+      });
+    }
+  }, [staff, isOpen]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleHallSelection = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedIds = Array.from(e.target.selectedOptions, (option) => option.value);
+    setFormData((prev) => ({ ...prev, hallIds: selectedIds }));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    // Omit password if it's empty (for editing without changing password)
+    const dataToSubmit: any = { ...formData };
+    if (!dataToSubmit.password) {
+      delete dataToSubmit.password;
+    }
+    onSubmit(dataToSubmit);
   };
 
   if (!isOpen) return null;
@@ -31,52 +85,32 @@ const StaffModal: React.FC<StaffModalProps> = ({ isOpen, onClose, onSubmit }) =>
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
       <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
-        <h2 className="text-2xl font-bold mb-6">Add New Staff Member</h2>
-        <form onSubmit={handleSubmit}>
-          <div className="space-y-4">
-            <input
-              type="text"
-              name="firstName"
-              placeholder="First Name"
-              value={formData.firstName}
-              onChange={handleChange}
-              className="w-full px-4 py-2 border rounded-md"
-              required
-            />
-            <input
-              type="text"
-              name="lastName"
-              placeholder="Last Name"
-              value={formData.lastName}
-              onChange={handleChange}
-              className="w-full px-4 py-2 border rounded-md"
-              required
-            />
-            <input
-              type="email"
-              name="email"
-              placeholder="Email Address"
-              value={formData.email}
-              onChange={handleChange}
-              className="w-full px-4 py-2 border rounded-md"
-              required
-            />
-            {/* You might have a role selector here if needed */}
+        <h2 className="text-2xl font-bold mb-6">{staff ? 'Edit Staff Member' : 'Add New Staff Member'}</h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <input type="text" name="fullName" placeholder="Full Name" value={formData.fullName} onChange={handleChange} className="w-full px-4 py-2 border rounded-md" required />
+          <input type="email" name="email" placeholder="Email Address" value={formData.email} onChange={handleChange} className="w-full px-4 py-2 border rounded-md" required />
+          <input type="tel" name="phone" placeholder="Phone Number" value={formData.phone} onChange={handleChange} className="w-full px-4 py-2 border rounded-md" required />
+          <input type="password" name="password" placeholder={staff ? 'New Password (leave blank to keep current)' : 'Password'} value={formData.password} onChange={handleChange} className="w-full px-4 py-2 border rounded-md" />
+          <div>
+            <label htmlFor="hallIds" className="block text-sm font-medium text-gray-700">Assign Halls</label>
+            <select
+              id="hallIds"
+              name="hallIds"
+              multiple
+              value={formData.hallIds}
+              onChange={handleHallSelection}
+              className="w-full h-32 px-4 py-2 border rounded-md"
+            >
+              {allHalls.map((hall) => (
+                <option key={hall._id} value={hall._id}>
+                  {hall.name}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="flex justify-end mt-8 space-x-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 rounded-md text-gray-600 bg-gray-100 hover:bg-gray-200"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 rounded-md text-white bg-primary hover:bg-primary-dark"
-            >
-              Add Staff
-            </button>
+            <button type="button" onClick={onClose} className="px-4 py-2 rounded-md text-gray-600 bg-gray-100 hover:bg-gray-200">Cancel</button>
+            <button type="submit" className="px-4 py-2 rounded-md text-white bg-primary hover:bg-primary-dark">{staff ? 'Save Changes' : 'Add Staff'}</button>
           </div>
         </form>
       </div>
