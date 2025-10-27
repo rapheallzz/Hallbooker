@@ -1,22 +1,18 @@
 "use client";
 import React from "react";
-import { Menu, Search, Bell, User as UserIcon } from "lucide-react";
+import { Search, Bell, User as UserIcon, Plus } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
-interface VendorHeaderProps {
-  toggleSidebar: () => void;
-}
-
-const VendorHeader: React.FC<VendorHeaderProps> = ({ toggleSidebar }) => {
+const VendorHeader = () => {
   const { user } = useAuth();
 
   return (
     <header className="bg-white shadow-sm p-4 flex items-center justify-between">
       <div className="flex items-center">
-        <button onClick={toggleSidebar} className="text-gray-500 lg:hidden">
-          <Menu size={24} />
-        </button>
-        <div className="relative ml-4">
+        <h1 className="text-2xl font-semibold text-gray-800">Dashboard</h1>
+      </div>
+      <div className="flex items-center w-1/3">
+        <div className="relative w-full">
           <Search
             size={18}
             className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
@@ -24,11 +20,15 @@ const VendorHeader: React.FC<VendorHeaderProps> = ({ toggleSidebar }) => {
           <input
             type="text"
             placeholder="Search..."
-            className="pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary"
+            className="pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary w-full"
           />
         </div>
       </div>
       <div className="flex items-center space-x-4">
+        <button className="bg-primary text-white px-4 py-2 rounded-lg flex items-center space-x-2">
+          <Plus size={20} />
+          <span>Create</span>
+        </button>
         <button className="text-gray-500 relative">
           <Bell size={24} />
           <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"></span>
