@@ -1,10 +1,17 @@
 "use client";
-import React from "react";
-import { Search, Bell, User as UserIcon, Plus } from "lucide-react";
+import React, { useState, useRef, useEffect } from "react";
+import { Search, Bell, User as UserIcon, Plus, ChevronDown } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useUI } from "@/context/UIContext";
+import useOnClickOutside from "@/hooks/useOnClickOutside";
 
 const VendorHeader = () => {
   const { user } = useAuth();
+  const { openHallModal, openStaffModal } = useUI();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  useOnClickOutside(dropdownRef, () => setIsDropdownOpen(false));
 
   return (
     <header className="bg-white shadow-sm p-4 flex items-center justify-between">
@@ -25,10 +32,44 @@ const VendorHeader = () => {
         </div>
       </div>
       <div className="flex items-center space-x-4">
-        <button className="bg-primary text-white px-4 py-2 rounded-lg flex items-center space-x-2">
-          <Plus size={20} />
-          <span>Create</span>
-        </button>
+        <div className="relative" ref={dropdownRef}>
+          <button
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            className="bg-primary text-white px-4 py-2 rounded-lg flex items-center space-x-2"
+          >
+            <Plus size={20} />
+            <span>Create</span>
+            <ChevronDown size={16} />
+          </button>
+          {isDropdownOpen && (
+            <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10">
+              <ul className="py-1">
+                <li>
+                  <button
+                    onClick={() => {
+                      openHallModal();
+                      setIsDropdownOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    Create Hall
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => {
+                      openStaffModal();
+                      setIsDropdownOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    Add Staff
+                  </button>
+                </li>
+              </ul>
+            </div>
+          )}
+        </div>
         <button className="text-gray-500 relative">
           <Bell size={24} />
           <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"></span>
