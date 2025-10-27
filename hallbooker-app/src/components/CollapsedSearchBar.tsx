@@ -1,15 +1,23 @@
 'use client';
 
-import { useState } from 'react';
-
 const CollapsedSearchBar = ({ onSearchClick }: { onSearchClick: () => void }) => {
   return (
     <div
-      className="w-full max-w-lg mx-auto cursor-pointer"
+      className="w-full max-w-md mx-auto cursor-pointer"
       onClick={onSearchClick}
     >
-      <div className="flex items-center justify-between px-4 py-2 bg-white border border-gray-200 rounded-full shadow-md">
-        <span className="font-semibold text-gray-800">Start your search</span>
+      <div className="flex items-center justify-between px-2 py-1 bg-white border border-gray-200 rounded-full shadow-sm">
+        <div className="flex items-center divide-x divide-gray-200">
+          <div className="px-4">
+            <p className="text-sm font-semibold text-gray-800">Location</p>
+          </div>
+          <div className="px-4">
+            <p className="text-sm font-semibold text-gray-800">Date</p>
+          </div>
+          <div className="px-4">
+            <p className="text-sm font-semibold text-gray-800">Capacity</p>
+          </div>
+        </div>
         <div className="p-2 text-white bg-primary rounded-full">
           <svg
             xmlns="http://www.w3.org/2000/svg"
