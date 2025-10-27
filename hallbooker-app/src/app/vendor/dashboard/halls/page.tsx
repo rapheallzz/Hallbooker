@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import api from "@/services/api";
+import HallModal from "@/components/vendor/HallModal";
 
 interface Hall {
   id: string;
@@ -8,36 +9,84 @@ interface Hall {
   location: string;
   capacity: number;
   isOnline: boolean;
+  price: number;
 }
 
 const HallsPage = () => {
   const [halls, setHalls] = useState<Hall[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingHall, setEditingHall] = useState<Hall | undefined>(undefined);
+
+  const fetchHalls = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get("/halls/by-owner");
+      setHalls(response.data.data);
+    } catch (err) {
+      setError('Failed to fetch your halls.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchHalls = async () => {
-      try {
-        const response = await api.get("/halls/by-owner");
-        setHalls(response.data.data);
-      } catch (error) {
-        console.error("Error fetching halls:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchHalls();
   }, []);
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+  const handleCreate = async (formData: any) => {
+    try {
+      await api.post('/halls', formData);
+      fetchHalls();
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error('Failed to create hall:', error);
+    }
+  };
+
+  const handleUpdate = async (formData: any) => {
+    if (!editingHall) return;
+    try {
+      await api.put(`/halls/${editingHall.id}`, formData);
+      fetchHalls();
+      setIsModalOpen(false);
+      setEditingHall(undefined);
+    } catch (error) {
+      console.error('Failed to update hall:', error);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (window.confirm('Are you sure you want to delete this hall?')) {
+      try {
+        await api.delete(`/halls/${id}`);
+        fetchHalls();
+      } catch (error) {
+        console.error('Failed to delete hall:', error);
+      }
+    }
+  };
+
+  const openCreateModal = () => {
+    setEditingHall(undefined);
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (hall: Hall) => {
+    setEditingHall(hall);
+    setIsModalOpen(true);
+  };
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <p className="text-red-600">{error}</p>;
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-3xl font-bold text-primary">Halls</h1>
         <button
-          onClick={() => console.log("Create Hall clicked")}
+          onClick={openCreateModal}
           className="bg-primary text-white px-4 py-2 rounded-lg"
         >
           Create Hall
@@ -87,13 +136,13 @@ const HallsPage = () => {
                 </td>
                 <td className="px-6 py-4 whitespace-no-wrap text-right border-b border-gray-500">
                   <button
-                    onClick={() => console.log(`Edit hall ${hall.id}`)}
+                    onClick={() => openEditModal(hall)}
                     className="px-5 py-2 border-primary border text-primary rounded transition duration-300 hover:bg-primary hover:text-white focus:outline-none"
                   >
                     Edit
                   </button>
                   <button
-                    onClick={() => console.log(`Delete hall ${hall.id}`)}
+                    onClick={() => handleDelete(hall.id)}
                     className="ml-2 px-5 py-2 border-red-500 border text-red-500 rounded transition duration-300 hover:bg-red-500 hover:text-white focus:outline-none"
                   >
                     Delete
@@ -104,6 +153,12 @@ const HallsPage = () => {
           </tbody>
         </table>
       </div>
+       <HallModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={editingHall ? handleUpdate : handleCreate}
+        hall={editingHall}
+      />
     </div>
   );
 };

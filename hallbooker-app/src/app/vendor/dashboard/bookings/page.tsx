@@ -14,24 +14,42 @@ interface Booking {
 const BookingsPage = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const fetchBookings = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get("/bookings/my-bookings");
+      setBookings(response.data.data);
+    } catch (error) {
+      console.error("Error fetching bookings:", error);
+      setError('Failed to fetch bookings.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchBookings = async () => {
-      try {
-        const response = await api.get("/bookings/my-bookings");
-        setBookings(response.data.data);
-      } catch (error) {
-        console.error("Error fetching bookings:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchBookings();
   }, []);
+
+  const handleCancel = async (bookingId: string) => {
+    if (window.confirm('Are you sure you want to cancel this booking?')) {
+      try {
+        await api.put(`/bookings/${bookingId}`);
+        fetchBookings(); // Refresh the list
+      } catch (error) {
+        console.error('Failed to cancel booking:', error);
+        setError('Failed to cancel the booking.');
+      }
+    }
+  };
 
   if (loading) {
     return <div>Loading...</div>;
   }
+
+  if (error) return <p className="text-red-600">{error}</p>;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -85,12 +103,14 @@ const BookingsPage = () => {
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-no-wrap text-right border-b border-gray-500">
-                  <button
-                    onClick={() => console.log(`View booking ${booking.id}`)}
-                    className="px-5 py-2 border-primary border text-primary rounded transition duration-300 hover:bg-primary hover:text-white focus:outline-none"
-                  >
-                    View
-                  </button>
+                   {booking.status.toLowerCase() !== 'cancelled' && (
+                    <button
+                      onClick={() => handleCancel(booking.id)}
+                      className="px-5 py-2 border-red-500 border text-red-500 rounded transition duration-300 hover:bg-red-500 hover:text-white focus:outline-none"
+                    >
+                      Cancel
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}
