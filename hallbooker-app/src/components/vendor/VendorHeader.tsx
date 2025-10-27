@@ -39,7 +39,7 @@ const VendorHeader = () => {
           </div>
           {user && (
             <div>
-              <p className="font-semibold text-sm">{user.fullName}</p>
+              <p className="font-semibold text-sm text-gray-700">{user.fullName}</p>
               <p className="text-xs text-gray-500 capitalize">{user.role.replace('-', ' ')}</p>
             </div>
           )}
