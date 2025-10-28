@@ -26,7 +26,8 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
     openingHour: '09:00',
     closingHour: '23:00',
     location: '',
-    pricing: JSON.stringify({}, null, 2),
+    pricePerHour: 0,
+    pricePerDay: 0,
     facilities: [] as Facility[],
     carParkCapacity: 0,
     hallSize: '',
@@ -42,7 +43,8 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
         openingHour: hall.openingHour || '09:00',
         closingHour: hall.closingHour || '23:00',
         location: hall.location || '',
-        pricing: hall.pricing ? JSON.stringify(hall.pricing, null, 2) : JSON.stringify({}, null, 2),
+        pricePerHour: hall.pricing?.perHour || 0,
+        pricePerDay: hall.pricing?.perDay || 0,
         facilities: hall.facilities || [],
         carParkCapacity: hall.carParkCapacity || 0,
         hallSize: hall.hallSize || '',
@@ -56,7 +58,8 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
         openingHour: '09:00',
         closingHour: '23:00',
         location: '',
-        pricing: JSON.stringify({}, null, 2),
+        pricePerHour: 0,
+        pricePerDay: 0,
         facilities: [],
         carParkCapacity: 0,
         hallSize: '',
@@ -99,19 +102,19 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      const parsedPricing = JSON.parse(formData.pricing);
-      const rulesArray = formData.rules.split('\n').filter(rule => rule.trim() !== '');
-      onSubmit({
-        ...formData,
-        pricing: parsedPricing,
-        rules: rulesArray,
-        capacity: Number(formData.capacity),
-        carParkCapacity: Number(formData.carParkCapacity),
-      });
-    } catch (error) {
-      alert('Pricing is not a valid JSON object.');
-    }
+    const { pricePerHour, pricePerDay, ...rest } = formData;
+    const pricing = {
+      perHour: Number(pricePerHour),
+      perDay: Number(pricePerDay),
+    };
+    const rulesArray = formData.rules.split('\n').filter(rule => rule.trim() !== '');
+    onSubmit({
+      ...rest,
+      pricing,
+      rules: rulesArray,
+      capacity: Number(formData.capacity),
+      carParkCapacity: Number(formData.carParkCapacity),
+    });
   };
 
   if (!isOpen) return null;
@@ -155,9 +158,15 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
               <input type="text" name="hallSize" placeholder="Hall Size (e.g., 100 sqm)" value={formData.hallSize} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" />
             </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-800">Pricing (JSON)</label>
-            <textarea name="pricing" placeholder="Enter pricing as JSON" value={formData.pricing} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md font-mono text-gray-900 placeholder-gray-500" rows={5} />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-800">Price Per Hour</label>
+              <input type="number" name="pricePerHour" placeholder="Price Per Hour" value={formData.pricePerHour} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-800">Price Per Day</label>
+              <input type="number" name="pricePerDay" placeholder="Price Per Day" value={formData.pricePerDay} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" />
+            </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-800">Rules (one rule per line)</label>
