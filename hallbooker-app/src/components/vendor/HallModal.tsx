@@ -117,44 +117,44 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
+    <div className="fixed inset-0 bg-black bg-opacity-20 z-50 flex justify-center items-center">
       <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <h2 className="text-2xl font-bold mb-6">{hall ? 'Edit Hall' : 'Create a New Hall'}</h2>
+        <h2 className="text-2xl font-bold mb-6 text-gray-800">{hall ? 'Edit Hall' : 'Create a New Hall'}</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <input type="text" name="name" placeholder="Hall Name" value={formData.name} onChange={handleChange} className="w-full px-4 py-2 border rounded-md" required />
-          <textarea name="description" placeholder="Description" value={formData.description} onChange={handleChange} className="w-full px-4 py-2 border rounded-md" rows={3} />
+          <input type="text" name="name" placeholder="Hall Name" value={formData.name} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" required />
+          <textarea name="description" placeholder="Description" value={formData.description} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" rows={3} />
           <div className="grid grid-cols-2 gap-4">
-            <input type="number" name="capacity" placeholder="Capacity" value={formData.capacity} onChange={handleChange} className="w-full px-4 py-2 border rounded-md" required />
-            <input type="text" name="location" placeholder="Location" value={formData.location} onChange={handleChange} className="w-full px-4 py-2 border rounded-md" required />
-            <input type="time" name="openingHour" placeholder="Opening Hour" value={formData.openingHour} onChange={handleChange} className="w-full px-4 py-2 border rounded-md" />
-            <input type="time" name="closingHour" placeholder="Closing Hour" value={formData.closingHour} onChange={handleChange} className="w-full px-4 py-2 border rounded-md" />
-            <input type="number" name="carParkCapacity" placeholder="Car Park Capacity" value={formData.carParkCapacity} onChange={handleChange} className="w-full px-4 py-2 border rounded-md" />
-            <input type="text" name="hallSize" placeholder="Hall Size (e.g., 100 sqm)" value={formData.hallSize} onChange={handleChange} className="w-full px-4 py-2 border rounded-md" />
+            <input type="number" name="capacity" placeholder="Capacity" value={formData.capacity} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" required />
+            <input type="text" name="location" placeholder="Location" value={formData.location} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" required />
+            <input type="time" name="openingHour" placeholder="Opening Hour" value={formData.openingHour} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" />
+            <input type="time" name="closingHour" placeholder="Closing Hour" value={formData.closingHour} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" />
+            <input type="number" name="carParkCapacity" placeholder="Car Park Capacity" value={formData.carParkCapacity} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" />
+            <input type="text" name="hallSize" placeholder="Hall Size (e.g., 100 sqm)" value={formData.hallSize} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Pricing (JSON)</label>
-            <textarea name="pricing" placeholder="Enter pricing as JSON" value={formData.pricing} onChange={handleChange} className="w-full px-4 py-2 border rounded-md font-mono" rows={5} />
+            <label className="block text-sm font-medium text-gray-800">Pricing (JSON)</label>
+            <textarea name="pricing" placeholder="Enter pricing as JSON" value={formData.pricing} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md font-mono text-gray-900 placeholder-gray-500" rows={5} />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Rules (one rule per line)</label>
-            <textarea name="rules" placeholder="Enter hall rules" value={formData.rules} onChange={handleChange} className="w-full px-4 py-2 border rounded-md" rows={3} />
+            <label className="block text-sm font-medium text-gray-800">Rules (one rule per line)</label>
+            <textarea name="rules" placeholder="Enter hall rules" value={formData.rules} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" rows={3} />
           </div>
 
           <div>
             <div className="flex justify-between items-center mb-2">
-              <label className="block text-sm font-medium text-gray-700">Facilities</label>
+              <label className="block text-sm font-medium text-gray-800">Facilities</label>
               <button type="button" onClick={addFacility} className="px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200">Add Facility</button>
             </div>
-            <div className="space-y-3 max-h-48 overflow-y-auto border p-3 rounded-md">
+            <div className="space-y-3 max-h-48 overflow-y-auto border p-3 rounded-md border-gray-300">
               {formData.facilities.map((facility, index) => (
-                <div key={index} className="grid grid-cols-12 gap-2 p-2 border rounded-md">
-                  <input type="text" placeholder="Name" value={facility.name} onChange={(e) => handleFacilityChange(index, 'name', e.target.value)} className="col-span-3 px-2 py-1 border rounded-md" />
-                  <select value={facility.chargeMethod} onChange={(e) => handleFacilityChange(index, 'chargeMethod', e.target.value)} className="col-span-3 px-2 py-1 border rounded-md">
+                <div key={index} className="grid grid-cols-12 gap-2 p-2 border rounded-md border-gray-300">
+                  <input type="text" placeholder="Name" value={facility.name} onChange={(e) => handleFacilityChange(index, 'name', e.target.value)} className="col-span-3 px-2 py-1 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" />
+                  <select value={facility.chargeMethod} onChange={(e) => handleFacilityChange(index, 'chargeMethod', e.target.value)} className="col-span-3 px-2 py-1 border border-gray-300 rounded-md text-gray-900">
                     <option value="per_hour">Per Hour</option>
                     <option value="per_booking">Per Booking</option>
                     <option value="per_person">Per Person</option>
                   </select>
-                  <input type="number" placeholder="Cost" value={facility.cost} onChange={(e) => handleFacilityChange(index, 'cost', e.target.value)} className="col-span-2 px-2 py-1 border rounded-md" />
+                  <input type="number" placeholder="Cost" value={facility.cost} onChange={(e) => handleFacilityChange(index, 'cost', e.target.value)} className="col-span-2 px-2 py-1 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" />
                   <div className="col-span-3 flex items-center space-x-2">
                     <label><input type="checkbox" checked={facility.available} onChange={(e) => handleFacilityChange(index, 'available', e.target.checked)} /> Available</label>
                     <label><input type="checkbox" checked={facility.chargeable} onChange={(e) => handleFacilityChange(index, 'chargeable', e.target.checked)} /> Chargeable</label>
