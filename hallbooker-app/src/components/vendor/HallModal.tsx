@@ -117,7 +117,7 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-20 z-50 flex justify-center items-center">
+    <div className="fixed inset-0 bg-gray-900 bg-opacity-10 backdrop-blur-sm z-50 flex justify-center items-center">
       <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <h2 className="text-2xl font-bold mb-6 text-gray-800">{hall ? 'Edit Hall' : 'Create a New Hall'}</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
