@@ -121,15 +121,39 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
       <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <h2 className="text-2xl font-bold mb-6 text-gray-800">{hall ? 'Edit Hall' : 'Create a New Hall'}</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <input type="text" name="name" placeholder="Hall Name" value={formData.name} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" required />
-          <textarea name="description" placeholder="Description" value={formData.description} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" rows={3} />
+          <div>
+            <label className="block text-sm font-medium text-gray-800">Hall Name</label>
+            <input type="text" name="name" placeholder="Hall Name" value={formData.name} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" required />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-800">Description</label>
+            <textarea name="description" placeholder="Description" value={formData.description} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" rows={3} />
+          </div>
           <div className="grid grid-cols-2 gap-4">
-            <input type="number" name="capacity" placeholder="Capacity" value={formData.capacity} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" required />
-            <input type="text" name="location" placeholder="Location" value={formData.location} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" required />
-            <input type="time" name="openingHour" placeholder="Opening Hour" value={formData.openingHour} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" />
-            <input type="time" name="closingHour" placeholder="Closing Hour" value={formData.closingHour} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" />
-            <input type="number" name="carParkCapacity" placeholder="Car Park Capacity" value={formData.carParkCapacity} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" />
-            <input type="text" name="hallSize" placeholder="Hall Size (e.g., 100 sqm)" value={formData.hallSize} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" />
+            <div>
+              <label className="block text-sm font-medium text-gray-800">Capacity</label>
+              <input type="number" name="capacity" placeholder="Capacity" value={formData.capacity} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" required />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-800">Location</label>
+              <input type="text" name="location" placeholder="Location" value={formData.location} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" required />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-800">Opening Hour</label>
+              <input type="time" name="openingHour" placeholder="Opening Hour" value={formData.openingHour} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-800">Closing Hour</label>
+              <input type="time" name="closingHour" placeholder="Closing Hour" value={formData.closingHour} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-800">Car Park Capacity</label>
+              <input type="number" name="carParkCapacity" placeholder="Car Park Capacity" value={formData.carParkCapacity} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-800">Hall Size</label>
+              <input type="text" name="hallSize" placeholder="Hall Size (e.g., 100 sqm)" value={formData.hallSize} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" />
+            </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-800">Pricing (JSON)</label>

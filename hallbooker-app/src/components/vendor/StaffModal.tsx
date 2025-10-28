@@ -87,10 +87,22 @@ const StaffModal: React.FC<StaffModalProps> = ({ isOpen, onClose, onSubmit, staf
       <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
         <h2 className="text-2xl font-bold mb-6 text-gray-800">{staff ? 'Edit Staff Member' : 'Add New Staff Member'}</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <input type="text" name="fullName" placeholder="Full Name" value={formData.fullName} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" required />
-          <input type="email" name="email" placeholder="Email Address" value={formData.email} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" required />
-          <input type="tel" name="phone" placeholder="Phone Number" value={formData.phone} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" required />
-          <input type="password" name="password" placeholder={staff ? 'New Password (leave blank to keep current)' : 'Password'} value={formData.password} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" />
+          <div>
+            <label className="block text-sm font-medium text-gray-800">Full Name</label>
+            <input type="text" name="fullName" placeholder="Full Name" value={formData.fullName} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" required />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-800">Email Address</label>
+            <input type="email" name="email" placeholder="Email Address" value={formData.email} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" required />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-800">Phone Number</label>
+            <input type="tel" name="phone" placeholder="Phone Number" value={formData.phone} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" required />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-800">Password</label>
+            <input type="password" name="password" placeholder={staff ? 'New Password (leave blank to keep current)' : 'Password'} value={formData.password} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" />
+          </div>
           <div>
             <label htmlFor="hallIds" className="block text-sm font-medium text-gray-800">Assign Halls</label>
             <select
