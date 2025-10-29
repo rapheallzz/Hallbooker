@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import api from "@/services/api";
 
 interface AnalyticsData {
-  totalRevenue: number;
+  totalRevenue?: number;
   totalBookings: number;
   totalHalls: number;
 }
@@ -42,10 +42,12 @@ const DashboardPage = () => {
           <h2 className="text-sm font-semibold text-gray-500 mb-2">Total Bookings</h2>
           <p className="text-3xl font-bold text-gray-800">{analytics?.totalBookings}</p>
         </div>
-        <div className="bg-white p-4 shadow-lg rounded-lg">
-          <h2 className="text-sm font-semibold text-gray-500 mb-2">Revenue</h2>
-          <p className="text-3xl font-bold text-gray-800">${analytics?.totalRevenue}</p>
-        </div>
+        {analytics?.totalRevenue !== undefined && (
+          <div className="bg-white p-4 shadow-lg rounded-lg">
+            <h2 className="text-sm font-semibold text-gray-500 mb-2">Revenue</h2>
+            <p className="text-3xl font-bold text-gray-800">${analytics.totalRevenue}</p>
+          </div>
+        )}
       </div>
     </div>
   );
