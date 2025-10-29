@@ -29,7 +29,7 @@ const Header = () => {
     }
   };
 
-  const dashboardUrl = user?.role === 'venue-owner' ? '/vendor/dashboard' : '/bookings';
+  const dashboardUrl = user?.role === 'hall-owner' ? '/vendor/dashboard' : '/bookings';
 
   return (
     <header
@@ -57,7 +57,7 @@ const Header = () => {
 
           <div className="flex items-center space-x-4">
             {user ? (
-              user.role !== 'venue-owner' && (
+              user.role !== 'hall-owner' && (
                 <button
                   onClick={handleApply}
                   disabled={loading}

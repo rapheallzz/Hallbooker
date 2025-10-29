@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import type { ComponentType } from 'react';
 
-type Role = 'user' | 'venue-owner' | 'super-admin' | 'staff';
+type Role = 'user' | 'hall-owner' | 'super-admin' | 'staff';
 
 const withAuth = <P extends object>(
   WrappedComponent: ComponentType<P>,
@@ -23,7 +23,7 @@ const withAuth = <P extends object>(
           // Redirect to a relevant page based on role if they try to access a forbidden page
           if (user.role === 'super-admin') {
             router.replace('/admin/dashboard');
-          } else if (user.role === 'venue-owner' || user.role === 'staff') {
+          } else if (user.role === 'hall-owner' || user.role === 'staff') {
             router.replace('/vendor/dashboard');
           } else {
             router.replace('/');

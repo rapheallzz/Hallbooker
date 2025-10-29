@@ -21,4 +21,4 @@ const VendorLayout = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-export default withAuth(VendorLayout, ["venue-owner", "staff"]);
+export default withAuth(VendorLayout, ["hall-owner", "staff"]);
