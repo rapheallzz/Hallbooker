@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { X } from 'lucide-react';
 import MediaUpload from './MediaUpload';
 import api from '@/services/api';
 
@@ -230,7 +231,10 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
 
   return (
     <div className="fixed inset-0 z-50 flex justify-center items-center">
-      <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative">
+        <button onClick={onClose} className="absolute top-4 right-4 text-gray-500 hover:text-gray-800">
+          <X size={24} />
+        </button>
         <div className="mb-6">
           <h2 className="text-2xl font-bold text-gray-800">{hall ? 'Edit Hall' : 'Create a New Hall'}</h2>
           {!hall && (
