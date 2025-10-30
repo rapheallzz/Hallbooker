@@ -194,18 +194,25 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
     if (currentStep === 1) {
       handleNext();
     } else if (currentStep === 2) {
-      const { pricePerHour, pricePerDay, ...rest } = formData;
-      const pricing = {
-        perHour: Number(pricePerHour),
-        perDay: Number(pricePerDay),
-      };
       const rulesArray = formData.rules.split('\n').filter(rule => rule.trim() !== '');
       const payload = {
-        ...rest,
-        pricing,
-        rules: rulesArray,
+        name: formData.name,
+        country: formData.country,
+        state: formData.state,
+        localGovernment: formData.localGovernment,
+        description: formData.description,
         capacity: Number(formData.capacity),
+        openingHour: formData.openingHour,
+        closingHour: formData.closingHour,
+        location: formData.location,
+        pricing: {
+          perHour: Number(formData.pricePerHour),
+          perDay: Number(formData.pricePerDay),
+        },
+        facilities: formData.facilities,
         carParkCapacity: Number(formData.carParkCapacity),
+        hallSize: formData.hallSize,
+        rules: rulesArray,
       };
       try {
         const response = await api.post('/halls', payload);
