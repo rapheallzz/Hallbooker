@@ -192,26 +192,27 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
 
     // Otherwise, handle the multi-step creation
     if (currentStep === 1) {
-      const { name, country, state, localGovernment, description, capacity, openingHour, closingHour, location } = formData;
-      try {
-        const response = await api.post('/halls', { name, country, state, localGovernment, description, capacity: Number(capacity), openingHour, closingHour, location });
-        setHallId(response.data.data._id);
-        handleNext();
-      } catch (error) {
-        console.error('Failed to create hall:', error);
-      }
+      handleNext();
     } else if (currentStep === 2) {
-      const { pricePerHour, pricePerDay, facilities, carParkCapacity, hallSize, rules } = formData;
+      const { pricePerHour, pricePerDay, ...rest } = formData;
       const pricing = {
         perHour: Number(pricePerHour),
         perDay: Number(pricePerDay),
       };
-      const rulesArray = rules.split('\n').filter(rule => rule.trim() !== '');
+      const rulesArray = formData.rules.split('\n').filter(rule => rule.trim() !== '');
+      const payload = {
+        ...rest,
+        pricing,
+        rules: rulesArray,
+        capacity: Number(formData.capacity),
+        carParkCapacity: Number(formData.carParkCapacity),
+      };
       try {
-        await api.put(`/halls/${hallId}`, { pricing, facilities, carParkCapacity: Number(carParkCapacity), hallSize, rules: rulesArray });
+        const response = await api.post('/halls', payload);
+        setHallId(response.data.data._id);
         handleNext();
       } catch (error) {
-        console.error('Failed to update hall:', error);
+        console.error('Failed to create hall:', error);
       }
     } else {
       onClose(); // Just close the modal on the final step
