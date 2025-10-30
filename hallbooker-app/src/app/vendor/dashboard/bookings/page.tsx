@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import api from "@/services/api";
+import BookingModal from "@/components/vendor/BookingModal";
 
 interface Booking {
   id: string;
@@ -15,6 +16,7 @@ const BookingsPage = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const fetchBookings = async () => {
     try {
@@ -51,9 +53,36 @@ const BookingsPage = () => {
 
   if (error) return <p className="text-red-600">{error}</p>;
 
+  const handleCreateBooking = async (formData: any, type: string) => {
+    try {
+      let endpoint = '';
+      if (type === 'standard') {
+        endpoint = '/bookings';
+      } else if (type === 'recurring') {
+        endpoint = '/bookings/recurring';
+      } else if (type === 'walk-in') {
+        endpoint = '/bookings/walk-in';
+      }
+      await api.post(endpoint, formData);
+      fetchBookings();
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error('Failed to create booking:', error);
+      setError('Failed to create the booking.');
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-4 text-primary">Bookings</h1>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-3xl font-bold text-primary">Bookings</h1>
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark"
+        >
+          Create Booking
+        </button>
+      </div>
       <div className="bg-white p-4 shadow-lg rounded-lg">
         <table className="min-w-full">
           <thead>
@@ -117,6 +146,11 @@ const BookingsPage = () => {
           </tbody>
         </table>
       </div>
+      <BookingModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleCreateBooking}
+      />
     </div>
   );
 };
