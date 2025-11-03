@@ -37,8 +37,8 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
     openingHour: '09:00',
     closingHour: '23:00',
     location: '',
-    pricePerHour: 0,
-    pricePerDay: 0,
+    hourlyRate: 0,
+    dailyRate: 0,
     facilities: [] as Facility[],
     carParkCapacity: 0,
     hallSize: '',
@@ -96,8 +96,8 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
         openingHour: hall.openingHour || '09:00',
         closingHour: hall.closingHour || '23:00',
         location: hall.location || '',
-        pricePerHour: hall.pricing?.perHour || 0,
-        pricePerDay: hall.pricing?.perDay || 0,
+        hourlyRate: hall.pricing?.hourlyRate || hall.pricing?.perHour || 0,
+        dailyRate: hall.pricing?.dailyRate || hall.pricing?.perDay || 0,
         facilities: hall.facilities || [],
         carParkCapacity: hall.carParkCapacity || 0,
         hallSize: hall.hallSize || '',
@@ -115,8 +115,8 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
         openingHour: '09:00',
         closingHour: '23:00',
         location: '',
-        pricePerHour: 0,
-        pricePerDay: 0,
+        hourlyRate: 0,
+        dailyRate: 0,
         facilities: [],
         carParkCapacity: 0,
         hallSize: '',
@@ -175,10 +175,10 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
 
     if (hall) {
       // If we are editing, just submit the whole form at once
-      const { pricePerHour, pricePerDay, ...rest } = formData;
+      const { hourlyRate, dailyRate, ...rest } = formData;
       const pricing = {
-        perHour: Number(pricePerHour),
-        perDay: Number(pricePerDay),
+        hourlyRate: Number(hourlyRate),
+        dailyRate: Number(dailyRate),
       };
       const rulesArray = formData.rules.split('\n').filter(rule => rule.trim() !== '');
       onSubmit({
@@ -207,8 +207,8 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
         closingHour: formData.closingHour,
         location: formData.location,
         pricing: {
-          perHour: Number(formData.pricePerHour),
-          perDay: Number(formData.pricePerDay),
+          hourlyRate: Number(formData.hourlyRate),
+          dailyRate: Number(formData.dailyRate),
         },
         facilities: formData.facilities,
         carParkCapacity: Number(formData.carParkCapacity),
@@ -312,14 +312,14 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
                   <label className="block text-sm font-medium text-gray-800">Price Per Hour</label>
                   <div className="relative">
                     <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">₦</span>
-                    <input type="number" name="pricePerHour" placeholder="Price Per Hour" value={formData.pricePerHour} onChange={handleChange} className="w-full pl-7 pr-4 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" />
+                    <input type="number" name="hourlyRate" placeholder="Price Per Hour" value={formData.hourlyRate} onChange={handleChange} className="w-full pl-7 pr-4 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" />
                   </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-800">Price Per Day</label>
                   <div className="relative">
                     <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">₦</span>
-                    <input type="number" name="pricePerDay" placeholder="Price Per Day" value={formData.pricePerDay} onChange={handleChange} className="w-full pl-7 pr-4 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" />
+                    <input type="number" name="dailyRate" placeholder="Price Per Day" value={formData.dailyRate} onChange={handleChange} className="w-full pl-7 pr-4 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" />
                   </div>
                 </div>
                 <div>
@@ -433,14 +433,14 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
                       <label className="block text-sm font-medium text-gray-800">Price Per Hour</label>
                       <div className="relative">
                         <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">₦</span>
-                        <input type="number" name="pricePerHour" placeholder="Price Per Hour" value={formData.pricePerHour} onChange={handleChange} className="w-full pl-7 pr-4 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" />
+                        <input type="number" name="hourlyRate" placeholder="Price Per Hour" value={formData.hourlyRate} onChange={handleChange} className="w-full pl-7 pr-4 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" />
                       </div>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-800">Price Per Day</label>
                       <div className="relative">
                         <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">₦</span>
-                        <input type="number" name="pricePerDay" placeholder="Price Per Day" value={formData.pricePerDay} onChange={handleChange} className="w-full pl-7 pr-4 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" />
+                        <input type="number" name="dailyRate" placeholder="Price Per Day" value={formData.dailyRate} onChange={handleChange} className="w-full pl-7 pr-4 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" />
                       </div>
                     </div>
                     <div>

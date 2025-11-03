@@ -29,14 +29,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
+    if (storedToken) {
+      const validateToken = async () => {
+        try {
+          api.defaults.headers.Authorization = `Bearer ${storedToken}`;
+          const response = await api.get('/auth/me');
+          const userData = response.data.data || response.data;
 
-    if (storedToken && storedUser) {
-      const parsedUser = JSON.parse(storedUser) as User;
-      setToken(storedToken);
-      setUser(parsedUser);
+          if (userData && !userData.fullName && userData.firstName && userData.lastName) {
+              userData.fullName = `${userData.firstName} ${userData.lastName}`;
+          }
+
+          setUser(userData);
+          setToken(storedToken);
+          localStorage.setItem('user', JSON.stringify(userData));
+        } catch (error) {
+          console.error("Token validation failed", error);
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          setUser(null);
+          setToken(null);
+        } finally {
+          setLoading(false);
+        }
+      };
+      validateToken();
+    } else {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
   const login = (newToken: string, newUser: User) => {

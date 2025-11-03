@@ -7,12 +7,23 @@ const api = axios.create({
   },
 });
 
+// Set the token from localStorage if it exists
+if (typeof window !== 'undefined') {
+  const token = localStorage.getItem('token');
+  if (token) {
+    api.defaults.headers.Authorization = `Bearer ${token}`;
+  }
+}
+
 api.interceptors.request.use(
   (config) => {
+    // Re-verify the token from localStorage on each request to ensure it's up-to-date
     if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('token');
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+      const currentToken = localStorage.getItem('token');
+      if (currentToken && config.headers.Authorization !== `Bearer ${currentToken}`) {
+        config.headers.Authorization = `Bearer ${currentToken}`;
+      } else if (!currentToken) {
+        delete config.headers.Authorization;
       }
     }
     return config;
