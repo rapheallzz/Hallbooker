@@ -108,19 +108,19 @@ const BookingsPage = () => {
           <tbody>
             {bookings.map((booking) => (
               <tr key={booking.id}>
-                <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500">
+                <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">
                   {booking.bookingId}
                 </td>
-                <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500">
+                <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">
                   {booking.hallName}
                 </td>
-                <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500">
+                <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">
                   {booking.customerName}
                 </td>
-                <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500">
+                <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">
                   {booking.bookingDate}
                 </td>
-                <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500">
+                <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">
                   <span
                     className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                       booking.status === "confirmed"
@@ -131,7 +131,7 @@ const BookingsPage = () => {
                     {booking.status}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-no-wrap text-right border-b border-gray-500">
+                <td className="px-6 py-4 whitespace-no-wrap text-right border-b border-gray-500 text-gray-900">
                    {booking.status.toLowerCase() !== 'cancelled' && (
                     <button
                       onClick={() => handleCancel(booking.id)}

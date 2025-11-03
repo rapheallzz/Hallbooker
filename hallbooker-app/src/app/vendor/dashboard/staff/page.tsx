@@ -103,9 +103,9 @@ const StaffPage = () => {
               {staff.length > 0 ? (
                 staff.map((member) => (
                   <tr key={member.id}>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500">{member.fullName}</td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500">{member.email}</td>
-                    <td className="px-6 py-4 whitespace-no-wrap text-right border-b border-gray-500">
+                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">{member.fullName}</td>
+                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">{member.email}</td>
+                    <td className="px-6 py-4 whitespace-no-wrap text-right border-b border-gray-500 text-gray-900">
                       <button
                         onClick={() => handleOpenEditModal(member)}
                         className="px-5 py-2 border-primary border text-primary rounded transition duration-300 hover:bg-primary hover:text-white focus:outline-none"

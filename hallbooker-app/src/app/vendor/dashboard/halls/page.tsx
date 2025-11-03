@@ -133,15 +133,15 @@ const HallsPage = () => {
               {halls.length > 0 ? (
                 halls.map((hall) => (
                   <tr key={hall.id}>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500">{hall.name}</td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500">{hall.location}</td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500">{hall.capacity}</td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500">
+                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">{hall.name}</td>
+                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">{hall.location}</td>
+                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">{hall.capacity}</td>
+                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${hall.isOnline ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
                         {hall.isOnline ? "Online" : "Offline"}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-no-wrap text-right border-b border-gray-500">
+                    <td className="px-6 py-4 whitespace-no-wrap text-right border-b border-gray-500 text-gray-900">
                       <button onClick={() => openEditModal(hall)} className="px-5 py-2 border-primary border text-primary rounded transition duration-300 hover:bg-primary hover:text-white focus:outline-none">Edit</button>
                       <button onClick={() => openReservationModal(hall.id)} className="ml-2 px-5 py-2 border-yellow-500 border text-yellow-500 rounded transition duration-300 hover:bg-yellow-500 hover:text-white focus:outline-none">Block Dates</button>
                       <button onClick={() => handleDelete(hall.id)} className="ml-2 px-5 py-2 border-red-500 border text-red-500 rounded transition duration-300 hover:bg-red-500 hover:text-white focus:outline-none">Delete</button>
