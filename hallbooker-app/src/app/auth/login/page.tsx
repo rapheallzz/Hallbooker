@@ -35,9 +35,9 @@ const LoginPage = () => {
       login(accessToken, user);
 
       // Redirect based on role
-      if (user.role === 'super-admin') {
+      if (user.role.includes('super-admin')) {
         router.push('/admin/dashboard');
-      } else if (user.role === 'hall-owner' || user.role === 'staff') {
+      } else if (user.role.includes('hall-owner') || user.role.includes('staff')) {
         router.push('/vendor/dashboard');
       } else {
         router.push('/');

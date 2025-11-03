@@ -19,11 +19,11 @@ const withAuth = <P extends object>(
       if (!loading) {
         if (!user) {
           router.replace('/auth/login');
-        } else if (!allowedRoles.includes(user.role)) {
+        } else if (!user.role.some(role => allowedRoles.includes(role))) {
           // Redirect to a relevant page based on role if they try to access a forbidden page
-          if (user.role === 'super-admin') {
+          if (user.role.includes('super-admin')) {
             router.replace('/admin/dashboard');
-          } else if (user.role === 'hall-owner' || user.role === 'staff') {
+          } else if (user.role.includes('hall-owner') || user.role.includes('staff')) {
             router.replace('/vendor/dashboard');
           } else {
             router.replace('/');
@@ -32,7 +32,7 @@ const withAuth = <P extends object>(
       }
     }, [user, loading, router]);
 
-    if (loading || !user || !allowedRoles.includes(user.role)) {
+    if (loading || !user || !user.role.some(role => allowedRoles.includes(role))) {
       return (
         <div className="flex items-center justify-center min-h-screen">
           <p>Loading...</p>
