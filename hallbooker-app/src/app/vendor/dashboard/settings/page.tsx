@@ -181,10 +181,10 @@ const SettingsPage = () => {
                 {currentSubscription ? (
                   <>
                     <h3 className="text-xl font-bold text-primary">{currentSubscription.tier.name}</h3>
-                    <p>Status: <span className="font-semibold text-green-600">{currentSubscription.status}</span></p>
-                    <p>Purchased on: {new Date(currentSubscription.purchaseDate).toLocaleDateString()}</p>
+                    <p className="text-gray-800">Status: <span className="font-semibold text-green-600">{currentSubscription.status}</span></p>
+                    <p className="text-gray-800">Purchased on: {new Date(currentSubscription.purchaseDate).toLocaleDateString()}</p>
                   </>
-                ) : <p>No active subscription found.</p>}
+                ) : <p className="text-gray-800">No active subscription found.</p>}
               </div>
             </div>
 
