@@ -1,17 +1,25 @@
 "use client";
-import React, { useState, useRef, useEffect } from "react";
-import { Search, Bell, User as UserIcon, Plus, ChevronDown } from "lucide-react";
+import React, { useState, useRef } from "react";
+import { Search, User as UserIcon, Plus, ChevronDown } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useUI } from "@/context/UIContext";
 import useOnClickOutside from "@/hooks/useOnClickOutside";
+import NotificationIcon from "../notifications/NotificationIcon";
+import NotificationDropdown from "../notifications/NotificationDropdown";
 
 const VendorHeader = () => {
   const { user } = useAuth();
   const { openHallModal, openStaffModal } = useUI();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [notificationDropdownOpen, setNotificationDropdownOpen] =
+    useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const notificationDropdownRef = useRef<HTMLDivElement>(null);
   useOnClickOutside(dropdownRef, () => setIsDropdownOpen(false));
+  useOnClickOutside(notificationDropdownRef, () =>
+    setNotificationDropdownOpen(false)
+  );
 
   return (
     <header className="bg-white shadow-sm p-4 flex items-center justify-between">
@@ -70,10 +78,21 @@ const VendorHeader = () => {
             </div>
           )}
         </div>
-        <button className="text-gray-500 relative">
-          <Bell size={24} />
-          <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"></span>
-        </button>
+        <div
+          className="relative"
+          ref={notificationDropdownRef}
+        >
+          <button
+            onClick={() =>
+              setNotificationDropdownOpen(!notificationDropdownOpen)
+            }
+            className="text-gray-500 relative"
+            data-testid="notification-button"
+          >
+            <NotificationIcon />
+          </button>
+          {notificationDropdownOpen && <NotificationDropdown />}
+        </div>
         <div className="flex items-center space-x-2">
           <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
             <UserIcon size={24} className="text-gray-600" />

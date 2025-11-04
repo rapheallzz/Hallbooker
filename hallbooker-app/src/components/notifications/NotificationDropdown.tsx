@@ -63,7 +63,7 @@ const NotificationDropdown = () => {
   };
 
   return (
-    <div className="absolute right-0 w-80 mt-2 origin-top-right bg-white rounded-md shadow-lg z-50">
+    <div className="absolute right-0 w-80 mt-2 origin-top-right bg-white rounded-md shadow-lg z-50" data-testid="notification-dropdown">
       <div className="p-4 border-b">
         <h3 className="text-lg font-semibold">Notifications</h3>
         <button onClick={handleMarkAllAsRead} className="text-sm text-primary hover:underline">
