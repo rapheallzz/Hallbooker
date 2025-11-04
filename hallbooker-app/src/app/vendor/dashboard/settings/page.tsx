@@ -25,23 +25,25 @@ interface SubscriptionTier {
 interface CurrentSubscription {
   tier: Tier;
   status: string;
-  renewalDate: string;
+  purchaseDate: string;
+  price: number;
 }
 
 interface SubscriptionHistoryItem {
-  id: number;
-  tier: string;
-  date: string;
-  amount: string;
+  _id: string;
+  tier: Tier;
+  purchaseDate: string;
+  price: number;
   status: string;
 }
 
 // Hardcoded tiers as API for all tiers is not specified
 const subscriptionTiersData: SubscriptionTier[] = [
-  { tier: "Basic", price: "$99/mo", features: ["5 Hall Listings", "Basic Analytics", "Email Support"] },
-  { tier: "Pro", price: "$199/mo", features: ["Unlimited Hall Listings", "Advanced Analytics", "Priority Support", "Featured Listings"] },
-  { tier: "Enterprise", price: "$399/mo", features: ["Everything in Pro", "Dedicated Account Manager", "Custom Integrations"] },
+  { tier: "Basic Package", price: "50,000", features: ["Up to 2 halls", "Basic Analytics", "Email Support"] },
+  { tier: "Standard Package", price: "100,000", features: ["Up to 5 halls", "Standard Analytics", "Priority Support"] },
+  { tier: "Premium Package", price: "200,000", features: ["Up to 10 halls", "Advanced Analytics", "24/7 Support", "Featured Listings"] },
 ];
+
 
 const SettingsPage = () => {
   const [activeTab, setActiveTab] = useState("account");
@@ -69,7 +71,7 @@ const SettingsPage = () => {
       ]);
       setCurrentSubscription(subRes.data.data);
       setSubscriptionHistory(historyRes.data.data);
-      setRecommendedTier(recommendRes.data.data.tier.name); // Correctly access the name property
+      setRecommendedTier(recommendRes.data.data.recommendedTier.name);
     } catch (error) {
       console.error("Error fetching license data:", error);
       setLicenseError("Failed to load subscription details. Please try again later.");
@@ -180,7 +182,7 @@ const SettingsPage = () => {
                   <>
                     <h3 className="text-xl font-bold text-primary">{currentSubscription.tier.name}</h3>
                     <p>Status: <span className="font-semibold text-green-600">{currentSubscription.status}</span></p>
-                    <p>Renews on: {currentSubscription.renewalDate}</p>
+                    <p>Purchased on: {new Date(currentSubscription.purchaseDate).toLocaleDateString()}</p>
                   </>
                 ) : <p>No active subscription found.</p>}
               </div>
@@ -200,10 +202,10 @@ const SettingsPage = () => {
                   </thead>
                   <tbody>
                     {subscriptionHistory.length > 0 ? subscriptionHistory.map((item) => (
-                      <tr key={item.id}>
-                        <td className="px-6 py-4 border-b text-gray-900">{item.date}</td>
-                        <td className="px-6 py-4 border-b text-gray-900">{item.tier}</td>
-                        <td className="px-6 py-4 border-b text-gray-900">{item.amount}</td>
+                      <tr key={item._id}>
+                        <td className="px-6 py-4 border-b text-gray-900">{new Date(item.purchaseDate).toLocaleDateString()}</td>
+                        <td className="px-6 py-4 border-b text-gray-900">{item.tier.name}</td>
+                        <td className="px-6 py-4 border-b text-gray-900">{item.price}</td>
                         <td className="px-6 py-4 border-b text-gray-900">{item.status}</td>
                       </tr>
                     )) : <tr><td colSpan={4} className="text-center py-10">No history found.</td></tr>}
