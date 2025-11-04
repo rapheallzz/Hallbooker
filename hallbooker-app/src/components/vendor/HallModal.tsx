@@ -247,18 +247,18 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
           <h2 className="text-2xl font-bold text-gray-800">{hall ? 'Edit Hall' : 'Create a New Hall'}</h2>
           {!hall && (
             <div className="flex items-center mt-2">
-              <div className={`flex items-center ${currentStep >= 1 ? 'text-primary' : 'text-gray-500'}`}>
-                <div className={`w-6 h-6 rounded-full border-2 ${currentStep >= 1 ? 'border-primary' : 'border-gray-500'} flex items-center justify-center`}>1</div>
+              <div className={`flex items-center ${currentStep >= 1 ? 'text-primary' : 'text-gray-700'}`}>
+                <div className={`w-6 h-6 rounded-full border-2 ${currentStep >= 1 ? 'border-primary' : 'border-gray-400'} flex items-center justify-center`}>1</div>
                 <span className="ml-2">Basic Info</span>
               </div>
               <div className="flex-1 h-px bg-gray-300 mx-4"></div>
-              <div className={`flex items-center ${currentStep >= 2 ? 'text-primary' : 'text-gray-500'}`}>
-                <div className={`w-6 h-6 rounded-full border-2 ${currentStep >= 2 ? 'border-primary' : 'border-gray-500'} flex items-center justify-center`}>2</div>
+              <div className={`flex items-center ${currentStep >= 2 ? 'text-primary' : 'text-gray-700'}`}>
+                <div className={`w-6 h-6 rounded-full border-2 ${currentStep >= 2 ? 'border-primary' : 'border-gray-400'} flex items-center justify-center`}>2</div>
                 <span className="ml-2">Details & Pricing</span>
               </div>
               <div className="flex-1 h-px bg-gray-300 mx-4"></div>
-              <div className={`flex items-center ${currentStep === 3 ? 'text-primary' : 'text-gray-500'}`}>
-                <div className={`w-6 h-6 rounded-full border-2 ${currentStep === 3 ? 'border-primary' : 'border-gray-500'} flex items-center justify-center`}>3</div>
+              <div className={`flex items-center ${currentStep === 3 ? 'text-primary' : 'text-gray-700'}`}>
+                <div className={`w-6 h-6 rounded-full border-2 ${currentStep === 3 ? 'border-primary' : 'border-gray-400'} flex items-center justify-center`}>3</div>
                 <span className="ml-2">Media</span>
               </div>
             </div>
