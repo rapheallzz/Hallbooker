@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import HallCard from '@/components/HallCard';
+import Carousel from '@/components/Carousel';
 import SkeletonCard from '@/components/SkeletonCard';
 import SearchBar from '@/components/SearchBar';
 import api from '@/services/api';
@@ -101,15 +101,19 @@ const HomePage = () => {
               <h2 className="text-2xl font-bold text-gray-900 mb-6">
                 {searchPerformed && filteredHalls.length > 0 ? 'Search Results' : 'Popular Halls'}
               </h2>
-              <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-                {filteredHalls.length > 0 ? (
-                    filteredHalls.map((hall) => (
-                        <HallCard key={hall.id} hall={hall} />
-                    ))
-                ) : (
-                    <p className="text-gray-600">No halls found matching your criteria.</p>
-                )}
-              </div>
+              {filteredHalls.length > 0 ? (
+                <Carousel halls={filteredHalls} />
+              ) : (
+                <p className="text-gray-600">No halls found matching your criteria.</p>
+              )}
+            </section>
+            <section className="mt-12">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Featured Locations</h2>
+              <Carousel halls={allHalls.slice(0, 5)} />
+            </section>
+            <section className="mt-12">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Newly Added</h2>
+              <Carousel halls={allHalls.slice(6, 11)} />
             </section>
           </div>
         )}
