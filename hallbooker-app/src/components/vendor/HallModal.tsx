@@ -88,6 +88,14 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
   }, [formData.state]);
 
   useEffect(() => {
+    // This effect handles the transition from step 2 to 3 after a hall is created.
+    // It waits for hallId to be set before moving to the next step to avoid race conditions.
+    if (hallId && !hall && currentStep === 2) {
+      setCurrentStep(3);
+    }
+  }, [hallId, hall, currentStep]);
+
+  useEffect(() => {
     if (hall) {
       setFormData({
         name: hall.name || '',
@@ -218,7 +226,7 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
       try {
         const response = await api.post('/halls', payload);
         setHallId(response.data.data._id);
-        handleNext();
+        // handleNext() is removed from here. The useEffect will handle the step change.
       } catch (error) {
         console.error('Failed to create hall:', error);
       }
