@@ -10,6 +10,7 @@ import {
   Users,
   Settings,
   LogOut,
+  CreditCard,
 } from "lucide-react";
 
 const Sidebar = () => {
@@ -40,6 +41,11 @@ const Sidebar = () => {
       href: "/vendor/dashboard/staff",
       label: "Staff",
       icon: <Users size={24} />,
+    },
+    {
+      href: "/vendor/dashboard/licenses",
+      label: "Licenses",
+      icon: <CreditCard size={24} />,
     },
     {
       href: "/vendor/dashboard/settings",
