@@ -19,11 +19,11 @@ const withAuth = <P extends object>(
       if (!loading) {
         if (!user) {
           router.replace('/auth/login');
-        } else if (!user.role.some(role => allowedRoles.includes(role))) {
+        } else if (!user.role || !user.role.some(role => allowedRoles.includes(role))) {
           // Redirect to a relevant page based on role if they try to access a forbidden page
-          if (user.role.includes('super-admin')) {
+          if (user.role && user.role.includes('super-admin')) {
             router.replace('/admin/dashboard');
-          } else if (user.role.includes('hall-owner') || user.role.includes('staff')) {
+          } else if (user.role && (user.role.includes('hall-owner') || user.role.includes('staff'))) {
             router.replace('/vendor/dashboard');
           } else {
             router.replace('/');
@@ -32,7 +32,8 @@ const withAuth = <P extends object>(
       }
     }, [user, loading, router]);
 
-    if (loading || !user || !user.role.some(role => allowedRoles.includes(role))) {
+    // Render a loading state while checking auth and permissions
+    if (loading || !user) {
       return (
         <div className="flex items-center justify-center min-h-screen">
           <p>Loading...</p>
@@ -40,6 +41,17 @@ const withAuth = <P extends object>(
       );
     }
 
+    // Once loaded, if user doesn't have the right role, they will be redirected by the useEffect.
+    // We can show a loading state or nothing while the redirect happens.
+    if (!user.role || !user.role.some(role => allowedRoles.includes(role))) {
+      return (
+        <div className="flex items-center justify-center min-h-screen">
+          <p>Redirecting...</p>
+        </div>
+      );
+    }
+
+    // If everything is fine, render the component.
     return <WrappedComponent {...props} />;
   };
 
