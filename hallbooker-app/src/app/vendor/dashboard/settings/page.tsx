@@ -11,6 +11,11 @@ interface BankAccount {
   accountName: string;
 }
 
+interface Tier {
+  _id: string;
+  name: string;
+}
+
 interface SubscriptionTier {
   tier: string;
   price: string;
@@ -18,7 +23,7 @@ interface SubscriptionTier {
 }
 
 interface CurrentSubscription {
-  tier: string;
+  tier: Tier;
   status: string;
   renewalDate: string;
 }
@@ -64,7 +69,7 @@ const SettingsPage = () => {
       ]);
       setCurrentSubscription(subRes.data.data);
       setSubscriptionHistory(historyRes.data.data);
-      setRecommendedTier(recommendRes.data.data.tier);
+      setRecommendedTier(recommendRes.data.data.tier.name); // Correctly access the name property
     } catch (error) {
       console.error("Error fetching license data:", error);
       setLicenseError("Failed to load subscription details. Please try again later.");
@@ -163,7 +168,7 @@ const SettingsPage = () => {
               <h2 className="text-2xl font-semibold text-gray-800 mb-6">Upgrade or Purchase a Subscription</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {subscriptionTiersData.map((tier) => (
-                  <SubscriptionCard key={tier.tier} tier={tier.tier} price={tier.price} features={tier.features} isCurrent={currentSubscription?.tier === tier.tier} isRecommended={tier.tier === recommendedTier} onSelect={() => handleSelectPlan(tier.tier)} />
+                  <SubscriptionCard key={tier.tier} tier={tier.tier} price={tier.price} features={tier.features} isCurrent={currentSubscription?.tier.name === tier.tier} isRecommended={tier.tier === recommendedTier} onSelect={() => handleSelectPlan(tier.tier)} />
                 ))}
               </div>
             </div>
@@ -173,7 +178,7 @@ const SettingsPage = () => {
               <div className="bg-white p-6 shadow-lg rounded-lg">
                 {currentSubscription ? (
                   <>
-                    <h3 className="text-xl font-bold text-primary">{currentSubscription.tier}</h3>
+                    <h3 className="text-xl font-bold text-primary">{currentSubscription.tier.name}</h3>
                     <p>Status: <span className="font-semibold text-green-600">{currentSubscription.status}</span></p>
                     <p>Renews on: {currentSubscription.renewalDate}</p>
                   </>
