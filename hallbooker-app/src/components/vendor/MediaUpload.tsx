@@ -25,16 +25,16 @@ const MediaUpload: React.FC<MediaUploadProps> = ({ hallId, onUploadSuccess }) =>
     try {
       // 1. Get Cloudinary signature from our backend
       const sigResponse = await api.post('/halls/media/generate-signature');
-      const { signature, timestamp, api_key } = sigResponse.data.data;
+      const { signature, timestamp, cloudname, apikey } = sigResponse.data.data;
 
       const uploadPromises = files.map(async (file) => {
         const formData = new FormData();
         formData.append('file', file);
         formData.append('signature', signature);
         formData.append('timestamp', timestamp);
-        formData.append('api_key', api_key);
+        formData.append('api_key', apikey);
         // The upload URL for Cloudinary
-        const uploadUrl = `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`;
+        const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudname}/image/upload`;
 
         const response = await fetch(uploadUrl, { method: 'POST', body: formData });
         const data = await response.json();
