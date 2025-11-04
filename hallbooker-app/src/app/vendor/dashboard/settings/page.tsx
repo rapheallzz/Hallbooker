@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import api from "@/services/api";
 import SubscriptionCard from "@/components/vendor/SubscriptionCard";
+import axios from "axios";
 
 // Interfaces for our data structures
 interface BankAccount {
@@ -43,6 +44,7 @@ const SettingsPage = () => {
   // State for Bank Account
   const [bankAccount, setBankAccount] = useState<BankAccount>({ accountNumber: "", bankName: "", accountName: "" });
   const [bankLoading, setBankLoading] = useState(true);
+  const [bankError, setBankError] = useState<string | null>(null);
 
   // State for Licenses
   const [currentSubscription, setCurrentSubscription] = useState<CurrentSubscription | null>(null);
@@ -74,10 +76,16 @@ const SettingsPage = () => {
   useEffect(() => {
     const fetchBankData = async () => {
       setBankLoading(true);
+      setBankError(null);
       try {
         const response = await api.get("/users/bank-account");
         setBankAccount(response.data.data || { accountNumber: "", bankName: "", accountName: "" });
       } catch (error) {
+        if (axios.isAxiosError(error) && error.response?.status === 403) {
+          setBankError("You do not have permission to view or edit bank account details.");
+        } else {
+          setBankError("Failed to load bank account details. Please try again later.");
+        }
         console.error("Error fetching bank account:", error);
       } finally {
         setBankLoading(false);
@@ -136,12 +144,14 @@ const SettingsPage = () => {
           bankLoading ? <div>Loading...</div> :
           <div className="bg-white p-6 shadow-lg rounded-lg">
             <h2 className="text-2xl font-bold mb-4 text-gray-800">Bank Account Details</h2>
+            {bankError ? <div className="text-red-600 p-4 bg-red-100 rounded-md">{bankError}</div> :
             <form onSubmit={handleSubmit}>
               <div className="mb-4"><label className="block text-gray-700" htmlFor="accountName">Account Name</label><input id="accountName" name="accountName" type="text" value={bankAccount.accountName} onChange={handleInputChange} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700"/></div>
               <div className="mb-4"><label className="block text-gray-700" htmlFor="accountNumber">Account Number</label><input id="accountNumber" name="accountNumber" type="text" value={bankAccount.accountNumber} onChange={handleInputChange} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700"/></div>
               <div className="mb-4"><label className="block text-gray-700" htmlFor="bankName">Bank Name</label><input id="bankName" name="bankName" type="text" value={bankAccount.bankName} onChange={handleInputChange} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700"/></div>
               <button type="submit" className="bg-primary text-white px-4 py-2 rounded-lg">Save</button>
             </form>
+            }
           </div>
         )}
 
