@@ -59,9 +59,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         } catch (error) {
           console.error("Token validation failed", error);
           logout(); // Use logout function to clear state and redirect
+        } finally {
+          setLoading(false);
         }
+      } else {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     validateToken();
