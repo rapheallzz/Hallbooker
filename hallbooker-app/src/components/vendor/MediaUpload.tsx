@@ -45,9 +45,13 @@ const MediaUpload: React.FC<MediaUploadProps> = ({ hallId, onUploadSuccess }) =>
       const validUrls = uploadedUrls.filter(url => url).map(String);
 
       // 2. Send the URLs to our backend to associate with the hall
-      await api.post(`/halls/${hallId}/media`, { imageUrl: validUrls });
-
-      onUploadSuccess(validUrls);
+      if (validUrls.length > 0) {
+        // The backend expects a single URL string under the key 'images'
+        await api.post(`/halls/${hallId}/media`, { images: validUrls[0] });
+        onUploadSuccess([validUrls[0]]);
+      } else {
+        onUploadSuccess([]);
+      }
       setFiles([]);
     } catch (error) {
       console.error('Upload failed:', error);
