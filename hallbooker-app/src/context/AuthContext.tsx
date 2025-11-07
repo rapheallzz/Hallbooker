@@ -49,13 +49,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           const response = await api.get('/auth/me');
           const userData = response.data.data || response.data;
 
-          if (userData && !userData.fullName && userData.firstName && userData.lastName) {
-            userData.fullName = `${userData.firstName} ${userData.lastName}`;
+          // Validate the user data from the server/cache
+          if (userData && userData.id && userData.role && Array.isArray(userData.role)) {
+            if (!userData.fullName && userData.firstName && userData.lastName) {
+              userData.fullName = `${userData.firstName} ${userData.lastName}`;
+            }
+            setUser(userData);
+            setToken(storedToken);
+            localStorage.setItem('user', JSON.stringify(userData));
+          } else {
+            // If data is invalid, the session is corrupt. Log out.
+            console.error("Session validation returned invalid user data", userData);
+            logout();
           }
-
-          setUser(userData);
-          setToken(storedToken);
-          localStorage.setItem('user', JSON.stringify(userData));
         } catch (error) {
           console.error("Token validation failed", error);
           logout(); // Use logout function to clear state and redirect
