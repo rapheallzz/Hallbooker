@@ -37,7 +37,7 @@ const Header = () => {
     }
   };
 
-  const dashboardUrl = user && user.role && user.role.includes('hall-owner') ? '/vendor/dashboard' : '/bookings';
+  const dashboardUrl = user?.role?.includes('hall-owner') ? '/vendor/dashboard' : '/bookings';
 
   return (
     <header
@@ -100,9 +100,9 @@ const Header = () => {
                   {notificationDropdownOpen && <NotificationDropdown />}
                 </div>
                 <div className="flex items-center" ref={dropdownRef}>
-                  <div className="flex items-center justify-center w-10 h-10 bg-gray-200 rounded-full" title={user.fullName || user.email}>
+                  <div className="flex items-center justify-center w-10 h-10 bg-gray-200 rounded-full" title={user?.fullName || user?.email}>
                     <span className="text-lg font-semibold text-gray-600">
-                      {(user.fullName || user.email || "").charAt(0).toUpperCase()}
+                      {(user?.fullName || user?.email || "").charAt(0).toUpperCase()}
                     </span>
                   </div>
                   <div className="relative">

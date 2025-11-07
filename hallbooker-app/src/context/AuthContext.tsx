@@ -29,15 +29,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
-    if (storedToken) {
-      const validateToken = async () => {
+    const storedUser = localStorage.getItem('user');
+
+    if (storedToken && storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+        setToken(storedToken);
+        api.defaults.headers.Authorization = `Bearer ${storedToken}`;
+      } catch (error) {
+        console.error("Failed to parse user from localStorage", error);
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+      }
+    }
+
+    const validateToken = async () => {
+      if (storedToken) {
         try {
-          api.defaults.headers.Authorization = `Bearer ${storedToken}`;
           const response = await api.get('/auth/me');
           const userData = response.data.data || response.data;
 
           if (userData && !userData.fullName && userData.firstName && userData.lastName) {
-              userData.fullName = `${userData.firstName} ${userData.lastName}`;
+            userData.fullName = `${userData.firstName} ${userData.lastName}`;
           }
 
           setUser(userData);
@@ -45,18 +58,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           localStorage.setItem('user', JSON.stringify(userData));
         } catch (error) {
           console.error("Token validation failed", error);
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          setUser(null);
-          setToken(null);
-        } finally {
-          setLoading(false);
+          logout(); // Use logout function to clear state and redirect
         }
-      };
-      validateToken();
-    } else {
+      }
       setLoading(false);
-    }
+    };
+
+    validateToken();
   }, []);
 
   const login = (newToken: string, newUser: User) => {
