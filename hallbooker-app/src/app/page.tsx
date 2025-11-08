@@ -29,11 +29,8 @@ const HomePage = () => {
   useEffect(() => {
     const fetchHalls = async () => {
       try {
-        // const response = await api.get('/halls');
-        // const hallsData = response.data.data;
-        const response = await fetch('/halls.json');
-        const hallsData = await response.json();
-
+        const response = await api.get('/halls');
+        const hallsData = response.data.data;
 
         if (Array.isArray(hallsData)) {
           const formattedHalls = hallsData.map((hall: any) => ({

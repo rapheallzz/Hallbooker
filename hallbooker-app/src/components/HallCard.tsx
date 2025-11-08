@@ -16,8 +16,8 @@ interface HallCardProps {
 
 const HallCard = ({ hall }: HallCardProps) => {
   return (
-    <Link href={`/venues/${hall.id}`}>
-      <div data-testid="hall-card" className="block bg-white rounded-lg shadow-lg overflow-hidden transform hover:scale-105 transition-transform duration-300">
+    <Link href={`/venues/${hall.id}`} className="h-full">
+      <div data-testid="hall-card" className="h-full block bg-white rounded-lg shadow-lg overflow-hidden transform hover:scale-105 transition-transform duration-300">
         <img
           className="h-56 w-full object-cover"
           src={
@@ -28,8 +28,8 @@ const HallCard = ({ hall }: HallCardProps) => {
           alt={hall.name}
         />
         <div className="p-4">
-          <h3 className="text-lg font-semibold text-gray-900">{hall.name}</h3>
-          <p className="mt-1 text-sm text-gray-500">{hall.location}</p>
+          <h3 className="text-lg font-semibold text-gray-900 truncate">{hall.name}</h3>
+          <p className="mt-1 text-sm text-gray-500 truncate">{hall.location}</p>
           <p className="mt-2 text-gray-600 truncate">{hall.description}</p>
           <div className="mt-4 flex justify-between items-center">
             <p className="text-xl font-bold text-gray-800">
