@@ -28,11 +28,11 @@ const HallCard = ({ hall }: HallCardProps) => {
           alt={hall.name}
         />
         <div className="p-4">
-          <h3 className="text-lg font-semibold text-gray-900 truncate">{hall.name}</h3>
-          <p className="mt-1 text-sm text-gray-500 truncate">{hall.location}</p>
-          <p className="mt-2 text-gray-600 truncate">{hall.description}</p>
+          <h3 className="text-md font-semibold text-gray-800 truncate">{hall.name}</h3>
+          <p className="mt-1 text-xs text-gray-500 truncate">{hall.location}</p>
+          <p className="mt-2 text-sm text-gray-600 truncate">{hall.description}</p>
           <div className="mt-4 flex justify-between items-center">
-            <p className="text-xl font-bold text-gray-800">
+            <p className="text-lg font-bold text-gray-800">
               <span className="font-semibold">${hall.price}</span> / day
             </p>
             {hall.averageRating > 0 && (
