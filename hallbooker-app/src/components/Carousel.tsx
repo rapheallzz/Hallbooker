@@ -71,9 +71,9 @@ const Carousel = ({ halls }: CarouselProps) => {
       <PrevArrow onClick={goToPrev} />
       <NextArrow onClick={goToNext} />
       <Slider ref={sliderRef} {...settings}>
-        {halls.map((hall) => (
-          <div key={hall.id} className="px-2">
-            <HallCard hall={hall} />
+        {halls.map(({ id, name, description, media, price, location }) => (
+          <div key={id} className="px-2">
+            <HallCard hall={{ id, name, description, media, price, location }} />
           </div>
         ))}
       </Slider>

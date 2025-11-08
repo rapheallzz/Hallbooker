@@ -31,8 +31,16 @@ const HomePage = () => {
         const hallsData = response.data.data;
 
         if (Array.isArray(hallsData)) {
-          setAllHalls(hallsData);
-          setFilteredHalls(hallsData);
+          const formattedHalls = hallsData.map((hall: any) => ({
+            id: hall.id,
+            name: hall.name,
+            description: hall.description,
+            media: hall.images ? hall.images.map((image: string) => ({ url: image })) : [],
+            price: hall.pricing?.dailyRate || 0,
+            location: hall.location,
+          }));
+          setAllHalls(formattedHalls);
+          setFilteredHalls(formattedHalls);
         } else {
           throw new Error('Invalid data format');
         }
