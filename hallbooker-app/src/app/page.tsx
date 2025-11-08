@@ -14,6 +14,8 @@ interface Hall {
   media: { url: string }[];
   price: number;
   location: string;
+  averageRating: number;
+  numReviews: number;
 }
 
 const HomePage = () => {
@@ -27,8 +29,11 @@ const HomePage = () => {
   useEffect(() => {
     const fetchHalls = async () => {
       try {
-        const response = await api.get('/halls');
-        const hallsData = response.data.data;
+        // const response = await api.get('/halls');
+        // const hallsData = response.data.data;
+        const response = await fetch('/halls.json');
+        const hallsData = await response.json();
+
 
         if (Array.isArray(hallsData)) {
           const formattedHalls = hallsData.map((hall: any) => ({
@@ -38,6 +43,8 @@ const HomePage = () => {
             media: hall.images ? hall.images.map((image: string) => ({ url: image })) : [],
             price: hall.pricing?.dailyRate || 0,
             location: hall.location,
+            averageRating: hall.averageRating || 0,
+            numReviews: hall.numReviews || 0,
           }));
           setAllHalls(formattedHalls);
           setFilteredHalls(formattedHalls);

@@ -1,50 +1,44 @@
 [
   {
-    "id": "1",
-    "name": "The Grand Hall",
-    "description": "A luxurious hall for grand events.",
-    "media": [{ "url": "https://via.placeholder.com/400x250" }],
-    "price": 1000,
-    "location": "New York, NY"
+    "id": "688bb2593c1fc2127b42c39b",
+    "name": "New Hall Utako",
+    "location": "Dutse",
+    "capacity": 150,
+    "description": "New Hall",
+    "images": [
+      "http://res.cloudinary.com/deg5p7oyh/image/upload/v1762521054/x0clyfukib0vkpkfd8oj.webp"
+    ],
+    "pricing": {
+      "dailyRate": 600000
+    },
+    "averageRating": 4.5,
+    "numReviews": 120
   },
   {
-    "id": "2",
-    "name": "The Royal Hall",
-    "description": "A royal hall for royal events.",
-    "media": [{ "url": "https://via.placeholder.com/400x250" }],
-    "price": 2000,
-    "location": "Los Angeles, CA"
+    "id": "690a36f703acdc76c593bb99",
+    "name": "Assmosh Limited",
+    "location": "Dutse",
+    "capacity": 23940,
+    "description": "test",
+    "images": [
+      "https://res.cloudinary.com/deg5p7oyh/image/upload/v1762541999/gptygen5rk4lm1vagazx.jpg"
+    ],
+    "pricing": {
+      "dailyRate": 4000
+    },
+    "averageRating": 4.8,
+    "numReviews": 85
   },
   {
-    "id": "3",
-    "name": "The Modern Hall",
-    "description": "A modern hall for modern events.",
-    "media": [{ "url": "https://via.placeholder.com/400x250" }],
-    "price": 3000,
-    "location": "Chicago, IL"
-  },
-  {
-    "id": "4",
-    "name": "The Classic Hall",
-    "description": "A classic hall for classic events.",
-    "media": [{ "url": "https://via.placeholder.com/400x250" }],
-    "price": 4000,
-    "location": "Houston, TX"
-  },
-  {
-    "id": "5",
-    "name": "The Vintage Hall",
-    "description": "A vintage hall for vintage events.",
-    "media": [{ "url": "https://via.placeholder.com/400x250" }],
-    "price": 5000,
-    "location": "Phoenix, AZ"
-  },
-  {
-    "id": "6",
-    "name": "The Rustic Hall",
-    "description": "A rustic hall for rustic events.",
-    "media": [{ "url": "https://via.placeholder.com/400x250" }],
-    "price": 6000,
-    "location": "Philadelphia, PA"
+    "id": "68a499687e369c5d091465c7",
+    "name": "Go Hall Great3",
+    "location": "Gwarinpa",
+    "description": "Main CBD Hall",
+    "images": [],
+    "pricing": {
+      "dailyRate": 3000000
+    },
+    "averageRating": 0,
+    "numReviews": 0
   }
 ]

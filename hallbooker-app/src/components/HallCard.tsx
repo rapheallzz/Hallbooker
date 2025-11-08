@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Star } from "lucide-react";
 
 interface HallCardProps {
   hall: {
@@ -8,13 +9,15 @@ interface HallCardProps {
     media: { url: string }[];
     price: number;
     location: string;
+    averageRating: number;
+    numReviews: number;
   };
 }
 
 const HallCard = ({ hall }: HallCardProps) => {
   return (
     <Link href={`/venues/${hall.id}`}>
-      <div className="block bg-white rounded-lg shadow-lg overflow-hidden transform hover:scale-105 transition-transform duration-300">
+      <div data-testid="hall-card" className="block bg-white rounded-lg shadow-lg overflow-hidden transform hover:scale-105 transition-transform duration-300">
         <img
           className="h-56 w-full object-cover"
           src={
@@ -28,9 +31,22 @@ const HallCard = ({ hall }: HallCardProps) => {
           <h3 className="text-lg font-semibold text-gray-900">{hall.name}</h3>
           <p className="mt-1 text-sm text-gray-500">{hall.location}</p>
           <p className="mt-2 text-gray-600 truncate">{hall.description}</p>
-          <p className="mt-4 text-xl font-bold text-primary">
-            ${hall.price} / day
-          </p>
+          <div className="mt-4 flex justify-between items-center">
+            <p className="text-xl font-bold text-gray-800">
+              <span className="font-semibold">${hall.price}</span> / day
+            </p>
+            {hall.averageRating > 0 && (
+              <div className="flex items-center">
+                <Star className="h-5 w-5 text-yellow-500" />
+                <span className="ml-1 text-gray-600 font-semibold">
+                  {hall.averageRating.toFixed(1)}
+                </span>
+                <span className="ml-2 text-gray-500 text-sm">
+                  ({hall.numReviews} reviews)
+                </span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </Link>

@@ -14,6 +14,8 @@ interface Hall {
   media: { url: string }[];
   price: number;
   location: string;
+  averageRating: number;
+  numReviews: number;
 }
 
 interface CarouselProps {
@@ -71,11 +73,13 @@ const Carousel = ({ halls }: CarouselProps) => {
       <PrevArrow onClick={goToPrev} />
       <NextArrow onClick={goToNext} />
       <Slider ref={sliderRef} {...settings}>
-        {halls.map(({ id, name, description, media, price, location }) => (
-          <div key={id} className="px-2">
-            <HallCard hall={{ id, name, description, media, price, location }} />
-          </div>
-        ))}
+        {halls.map((hall) => {
+          return (
+            <div key={hall.id} className="px-2">
+              <HallCard key={hall.id} hall={hall} />
+            </div>
+          );
+        })}
       </Slider>
     </div>
   );
