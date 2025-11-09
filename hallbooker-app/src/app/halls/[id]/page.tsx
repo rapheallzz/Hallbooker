@@ -68,36 +68,61 @@ const HallDetailPage = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div>
-          {hall.images.length > 0 ? (
-            <img src={hall.images[0]} alt={hall.name} className="w-full h-auto rounded-lg shadow-lg" />
-          ) : (
-            <div className="w-full h-96 bg-gray-200 rounded-lg shadow-lg flex items-center justify-center">
-              <span className="text-gray-500">No Image Available</span>
-            </div>
-          )}
-          <div className="grid grid-cols-3 gap-4 mt-4">
-            {hall.images.slice(1, 4).map((image, index) => (
-              <img key={index} src={image} alt={`${hall.name} ${index + 1}`} className="w-full h-auto rounded-lg shadow-md" />
-            ))}
-          </div>
+    <div className="bg-white min-h-screen">
+      <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mb-4">
+          <h1 className="text-2xl font-bold">{hall.name}</h1>
+          <p className="text-sm text-gray-600">{hall.location}</p>
         </div>
-        <div>
-          <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">{hall.name}</h1>
-          <p className="mt-2 text-lg text-gray-600">{hall.location}</p>
-          <div className="mt-4 flex items-center">
-            <p className="text-lg text-gray-800">
-              <span className="font-semibold">Capacity:</span> {hall.capacity}
+        <div className="grid grid-cols-1 md:grid-cols-2 md:grid-rows-2 gap-2 h-96">
+          <div className="md:col-span-1 md:row-span-2">
+            {hall.images.length > 0 ? (
+              <img src={hall.images[0]} alt={hall.name} className="w-full h-full object-cover rounded-l-xl" />
+            ) : (
+              <div className="w-full h-full bg-gray-200 rounded-l-xl flex items-center justify-center">
+                <span className="text-gray-500">No Image Available</span>
+              </div>
+            )}
+          </div>
+          {hall.images.slice(1, 3).map((image, index) => (
+            <div key={index} className="md:col-span-1">
+              <img src={image} alt={`${hall.name} ${index + 1}`} className="w-full h-full object-cover" />
+            </div>
+          ))}
+          {hall.images.length > 3 && (
+             <div className="md:col-span-1 relative">
+             <img src={hall.images[3]} alt={`${hall.name} 4`} className="w-full h-full object-cover rounded-r-xl" />
+             <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
+               <button className="bg-white text-black px-4 py-2 rounded-lg">Show all photos</button>
+             </div>
+           </div>
+          )}
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
+          <div className="md:col-span-2">
+            <h2 className="text-xl font-semibold">About this hall</h2>
+            <p className="mt-2 text-gray-700">{hall.description}</p>
+            <p className="mt-4 text-gray-800">
+              <strong>Capacity:</strong> {hall.capacity}
             </p>
           </div>
-          <div className="mt-4">
-            <p className="text-lg text-gray-800">
-              <span className="font-semibold">Price:</span> ${hall.price} / day
-            </p>
+          <div className="md:col-span-1">
+            <div className="border rounded-xl p-4 shadow-lg sticky top-24">
+              <p className="text-xl font-semibold">
+                ${hall.price} <span className="font-normal text-base">/ day</span>
+              </p>
+              <div className="mt-4">
+                <button className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold">
+                  Booking
+                </button>
+              </div>
+              <div className="mt-2">
+                <button className="w-full border border-gray-300 text-gray-700 py-3 rounded-lg font-semibold">
+                  Calendar
+                </button>
+              </div>
+            </div>
           </div>
-          <p className="mt-6 text-gray-700">{hall.description}</p>
         </div>
       </div>
     </div>
