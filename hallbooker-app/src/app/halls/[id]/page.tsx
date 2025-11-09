@@ -68,14 +68,14 @@ const HallDetailPage = () => {
   }
 
   return (
-    <div className="bg-white min-h-screen">
+    <div className="bg-white min-h-screen pt-24">
       <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-4">
           <h1 className="text-2xl font-bold">{hall.name}</h1>
           <p className="text-sm text-gray-600">{hall.location}</p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 md:grid-rows-2 gap-2 h-96">
-          <div className="md:col-span-1 md:row-span-2">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 h-auto md:h-96">
+          <div className="col-span-2 row-span-2">
             {hall.images.length > 0 ? (
               <img src={hall.images[0]} alt={hall.name} className="w-full h-full object-cover rounded-l-xl" />
             ) : (
@@ -84,22 +84,14 @@ const HallDetailPage = () => {
               </div>
             )}
           </div>
-          {hall.images.slice(1, 3).map((image, index) => (
-            <div key={index} className="md:col-span-1">
+          {hall.images.slice(1, 5).map((image, index) => (
+            <div key={index} className="hidden md:block">
               <img src={image} alt={`${hall.name} ${index + 1}`} className="w-full h-full object-cover" />
             </div>
           ))}
-          {hall.images.length > 3 && (
-             <div className="md:col-span-1 relative">
-             <img src={hall.images[3]} alt={`${hall.name} 4`} className="w-full h-full object-cover rounded-r-xl" />
-             <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-               <button className="bg-white text-black px-4 py-2 rounded-lg">Show all photos</button>
-             </div>
-           </div>
-          )}
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
-          <div className="md:col-span-2">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
+          <div className="lg:col-span-2">
             <h2 className="text-xl font-semibold">About this hall</h2>
             <p className="mt-2 text-gray-700">{hall.description}</p>
             <p className="mt-4 text-gray-800">
