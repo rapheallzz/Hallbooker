@@ -18,6 +18,25 @@ interface Hall {
   numReviews: number;
 }
 
+const demoHall: Hall = {
+  id: 'demo',
+  name: 'Demo Hall',
+  description: 'This is a demo hall.',
+  media: [{ url: 'https://via.placeholder.com/400x250' }],
+  price: 100,
+  location: 'Demo Location',
+  averageRating: 4.5,
+  numReviews: 10,
+};
+
+const padHalls = (halls: Hall[]) => {
+  const paddedHalls = [...halls];
+  while (paddedHalls.length < 6) {
+    paddedHalls.push({ ...demoHall, id: `demo-${paddedHalls.length}` });
+  }
+  return paddedHalls;
+};
+
 const HomePage = () => {
   const [allHalls, setAllHalls] = useState<Hall[]>([]);
   const [filteredHalls, setFilteredHalls] = useState<Hall[]>([]);
@@ -114,18 +133,18 @@ const HomePage = () => {
                 {searchPerformed && filteredHalls.length > 0 ? 'Search Results' : 'Popular Halls'}
               </h2>
               {filteredHalls.length > 0 ? (
-                <Carousel halls={filteredHalls} />
+                <Carousel halls={padHalls(filteredHalls)} />
               ) : (
                 <p className="text-gray-600">No halls found matching your criteria.</p>
               )}
             </section>
             <section className="mt-12">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Featured Locations</h2>
-              <Carousel halls={allHalls.slice(0, 5)} />
+              <Carousel halls={padHalls(allHalls.slice(0, 12))} />
             </section>
             <section className="mt-12">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Newly Added</h2>
-              <Carousel halls={allHalls.slice(6, 11)} />
+              <Carousel halls={padHalls(allHalls.slice(12, 24))} />
             </section>
           </div>
         )}

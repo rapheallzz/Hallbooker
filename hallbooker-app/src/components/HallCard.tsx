@@ -27,24 +27,28 @@ const HallCard = ({ hall }: HallCardProps) => {
           }
           alt={hall.name}
         />
-        <div className="p-3">
-          <h3 className="text-sm font-semibold text-gray-800 truncate">{hall.name}</h3>
+        <div className="p-2">
+          <h3 className="text-xs font-semibold text-gray-800 truncate">{hall.name}</h3>
           <p className="mt-0.5 text-xs text-gray-500 truncate">{hall.location}</p>
-          <div className="mt-2 flex justify-between items-center">
-            <p className="text-sm font-bold text-gray-800">
+          <div className="mt-1 flex justify-between items-center">
+            <p className="text-xs font-bold text-gray-800">
               <span className="font-semibold">${hall.price}</span> / day
             </p>
-            {hall.averageRating > 0 && (
-              <div className="flex items-center text-xs">
-                <Star className="h-4 w-4 text-yellow-500" />
-                <span className="ml-1 text-gray-600 font-semibold">
-                  {hall.averageRating.toFixed(1)}
-                </span>
-                <span className="ml-1 text-gray-500">
-                  ({hall.numReviews} reviews)
-                </span>
-              </div>
-            )}
+            <div className="flex items-center text-xs">
+              <Star className="h-4 w-4 text-yellow-500" />
+              {hall.averageRating > 0 ? (
+                <>
+                  <span className="ml-1 text-gray-600 font-semibold">
+                    {hall.averageRating.toFixed(1)}
+                  </span>
+                  <span className="ml-1 text-gray-500">
+                    ({hall.numReviews} reviews)
+                  </span>
+                </>
+              ) : (
+                <span className="ml-1 text-gray-500">New</span>
+              )}
+            </div>
           </div>
         </div>
       </div>
