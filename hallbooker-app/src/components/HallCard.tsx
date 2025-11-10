@@ -23,7 +23,7 @@ const HallCard = ({ hall }: HallCardProps) => {
           src={
             hall.images && hall.images.length > 0
               ? hall.images[0]
-              : "https://via.placeholder.com/400x250"
+              : "/hall_dafault.svg"
           }
           alt={hall.name}
         />
