@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import api from '@/services/api';
+import BookingModal from '@/components/BookingModal';
+import { useUI } from '@/context/UIContext';
 
 interface Hall {
   id: string;
@@ -29,6 +31,7 @@ const HallDetailPage = () => {
   const [hall, setHall] = useState<Hall | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const { isBookingModalOpen, openBookingModal, closeBookingModal } = useUI();
   const params = useParams();
   const { id } = params;
 
@@ -135,7 +138,7 @@ const HallDetailPage = () => {
           <div className="lg:col-span-2">
             <div className="pb-6 border-b">
               <h2 className="text-2xl font-semibold text-gray-800">
-                Capacity
+                Hall hosted by {hall.owner?.fullName || 'Anonymous'}
               </h2>
               <p className="text-gray-600 mt-1">
                 {hall.capacity} guests
@@ -175,7 +178,10 @@ const HallDetailPage = () => {
                 <span className="ml-1 text-gray-600">/ day</span>
               </div>
               <div className="mt-4">
-                <button className="w-full bg-[#295FA7] hover:bg-[#204a8a] text-white font-bold py-3 px-4 rounded-lg transition duration-300">
+                <button
+                  onClick={openBookingModal}
+                  className="w-full bg-[#295FA7] hover:bg-[#204a8a] text-white font-bold py-3 px-4 rounded-lg transition duration-300"
+                >
                   Booking
                 </button>
               </div>
@@ -189,6 +195,13 @@ const HallDetailPage = () => {
           </div>
         </div>
       </div>
+      {hall && (
+        <BookingModal
+          hallId={hall.id}
+          isOpen={isBookingModalOpen}
+          onClose={closeBookingModal}
+        />
+      )}
     </div>
   );
 };

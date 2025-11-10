@@ -9,6 +9,9 @@ interface UIContextType {
   isStaffModalOpen: boolean;
   openStaffModal: () => void;
   closeStaffModal: () => void;
+  isBookingModalOpen: boolean;
+  openBookingModal: () => void;
+  closeBookingModal: () => void;
 }
 
 const UIContext = createContext<UIContextType | undefined>(undefined);
@@ -16,12 +19,16 @@ const UIContext = createContext<UIContextType | undefined>(undefined);
 export const UIProvider = ({ children }: { children: ReactNode }) => {
   const [isHallModalOpen, setIsHallModalOpen] = useState(false);
   const [isStaffModalOpen, setIsStaffModalOpen] = useState(false);
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 
   const openHallModal = () => setIsHallModalOpen(true);
   const closeHallModal = () => setIsHallModalOpen(false);
 
   const openStaffModal = () => setIsStaffModalOpen(true);
   const closeStaffModal = () => setIsStaffModalOpen(false);
+
+  const openBookingModal = () => setIsBookingModalOpen(true);
+  const closeBookingModal = () => setIsBookingModalOpen(false);
 
   return (
     <UIContext.Provider
@@ -32,6 +39,9 @@ export const UIProvider = ({ children }: { children: ReactNode }) => {
         isStaffModalOpen,
         openStaffModal,
         closeStaffModal,
+        isBookingModalOpen,
+        openBookingModal,
+        closeBookingModal,
       }}
     >
       {children}
