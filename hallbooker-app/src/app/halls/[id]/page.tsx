@@ -138,7 +138,7 @@ const HallDetailPage = () => {
           <div className="lg:col-span-2">
             <div className="pb-6 border-b">
               <h2 className="text-2xl font-semibold text-gray-800">
-                Hall hosted by {hall.owner?.fullName || 'Anonymous'}
+                Capacity
               </h2>
               <p className="text-gray-600 mt-1">
                 {hall.capacity} guests

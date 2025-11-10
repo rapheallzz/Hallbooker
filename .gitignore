@@ -1,1 +1,5 @@
 npm_output.log
+node_modules/
+test-results/
+*.png
+*.spec.ts
