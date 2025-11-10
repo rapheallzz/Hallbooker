@@ -6,7 +6,7 @@ interface HallCardProps {
     id: string;
     name: string;
     description: string;
-    images: string[];
+    media: { url: string }[];
     price: number;
     location: string;
     averageRating: number;
@@ -21,8 +21,8 @@ const HallCard = ({ hall }: HallCardProps) => {
         <img
           className="h-48 w-full object-cover"
           src={
-            hall.images && hall.images.length > 0
-              ? hall.images[0]
+            hall.media && hall.media.length > 0
+              ? hall.media[0].url
               : "/hall_dafault.jpg"
           }
           alt={hall.name}
