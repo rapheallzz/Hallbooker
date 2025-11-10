@@ -7,6 +7,7 @@ import BookingModal from '@/components/BookingModal';
 import { useUI } from '@/context/UIContext';
 import ReviewCard from '@/components/ReviewCard';
 import Calendar from '@/components/Calendar';
+import HallDetailSkeleton from '@/components/HallDetailSkeleton';
 
 interface Hall {
   id: string;
@@ -59,7 +60,7 @@ const HallDetailPage = () => {
   }, [id]);
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <HallDetailSkeleton />;
   }
 
   if (error) {
