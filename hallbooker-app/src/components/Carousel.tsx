@@ -68,6 +68,17 @@ const Carousel = ({ halls }: CarouselProps) => {
   };
 
 
+  // If there are fewer than 4 halls, render a simple grid instead of a carousel
+  if (halls.length < 4) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {halls.map((hall) => (
+          <HallCard key={hall.id} hall={hall} />
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="relative">
       <PrevArrow onClick={goToPrev} />
