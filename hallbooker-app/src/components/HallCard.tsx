@@ -7,7 +7,10 @@ interface HallCardProps {
     name: string;
     description: string;
     images: string[];
-    price: number;
+    pricing: {
+      dailyRate?: number;
+      hourlyRate?: number;
+    };
     location: string;
     averageRating: number;
     numReviews: number;
@@ -23,7 +26,7 @@ const HallCard = ({ hall }: HallCardProps) => {
           src={
             hall.images && hall.images.length > 0
               ? hall.images[0]
-              : "https://via.placeholder.com/400x250"
+              : "/hall_defalut.jpg"
           }
           alt={hall.name}
         />
@@ -32,7 +35,12 @@ const HallCard = ({ hall }: HallCardProps) => {
           <p className="mt-0.5 text-xs text-gray-500 truncate">{hall.location}</p>
           <div className="mt-1 flex justify-between items-center">
             <p className="text-xs font-bold text-gray-800">
-              <span className="font-semibold">${hall.price}</span> / day
+              <span className="font-semibold">
+                {hall.pricing?.dailyRate
+                  ? `$${hall.pricing.dailyRate}`
+                  : "N/A"}
+              </span>{" "}
+              / day
             </p>
             <div className="flex items-center text-xs">
               <Star className="h-4 w-4 text-yellow-500" />
