@@ -60,10 +60,10 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center text-gray-800">
       <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold">Book Hall</h2>
+          <h2 className="text-2xl font-bold text-gray-800">Book Hall</h2>
           <button onClick={onClose}>
             <X className="h-6 w-6" />
           </button>
@@ -79,7 +79,7 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
               id="startTime"
               value={startTime}
               onChange={(e) => setStartTime(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              className="mt-1 block w-full px-3 py-2 border border-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
               required
             />
           </div>
@@ -101,7 +101,7 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
               Number of People
             </label>
             <input
-              type="number"
+              type="value"
               id="numberOfPeople"
               value={numberOfPeople}
               onChange={(e) => setNumberOfPeople(Number(e.target.value))}
@@ -133,7 +133,7 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
             <button
               type="submit"
               disabled={loading}
-              className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              className="px-4 py-2 text-sm font-medium text-white bg-[#295FA7] border border-transparent rounded-md shadow-sm hover:bg-[#204a8a] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             >
               {loading ? 'Processing...' : 'Proceed to Payment'}
             </button>
