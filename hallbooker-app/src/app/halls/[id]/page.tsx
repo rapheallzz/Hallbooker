@@ -169,6 +169,12 @@ const HallDetailPage = () => {
               </div>
             </div>
 
+            {/* Availability Section */}
+            <div className="py-6 border-b">
+              <h3 className="font-semibold text-xl text-gray-800 mb-4">Availability</h3>
+              <Calendar unavailableDates={[new Date(2023, 9, 20), new Date(2023, 9, 21)]} />
+            </div>
+
             {/* Reviews Section */}
             <div className="py-6 border-b">
               <h3 className="font-semibold text-xl text-gray-800 mb-4">Reviews</h3>
@@ -214,12 +220,6 @@ const HallDetailPage = () => {
               <p className="text-center text-sm text-gray-500 mt-4">You won't be charged yet</p>
             </div>
           </div>
-        </div>
-
-        {/* Calendar Section */}
-        <div className="py-6">
-          <h3 className="font-semibold text-xl text-gray-800 mb-4">Availability</h3>
-          <Calendar unavailableDates={[new Date(2023, 9, 20), new Date(2023, 9, 21)]} />
         </div>
       </div>
       {hall && (
