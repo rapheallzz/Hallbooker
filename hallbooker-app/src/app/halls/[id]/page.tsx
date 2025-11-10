@@ -5,6 +5,8 @@ import { useParams } from 'next/navigation';
 import api from '@/services/api';
 import BookingModal from '@/components/BookingModal';
 import { useUI } from '@/context/UIContext';
+import ReviewCard from '@/components/ReviewCard';
+import Calendar from '@/components/Calendar';
 
 interface Hall {
   id: string;
@@ -166,6 +168,25 @@ const HallDetailPage = () => {
                 )}
               </div>
             </div>
+
+            {/* Reviews Section */}
+            <div className="py-6 border-b">
+              <h3 className="font-semibold text-xl text-gray-800 mb-4">Reviews</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <ReviewCard
+                  name="John Doe"
+                  date="October 2023"
+                  rating={5}
+                  comment="This hall was amazing! It was clean, spacious, and perfect for our event."
+                />
+                <ReviewCard
+                  name="Jane Smith"
+                  date="September 2023"
+                  rating={4}
+                  comment="Great location and amenities. The host was very responsive and helpful."
+                />
+              </div>
+            </div>
           </div>
 
           {/* Sticky booking widget */}
@@ -193,6 +214,12 @@ const HallDetailPage = () => {
               <p className="text-center text-sm text-gray-500 mt-4">You won't be charged yet</p>
             </div>
           </div>
+        </div>
+
+        {/* Calendar Section */}
+        <div className="py-6">
+          <h3 className="font-semibold text-xl text-gray-800 mb-4">Availability</h3>
+          <Calendar unavailableDates={[new Date(2023, 9, 20), new Date(2023, 9, 21)]} />
         </div>
       </div>
       {hall && (
