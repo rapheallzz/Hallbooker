@@ -11,7 +11,7 @@ interface Hall {
   id: string;
   name: string;
   description: string;
-  media: { url: string }[];
+  images: string[];
   price: number;
   location: string;
   averageRating: number;
@@ -37,7 +37,7 @@ const HomePage = () => {
             id: hall.id,
             name: hall.name,
             description: hall.description,
-            media: hall.images ? hall.images.map((image: string) => ({ url: image })) : [],
+            images: hall.images || [],
             price: hall.pricing?.dailyRate || 0,
             location: hall.location,
             averageRating: hall.averageRating || 0,

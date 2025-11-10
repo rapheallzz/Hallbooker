@@ -11,7 +11,7 @@ interface Hall {
   id: string;
   name: string;
   description: string;
-  media: { url: string }[];
+  images: string[];
   price: number;
   location: string;
   averageRating: number;

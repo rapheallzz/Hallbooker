@@ -92,32 +92,32 @@ const HallDetailPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 md:grid-rows-2 gap-2 h-96 rounded-xl overflow-hidden">
           <div className="md:col-span-1 md:row-span-2 h-full">
             <img
-              src={hall.images?.[0] || '/hall_dafault.jpg'}
+              src={hall.images?.[0] || '/hall_default.jpg'}
               alt={hall.name}
               className="w-full h-full object-cover"
             />
           </div>
           <div className="hidden md:grid grid-cols-2 grid-rows-1 gap-2 h-full">
             <img
-              src={hall.images?.[1] || '/hall_dafault.jpg'}
+              src={hall.images?.[1] || '/hall_default.jpg'}
               alt=""
               className="w-full h-full object-cover"
             />
             <img
-              src={hall.images?.[2] || '/hall_dafault.jpg'}
+              src={hall.images?.[2] || '/hall_default.jpg'}
               alt=""
               className="w-full h-full object-cover"
             />
           </div>
           <div className="hidden md:grid grid-cols-2 grid-rows-1 gap-2 h-full">
             <img
-              src={hall.images?.[3] || '/hall_dafault.jpg'}
+              src={hall.images?.[3] || '/hall_default.jpg'}
               alt=""
               className="w-full h-full object-cover"
             />
              <div className="relative w-full h-full">
               <img
-                src={hall.images?.[4] || '/hall_dafault.jpg'}
+                src={hall.images?.[4] || '/hall_default.jpg'}
                 alt=""
                 className="w-full h-full object-cover"
               />
