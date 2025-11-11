@@ -4,7 +4,8 @@ import withAuth from "@/components/auth/withAuth";
 import api from "@/services/api";
 import Swal from "sweetalert2";
 import LoadingSpinner from "@/components/admin/LoadingSpinner";
-import { Search, XCircle } from "lucide-react";
+import { Search, XCircle, PlusCircle } from "lucide-react";
+import AdminBookingModal from "@/components/admin/AdminBookingModal";
 
 // Assuming a structure for the Booking object based on common patterns
 interface Booking {
@@ -23,23 +24,24 @@ const BookingsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [sortConfig, setSortConfig] = useState<{ key: keyof Booking; direction: "ascending" | "descending" } | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
-    const fetchBookings = async () => {
-      try {
-        // NOTE: The provided API spec does not list an endpoint to get ALL bookings.
-        // Proceeding with the assumption that GET /api/v1/bookings returns all bookings for a super-admin.
-        const response = await api.get("/bookings");
-        setBookings(Array.isArray(response.data.data) ? response.data.data : []);
-      } catch (error) {
-        console.error("Error fetching bookings:", error);
-        Swal.fire("Error", "Could not fetch bookings. Please try again.", "error");
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchBookings();
   }, []);
+
+  const fetchBookings = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get("/bookings/my-bookings");
+      setBookings(Array.isArray(response.data.data) ? response.data.data : []);
+    } catch (error) {
+      console.error("Error fetching bookings:", error);
+      Swal.fire("Error", "Could not fetch bookings. Please try again.", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredAndSortedBookings = useMemo(() => {
     let sortableItems = [...bookings];
@@ -79,13 +81,43 @@ const BookingsPage = () => {
     setSortConfig({ key, direction });
   };
 
+  const handleCreateBooking = async (formData: any, type: string) => {
+    try {
+      let endpoint = '';
+      if (type === 'standard') {
+        endpoint = '/bookings';
+      } else if (type === 'recurring') {
+        endpoint = '/bookings/recurring';
+      } else if (type === 'walk-in') {
+        endpoint = '/bookings/walk-in';
+      }
+      await api.post(endpoint, formData);
+      fetchBookings();
+      setIsModalOpen(false);
+      Swal.fire("Success", "Booking created successfully.", "success");
+    } catch (error) {
+      console.error('Failed to create booking:', error);
+      Swal.fire("Error", "Failed to create the booking.", "error");
+    }
+  };
+
+
   if (loading) {
     return <LoadingSpinner />;
   }
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8 text-primary">Manage Bookings</h1>
+       <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold text-primary">Manage Bookings</h1>
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="bg-primary text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-opacity-90"
+        >
+          <PlusCircle size={20} />
+          <span>Create Booking</span>
+        </button>
+      </div>
       <div className="bg-white p-6 shadow-lg rounded-lg">
         {/* Filtering and Search UI */}
         <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
@@ -161,6 +193,11 @@ const BookingsPage = () => {
             </div>
         )}
       </div>
+      <AdminBookingModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleCreateBooking}
+      />
     </div>
   );
 };
