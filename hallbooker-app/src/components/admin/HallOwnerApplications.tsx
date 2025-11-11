@@ -22,7 +22,7 @@ const HallOwnerApplications = () => {
   const fetchApplications = async () => {
     try {
       const response = await api.get("/admin");
-      setApplications(response.data.data);
+      setApplications(Array.isArray(response.data.data) ? response.data.data : []);
     } catch (error) {
       console.error("Error fetching applications:", error);
       Swal.fire({
