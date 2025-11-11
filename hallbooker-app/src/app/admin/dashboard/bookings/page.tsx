@@ -30,7 +30,7 @@ const BookingsPage = () => {
         // NOTE: The provided API spec does not list an endpoint to get ALL bookings.
         // Proceeding with the assumption that GET /api/v1/bookings returns all bookings for a super-admin.
         const response = await api.get("/bookings");
-        setBookings(response.data.data);
+        setBookings(Array.isArray(response.data.data) ? response.data.data : []);
       } catch (error) {
         console.error("Error fetching bookings:", error);
         Swal.fire("Error", "Could not fetch bookings. Please try again.", "error");
