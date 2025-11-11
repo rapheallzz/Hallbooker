@@ -114,19 +114,19 @@ const AnalyticsPage = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div className="bg-white p-6 shadow-lg rounded-lg">
           <h2 className="text-lg font-semibold text-gray-500 mb-2">Total Revenue</h2>
-          <p className="text-4xl font-bold text-gray-800">${analytics?.totalRevenue.toLocaleString()}</p>
+          <p className="text-4xl font-bold text-gray-800">${(analytics?.totalRevenue || 0).toLocaleString()}</p>
         </div>
         <div className="bg-white p-6 shadow-lg rounded-lg">
           <h2 className="text-lg font-semibold text-gray-500 mb-2">Total Bookings</h2>
-          <p className="text-4xl font-bold text-gray-800">{analytics?.totalBookings.toLocaleString()}</p>
+          <p className="text-4xl font-bold text-gray-800">{(analytics?.totalBookings || 0).toLocaleString()}</p>
         </div>
         <div className="bg-white p-6 shadow-lg rounded-lg">
           <h2 className="text-lg font-semibold text-gray-500 mb-2">Total Users</h2>
-          <p className="text-4xl font-bold text-gray-800">{analytics?.totalUsers.toLocaleString()}</p>
+          <p className="text-4xl font-bold text-gray-800">{(analytics?.totalUsers || 0).toLocaleString()}</p>
         </div>
         <div className="bg-white p-6 shadow-lg rounded-lg">
           <h2 className="text-lg font-semibold text-gray-500 mb-2">Total Halls</h2>
-          <p className="text-4xl font-bold text-gray-800">{analytics?.totalHalls.toLocaleString()}</p>
+          <p className="text-4xl font-bold text-gray-800">{(analytics?.totalHalls || 0).toLocaleString()}</p>
         </div>
       </div>
 
