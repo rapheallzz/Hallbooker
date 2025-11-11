@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
+import { jwtDecode } from 'jwt-decode';
 import api from '@/services/api';
 
 interface User {
@@ -9,15 +10,24 @@ interface User {
   fullName: string;
   email: string;
   role: string[];
+  activeRole: string;
+}
+
+interface DecodedToken {
+  _id: string;
+  email: string;
+  role: string[];
+  activeRole: string;
+  iat: number;
+  exp: number;
 }
 
 interface AuthContextType {
   user: User | null;
   token: string | null;
   loading: boolean;
-  login: (token:string, user: User) => void;
+  login: (token: string, user: User) => void;
   logout: () => void;
-  updateToken: (token: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -52,6 +62,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(newUser);
     localStorage.setItem('token', newToken);
     localStorage.setItem('user', JSON.stringify(newUser));
+    api.defaults.headers.Authorization = `Bearer ${newToken}`;
   };
 
   const logout = () => {
@@ -63,32 +74,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     router.push('/auth/login');
   };
 
-  const updateToken = (newToken: string) => {
-    setToken(newToken);
-    localStorage.setItem('token', newToken);
-    api.defaults.headers.Authorization = `Bearer ${newToken}`;
-
-    // Re-fetch user data after token update
-    const fetchUser = async () => {
-      try {
-        const { data } = await api.get('/auth/me');
-        if (data.data && !data.data.fullName && data.data.firstName && data.data.lastName) {
-          data.data.fullName = `${data.data.firstName} ${data.data.lastName}`;
-        }
-        setUser(data.data);
-        localStorage.setItem('user', JSON.stringify(data.data));
-      } catch (error) {
-        console.error("Failed to fetch user after token update", error);
-        logout();
-      }
-    };
-
-    fetchUser();
-  };
-
-
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout, updateToken }}>
+    <AuthContext.Provider value={{ user, token, loading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

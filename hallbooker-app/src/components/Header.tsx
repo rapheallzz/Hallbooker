@@ -48,6 +48,7 @@ const Header = () => {
       updateToken(accessToken);
 
       // Redirect based on the new role
+      console.log(`Redirecting to /admin/dashboard for role: ${role}`);
       if (role === 'super-admin') {
         router.push('/admin/dashboard');
       } else if (role === 'hall-owner' || role === 'staff') {
@@ -55,8 +56,8 @@ const Header = () => {
       } else {
         router.push('/');
       }
-    } catch (error) {
-      console.error("Failed to switch role", error);
+    } catch (error: any) {
+      console.error("Failed to switch role", error.response?.data || error.message);
     }
   };
 
@@ -128,6 +129,7 @@ const Header = () => {
                   </div>
                   <div className="relative">
                     <button
+                      data-testid="user-dropdown-button"
                       onClick={() => setDropdownOpen(!dropdownOpen)}
                       className="p-2 rounded-full hover:bg-gray-100"
                     >
