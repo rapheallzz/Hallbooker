@@ -19,7 +19,9 @@
     "react-date-range": "^2.0.1",
     "react-dom": "19.1.0",
     "react-slick": "^0.31.0",
-    "slick-carousel": "^1.8.1"
+    "recharts": "^3.4.1",
+    "slick-carousel": "^1.8.1",
+    "sweetalert2": "^11.26.3"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
