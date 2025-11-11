@@ -12,7 +12,7 @@ const LoginPage = () => {
     password: '',
   });
   const [error, setError] = useState('');
-  const { login } = useAuth();
+  const { login, updateToken } = useAuth();
   const router = useRouter();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -40,8 +40,7 @@ const LoginPage = () => {
           const switchResponse = await api.post('/auth/switch-role', { role: 'super-admin' });
           const newAccessToken = switchResponse.data.data.accessToken;
 
-          // The updateToken function in AuthContext should handle decoding and updating the user state
-          login(newAccessToken, user);
+          updateToken(newAccessToken);
 
           router.push('/admin/dashboard');
         } catch (switchErr) {
