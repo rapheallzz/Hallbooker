@@ -34,9 +34,21 @@ const LoginPage = () => {
 
       login(accessToken, user);
 
-      // Redirect based on role
+      // If the user is a super-admin, automatically switch to the super-admin role
       if (user.role.includes('super-admin')) {
-        router.push('/admin/dashboard');
+        try {
+          const switchResponse = await api.post('/auth/switch-role', { role: 'super-admin' });
+          const newAccessToken = switchResponse.data.data.accessToken;
+
+          // The updateToken function in AuthContext should handle decoding and updating the user state
+          login(newAccessToken, user);
+
+          router.push('/admin/dashboard');
+        } catch (switchErr) {
+          console.error("Failed to switch to super-admin role:", switchErr);
+          setError('Logged in, but failed to switch to super-admin role.');
+          return; // Stop execution if role switch fails
+        }
       } else if (user.role.includes('hall-owner') || user.role.includes('staff')) {
         router.push('/vendor/dashboard');
       } else {
