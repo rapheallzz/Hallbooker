@@ -135,7 +135,7 @@ const AnalyticsPage = () => {
         <div className="bg-white p-6 shadow-lg rounded-lg">
           <h2 className="text-xl font-semibold text-gray-700 mb-4">Revenue and Bookings Over Time</h2>
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={analytics?.monthlyData}>
+            <LineChart data={analytics?.monthlyData || []}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="month" />
               <YAxis yAxisId="left" />
@@ -152,7 +152,7 @@ const AnalyticsPage = () => {
             <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
                 <Pie
-                    data={analytics?.bookingStatusDistribution}
+                    data={analytics?.bookingStatusDistribution || []}
                     cx="50%"
                     cy="50%"
                     labelLine={false}
@@ -162,7 +162,7 @@ const AnalyticsPage = () => {
                     nameKey="name"
                     label={(entry) => `${entry.name}: ${entry.value}`}
                 >
-                    {analytics?.bookingStatusDistribution.map((entry, index) => (
+                    {(analytics?.bookingStatusDistribution || []).map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                 </Pie>
