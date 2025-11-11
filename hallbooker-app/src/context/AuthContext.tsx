@@ -28,6 +28,7 @@ interface AuthContextType {
   loading: boolean;
   login: (token: string, user: User) => void;
   logout: () => void;
+  updateToken: (token: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -74,8 +75,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     router.push('/auth/login');
   };
 
+  const updateToken = (newToken: string) => {
+    setToken(newToken);
+    localStorage.setItem('token', newToken);
+    api.defaults.headers.Authorization = `Bearer ${newToken}`;
+
+    try {
+      const decodedToken = jwtDecode<DecodedToken>(newToken);
+      const updatedUser: User = {
+        id: decodedToken._id,
+        email: decodedToken.email,
+        role: decodedToken.role,
+        activeRole: decodedToken.activeRole,
+        fullName: user?.fullName || '', // Preserve fullName from the old state
+      };
+      setUser(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+    } catch (error) {
+      console.error("Failed to decode token or update user", error);
+      logout();
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, token, loading, login, logout, updateToken }}>
       {children}
     </AuthContext.Provider>
   );

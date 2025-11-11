@@ -9,6 +9,7 @@ import useScroll from "@/hooks/useScroll";
 import CollapsedSearchBar from "./CollapsedSearchBar";
 import NotificationIcon from "./notifications/NotificationIcon";
 import NotificationDropdown from "./notifications/NotificationDropdown";
+import TermsOfServiceModal from "./TermsOfServiceModal";
 
 const Header = () => {
   const { user, logout, updateToken } = useAuth();
@@ -17,6 +18,7 @@ const Header = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [roleSwitchOpen, setRoleSwitchOpen] = useState(false);
   const [notificationDropdownOpen, setNotificationDropdownOpen] = useState(false);
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const notificationDropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -30,10 +32,11 @@ const Header = () => {
     setLoading(true);
     setMessage("");
     try {
-      await api.post("/users/apply-hall-owner");
+      await api.post("/users/apply-hall-owner", { hasReadTermsOfService: true });
       setMessage("Application successful!");
-    } catch (error) {
-      setMessage("An error occurred. Please try again.");
+    } catch (error: any) {
+        const errorMessage = error.response?.data?.message || "An error occurred. Please try again.";
+        setMessage(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -89,7 +92,7 @@ const Header = () => {
             {user ? (
               user.role && !user.role.includes('hall-owner') && (
                 <button
-                  onClick={handleApply}
+                  onClick={() => setIsTermsModalOpen(true)}
                   disabled={loading}
                   className="text-gray-600 hover:text-gray-900"
                 >
@@ -106,6 +109,15 @@ const Header = () => {
             )}
 
             {message && <p>{message}</p>}
+             {isTermsModalOpen && (
+              <TermsOfServiceModal
+                onClose={() => setIsTermsModalOpen(false)}
+                onContinue={() => {
+                  setIsTermsModalOpen(false);
+                  handleApply();
+                }}
+              />
+            )}
             {user ? (
               <div className="flex items-center space-x-4">
                 <div
