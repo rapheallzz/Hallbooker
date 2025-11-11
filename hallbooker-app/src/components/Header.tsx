@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import api from "@/services/api";
 import { useState, useRef } from "react";
@@ -10,14 +11,15 @@ import NotificationIcon from "./notifications/NotificationIcon";
 import NotificationDropdown from "./notifications/NotificationDropdown";
 
 const Header = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, updateToken } = useAuth();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [notificationDropdownOpen, setNotificationDropdownOpen] =
-    useState(false);
+  const [roleSwitchOpen, setRoleSwitchOpen] = useState(false);
+  const [notificationDropdownOpen, setNotificationDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const notificationDropdownRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
   const scrolled = useScroll(100);
   useOnClickOutside(dropdownRef, () => setDropdownOpen(false));
   useOnClickOutside(notificationDropdownRef, () =>
@@ -38,6 +40,25 @@ const Header = () => {
   };
 
   const dashboardUrl = user?.role?.includes('hall-owner') ? '/vendor/dashboard' : '/bookings';
+
+  const handleRoleSwitch = async (role: string) => {
+    try {
+      const response = await api.post('/auth/switch-role', { role });
+      const { accessToken } = response.data.data;
+      updateToken(accessToken);
+
+      // Redirect based on the new role
+      if (role === 'super-admin') {
+        router.push('/admin/dashboard');
+      } else if (role === 'hall-owner' || role === 'staff') {
+        router.push('/vendor/dashboard');
+      } else {
+        router.push('/');
+      }
+    } catch (error) {
+      console.error("Failed to switch role", error);
+    }
+  };
 
   return (
     <header
@@ -134,6 +155,31 @@ const Header = () => {
                           >
                             Dashboard
                           </Link>
+                          {user.role && user.role.length > 1 && (
+                            <div className="relative">
+                              <button
+                                onClick={() => setRoleSwitchOpen(!roleSwitchOpen)}
+                                className="block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100"
+                              >
+                                Switch Role
+                              </button>
+                              {roleSwitchOpen && (
+                                <div className="absolute left-full top-0 w-48 mt-[-2.5rem] origin-top-right bg-white rounded-md shadow-lg">
+                                  <div className="py-1">
+                                    {user.role.map((role) => (
+                                      <button
+                                        key={role}
+                                        onClick={() => handleRoleSwitch(role)}
+                                        className="block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100"
+                                      >
+                                        {role}
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
                           <button
                             onClick={logout}
                             className="block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100"

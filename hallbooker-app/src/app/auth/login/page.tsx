@@ -10,6 +10,7 @@ const LoginPage = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
+    role: 'user',
   });
   const [error, setError] = useState('');
   const { login } = useAuth();
@@ -74,7 +75,43 @@ const LoginPage = () => {
               className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
             />
           </div>
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Login as</label>
+            <div className="flex items-center mt-2 space-x-4">
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name="role"
+                  value="user"
+                  checked={formData.role === 'user'}
+                  onChange={handleChange}
+                  className="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
+                />
+                <span className="ml-2 text-sm text-gray-700">User</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name="role"
+                  value="hall-owner"
+                  checked={formData.role === 'hall-owner'}
+                  onChange={handleChange}
+                  className="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
+                />
+                <span className="ml-2 text-sm text-gray-700">Hall Owner</span>
+              </label>
+            </div>
+          </div>
+          {error && (
+            <div className="text-sm text-red-600">
+              {error}
+              {error.includes('does not have the hall-owner role') && (
+                <p>
+                  Please sign in as a normal user and apply to become a hall owner.
+                </p>
+              )}
+            </div>
+          )}
           <button
             type="submit"
             className="w-full px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"

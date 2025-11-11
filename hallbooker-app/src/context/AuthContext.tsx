@@ -15,8 +15,9 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   loading: boolean;
-  login: (token: string, user: User) => void;
+  login: (token:string, user: User) => void;
   logout: () => void;
+  updateToken: (token: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -62,8 +63,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     router.push('/auth/login');
   };
 
+  const updateToken = (newToken: string) => {
+    setToken(newToken);
+    localStorage.setItem('token', newToken);
+    api.defaults.headers.Authorization = `Bearer ${newToken}`;
+
+    // Re-fetch user data after token update
+    const fetchUser = async () => {
+      try {
+        const { data } = await api.get('/auth/me');
+        if (data.data && !data.data.fullName && data.data.firstName && data.data.lastName) {
+          data.data.fullName = `${data.data.firstName} ${data.data.lastName}`;
+        }
+        setUser(data.data);
+        localStorage.setItem('user', JSON.stringify(data.data));
+      } catch (error) {
+        console.error("Failed to fetch user after token update", error);
+        logout();
+      }
+    };
+
+    fetchUser();
+  };
+
+
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, token, loading, login, logout, updateToken }}>
       {children}
     </AuthContext.Provider>
   );
