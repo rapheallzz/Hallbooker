@@ -14,7 +14,7 @@ const NotificationIcon = () => {
     const fetchNotifications = async () => {
       try {
         const response = await api.get("/notifications");
-        const notifications = response.data.data;
+        const notifications = Array.isArray(response.data.data) ? response.data.data : [];
         const unread = notifications.filter((n: any) => !n.isRead).length;
         setUnreadCount(unread);
       } catch (error) {
