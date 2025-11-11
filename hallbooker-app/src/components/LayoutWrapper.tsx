@@ -7,9 +7,9 @@ import React from "react";
 
 const LayoutWrapper = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
-  const isVendorPage = pathname.startsWith("/vendor");
+  const isDashboardPage = pathname.startsWith("/vendor") || pathname.startsWith("/admin");
 
-  if (isVendorPage) {
+  if (isDashboardPage) {
     return <>{children}</>;
   }
 
