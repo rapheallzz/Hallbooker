@@ -30,7 +30,7 @@ const BookingsView = () => {
         <input
           type="text"
           placeholder="Search by booking ID..."
-          className="p-2 border rounded-md w-1/2 md:w-1/3"
+          className="p-2 border border-gray-400 rounded-md w-1/2 md:w-1/3 text-gray-800"
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
