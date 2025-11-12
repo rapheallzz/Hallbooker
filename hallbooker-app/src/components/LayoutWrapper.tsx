@@ -9,9 +9,7 @@ const LayoutWrapper = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
   const isDashboardPage =
     pathname.startsWith("/vendor") ||
-    pathname.startsWith("/admin") ||
-    pathname.startsWith("/bookings") ||
-    pathname.startsWith("/dashboard");
+    pathname.startsWith("/admin");
 
   if (isDashboardPage) {
     return <>{children}</>;
