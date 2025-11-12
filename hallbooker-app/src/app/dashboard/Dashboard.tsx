@@ -10,7 +10,7 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-6">
-        <nav>
+        <nav className="mt-8">
           <ul className="flex space-x-4 border-b">
             <li
               className={`cursor-pointer py-2 px-4 ${
