@@ -7,6 +7,7 @@ import api from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
 
 const LoginPage = () => {
+  const [role, setRole] = useState('user');
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -24,7 +25,7 @@ const LoginPage = () => {
     setError('');
 
     try {
-      const response = await api.post('/auth/login', formData);
+      const response = await api.post('/auth/login', { ...formData, role });
       const { accessToken, user } = response.data.data || response.data;
 
       // Ensure the user object has a fullName property
@@ -62,6 +63,23 @@ const LoginPage = () => {
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
         <h2 className="text-2xl font-bold text-center text-gray-900">Login to your Account</h2>
+
+        {/* Role selection tabs */}
+        <div className="flex justify-center border-b">
+          <button
+            className={`px-4 py-2 text-sm font-medium ${role === 'user' ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-gray-500'}`}
+            onClick={() => setRole('user')}
+          >
+            User
+          </button>
+          <button
+            className={`px-4 py-2 text-sm font-medium ${role === 'hall-owner' ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-gray-500'}`}
+            onClick={() => setRole('hall-owner')}
+          >
+            An Owner
+          </button>
+        </div>
+
         <form className="space-y-6" onSubmit={handleSubmit}>
           <div>
             <label className="block text-sm font-medium text-gray-700">Email</label>
