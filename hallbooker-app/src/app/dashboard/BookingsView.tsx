@@ -26,11 +26,11 @@ const BookingsView = () => {
   return (
     <div>
       <h2 className="text-2xl font-bold text-gray-800 mb-4">My Bookings</h2>
-      <div className="flex justify-center mb-6">
+      <div className="flex justify-end mb-6">
         <input
           type="text"
           placeholder="Search by booking ID..."
-          className="p-2 border rounded-md w-1/2"
+          className="p-2 border rounded-md w-1/2 md:w-1/3"
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>

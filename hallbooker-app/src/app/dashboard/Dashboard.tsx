@@ -8,9 +8,9 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("bookings");
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-100">
       <div className="container mx-auto px-4 py-6">
-        <nav className="mt-8">
+        <nav className="mt-12">
           <ul className="flex space-x-4 border-b">
             <li
               className={`cursor-pointer py-2 px-4 ${
