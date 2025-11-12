@@ -147,7 +147,7 @@ const LicenseTiersPage = () => {
                     <p className="text-4xl font-extrabold text-primary mb-4">${tier.price}<span className="text-lg font-medium text-gray-500">/{tier.durationInDays} days</span></p>
                     <p className="text-sm text-gray-600 mb-4">Up to <span className="font-bold">{tier.maxHalls}</span> halls.</p>
                     <ul className="space-y-2">
-                        {tier.features.map((feature, index) => (
+                        {Array.isArray(tier.features) && tier.features.map((feature, index) => (
                             <li key={index} className="flex items-center">
                                 <ShieldCheck className="text-green-500 mr-2" size={18}/>
                                 <span className="text-gray-700">{feature}</span>
