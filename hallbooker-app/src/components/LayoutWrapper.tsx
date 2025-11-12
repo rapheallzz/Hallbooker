@@ -7,7 +7,11 @@ import React from "react";
 
 const LayoutWrapper = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
-  const isDashboardPage = pathname.startsWith("/vendor") || pathname.startsWith("/admin");
+  const isDashboardPage =
+    pathname.startsWith("/vendor") ||
+    pathname.startsWith("/admin") ||
+    pathname.startsWith("/bookings") ||
+    pathname.startsWith("/dashboard");
 
   if (isDashboardPage) {
     return <>{children}</>;

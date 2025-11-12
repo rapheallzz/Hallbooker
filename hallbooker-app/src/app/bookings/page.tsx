@@ -1,9 +1,9 @@
 "use client";
-import UserProfile from "../user/UserProfile";
+import Dashboard from "../dashboard/Dashboard";
 
 const BookingsPage = () => {
   return (
-    <UserProfile />
+    <Dashboard />
   );
 };
 
