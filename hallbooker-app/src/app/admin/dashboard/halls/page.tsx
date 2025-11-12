@@ -4,8 +4,9 @@ import withAuth from "@/components/auth/withAuth";
 import api from "@/services/api";
 import Swal from "sweetalert2";
 import LoadingSpinner from "@/components/admin/LoadingSpinner";
-import { Search, Trash, Edit, Power, PowerOff, Eye } from "lucide-react";
+import { Search, Trash, Edit, Power, PowerOff, Eye, PlusCircle } from "lucide-react";
 import Link from "next/link";
+import HallModal from "@/components/vendor/HallModal";
 
 interface Hall {
   _id: string;
@@ -23,6 +24,8 @@ const HallsPage = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>(""); // "all", "enabled", "disabled"
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingHall, setEditingHall] = useState<Hall | undefined>(undefined);
 
   useEffect(() => {
     fetchHalls();
@@ -102,9 +105,59 @@ const HallsPage = () => {
     return <LoadingSpinner />;
   }
 
+  const handleCreate = async (formData: any) => {
+    try {
+      await api.post('/halls', formData);
+      fetchHalls();
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error('Failed to create hall:', error);
+    }
+  };
+
+  const handleUpdate = async (formData: any) => {
+    if (!editingHall) return;
+    try {
+      await api.put(`/halls/${editingHall._id}`, formData);
+      fetchHalls();
+      setIsModalOpen(false);
+      setEditingHall(undefined);
+    } catch (error) {
+      console.error('Failed to update hall:', error);
+    }
+  };
+
+  const openEditModal = (hall: Hall) => {
+    setEditingHall(hall);
+    setIsModalOpen(true);
+  };
+
+  const handleOpenCreateModal = () => {
+    setEditingHall(undefined);
+    setIsModalOpen(true);
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8 text-primary">Manage Halls</h1>
+      <HallModal
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingHall(undefined);
+        }}
+        onSubmit={editingHall ? handleUpdate : handleCreate}
+        hall={editingHall}
+      />
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold text-primary">Manage Halls</h1>
+        <button
+          onClick={handleOpenCreateModal}
+          className="bg-primary text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-opacity-90"
+        >
+          <PlusCircle size={20} />
+          <span>Create Hall</span>
+        </button>
+      </div>
       <div className="bg-white p-6 shadow-lg rounded-lg">
         {/* Search and Filter */}
         <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
@@ -159,6 +212,7 @@ const HallsPage = () => {
                     <Link href={`/halls/${hall._id}`} passHref>
                         <button title="View Hall" className="text-blue-600 hover:text-blue-900 mr-3"><Eye size={18} /></button>
                     </Link>
+                    <button onClick={() => openEditModal(hall)} title="Edit Hall" className="text-indigo-600 hover:text-indigo-900 mr-3"><Edit size={18} /></button>
                     <button
                         onClick={() => handleToggleBooking(hall._id, hall.isOnlineBookingEnabled)}
                         title={hall.isOnlineBookingEnabled ? "Disable Booking" : "Enable Booking"}

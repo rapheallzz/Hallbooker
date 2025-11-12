@@ -59,7 +59,7 @@ const TierModal: React.FC<TierModalProps> = ({ isOpen, onClose, onSubmit, tier }
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-center items-center bg-black bg-opacity-50">
+    <div className="fixed inset-0 z-50 flex justify-center items-center">
       <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto relative">
         <button onClick={onClose} className="absolute top-4 right-4 text-gray-500 hover:text-gray-800">
           <X size={24} />
