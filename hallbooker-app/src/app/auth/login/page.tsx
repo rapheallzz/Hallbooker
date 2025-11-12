@@ -65,7 +65,7 @@ const LoginPage = () => {
         <h2 className="text-2xl font-bold text-center text-gray-900">Login to your Account</h2>
 
         {/* Role selection tabs */}
-        <div className="flex justify-center border-b">
+        <div className="flex justify-center border-b space-x-8">
           <button
             className={`px-4 py-2 text-sm font-medium ${role === 'user' ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-gray-500'}`}
             onClick={() => setRole('user')}

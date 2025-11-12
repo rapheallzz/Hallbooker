@@ -7,11 +7,14 @@ import React from "react";
 
 const LayoutWrapper = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
+  const isAuthPage =
+    pathname.startsWith("/auth/login") ||
+    pathname.startsWith("/auth/register");
   const isDashboardPage =
     pathname.startsWith("/vendor") ||
     pathname.startsWith("/admin");
 
-  if (isDashboardPage) {
+  if (isDashboardPage || isAuthPage) {
     return <>{children}</>;
   }
 
