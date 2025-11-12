@@ -77,7 +77,7 @@ const Header = () => {
       return null; // Don't show the button if the user is already a hall owner
     }
 
-    if (user.hallOwnerStatus === 'pending') {
+    if (user.status === 'pending') {
       return (
         <button disabled className="text-gray-600 cursor-not-allowed">
           Pending
@@ -85,15 +85,19 @@ const Header = () => {
       );
     }
 
-    return (
-      <button
-        onClick={() => setIsTermsModalOpen(true)}
-        disabled={loading}
-        className="text-gray-600 hover:text-gray-900"
-      >
-        {loading ? "Applying..." : "Become an owner"}
-      </button>
-    );
+    if (user.status === 'not-applied') {
+      return (
+        <button
+          onClick={() => setIsTermsModalOpen(true)}
+          disabled={loading}
+          className="text-gray-600 hover:text-gray-900"
+        >
+          {loading ? "Applying..." : "Become an owner"}
+        </button>
+      );
+    }
+
+    return null;
   };
 
   return (
