@@ -64,6 +64,38 @@ const Header = () => {
     }
   };
 
+  const renderBecomeOwnerButton = () => {
+    if (!user) {
+      return (
+        <Link href="/auth/register" className="text-gray-600 hover:text-gray-900">
+          Become an owner
+        </Link>
+      );
+    }
+
+    if (user.role?.includes('hall-owner')) {
+      return null; // Don't show the button if the user is already a hall owner
+    }
+
+    if (user.hallOwnerStatus === 'pending') {
+      return (
+        <button disabled className="text-gray-600 cursor-not-allowed">
+          Pending
+        </button>
+      );
+    }
+
+    return (
+      <button
+        onClick={() => setIsTermsModalOpen(true)}
+        disabled={loading}
+        className="text-gray-600 hover:text-gray-900"
+      >
+        {loading ? "Applying..." : "Become an owner"}
+      </button>
+    );
+  };
+
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -89,25 +121,7 @@ const Header = () => {
           )}
 
           <div className="flex items-center space-x-4">
-            {user ? (
-              user.role && !user.role.includes('hall-owner') && (
-                <button
-                  onClick={() => setIsTermsModalOpen(true)}
-                  disabled={loading}
-                  className="text-gray-600 hover:text-gray-900"
-                >
-                  {loading ? "Applying..." : "Become an owner"}
-                </button>
-              )
-            ) : (
-              <Link
-                href="/auth/register"
-                className="text-gray-600 hover:text-gray-900"
-              >
-                Become an owner
-              </Link>
-            )}
-
+            {renderBecomeOwnerButton()}
             {message && <p>{message}</p>}
              {isTermsModalOpen && (
               <TermsOfServiceModal

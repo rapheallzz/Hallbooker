@@ -11,15 +11,17 @@ interface User {
   email: string;
   role: string[];
   activeRole: string;
+  hallOwnerStatus?: string; // Add hallOwnerStatus property
 }
 
 interface DecodedToken {
   _id: string;
   email: string;
-  role: string[];
+  role:string[];
   activeRole: string;
   iat: number;
   exp: number;
+  hallOwnerStatus?: string; // Add hallOwnerStatus property
 }
 
 interface AuthContextType {
@@ -88,6 +90,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         role: decodedToken.role,
         activeRole: decodedToken.activeRole,
         fullName: user?.fullName || '', // Preserve fullName from the old state
+        hallOwnerStatus: decodedToken.hallOwnerStatus, // Update hallOwnerStatus
       };
       setUser(updatedUser);
       localStorage.setItem('user', JSON.stringify(updatedUser));
