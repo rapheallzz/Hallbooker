@@ -57,8 +57,8 @@ const AdminSidebar = () => {
       icon: <Shield size={24} />,
     },
     {
-      href: "/admin/dashboard/subaccounts",
-      label: "Subaccounts",
+      href: "/admin/dashboard/payment-management",
+      label: "Payment Management",
       icon: <DollarSign size={24} />,
     },
     {
