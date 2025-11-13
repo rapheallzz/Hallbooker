@@ -30,8 +30,8 @@ const PaymentManagementPage = () => {
         api.get("/admin/payment-methods"),
         api.get("/admin/payment-statuses"),
       ]);
-      setPaymentMethods(methodsRes.data.data);
-      setPaymentStatuses(statusesRes.data.data);
+      setPaymentMethods(Array.isArray(methodsRes.data.data) ? methodsRes.data.data : []);
+      setPaymentStatuses(Array.isArray(statusesRes.data.data) ? statusesRes.data.data : []);
     } catch (error) {
       console.error("Error fetching payment data:", error);
       Swal.fire("Error", "Could not fetch payment data.", "error");
