@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import api from '@/services/api';
 import BookingModal from '@/components/BookingModal';
+import DemoModal from '@/components/DemoModal';
 import { useUI } from '@/context/UIContext';
 import ReviewCard from '@/components/ReviewCard';
 import Calendar from '@/components/Calendar';
@@ -23,7 +24,7 @@ interface Hall {
   capacity: number;
   averageRating: number;
   numReviews: number;
-  facilities: any[];
+  facilities: { name: string }[];
   owner: {
     _id: string;
     fullName: string;
@@ -35,15 +36,27 @@ const HallDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const { isBookingModalOpen, openBookingModal, closeBookingModal } = useUI();
+  const [isDemoModalOpen, setDemoModalOpen] = useState(false);
+  const [ownerContact, setOwnerContact] = useState({ phone: '', whatsappNumber: '' });
   const params = useParams();
   const { id } = params;
+
+  const handleBookDemo = async () => {
+    try {
+      const response = await api.post(`/halls/${id}/book-demo`);
+      setOwnerContact(response.data.data);
+      setDemoModalOpen(true);
+    } catch (err) {
+      console.error(`Failed to book demo for hall with id ${id}:`, err);
+      setError('Failed to book demo. See console for details.');
+    }
+  };
 
   useEffect(() => {
     if (id) {
       const fetchHall = async () => {
         try {
-          const response = await api.get(`/halls/${id}`);
-          const hallData = response.data.data;
+          const response = await api.get<{ data: Hall }>(`/halls/${id}`);
           setHall(response.data.data);
         } catch (err)
         {
@@ -214,21 +227,32 @@ const HallDetailPage = () => {
                 </button>
               </div>
               <div className="mt-2">
-                <button className="w-full border border-gray-300 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-50 transition duration-300">
-                  Calendar
+                <button
+                  onClick={handleBookDemo}
+                  className="w-full border border-gray-300 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-50 transition duration-300"
+                >
+                  Book a Demo
                 </button>
               </div>
-              <p className="text-center text-sm text-gray-500 mt-4">You won't be charged yet</p>
+              <p className="text-center text-sm text-gray-500 mt-4">You won&apos;t be charged yet</p>
             </div>
           </div>
         </div>
       </div>
       {hall && (
-        <BookingModal
-          hallId={hall.id}
-          isOpen={isBookingModalOpen}
-          onClose={closeBookingModal}
-        />
+        <>
+          <BookingModal
+            hallId={hall.id}
+            isOpen={isBookingModalOpen}
+            onClose={closeBookingModal}
+          />
+          <DemoModal
+            isOpen={isDemoModalOpen}
+            onClose={() => setDemoModalOpen(false)}
+            phone={ownerContact.phone}
+            whatsappNumber={ownerContact.whatsappNumber}
+          />
+        </>
       )}
     </div>
   );
