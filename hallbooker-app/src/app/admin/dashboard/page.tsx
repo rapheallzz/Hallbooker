@@ -4,7 +4,6 @@ import api from "@/services/api";
 import withAuth from "@/components/auth/withAuth";
 import LoadingSpinner from "@/components/admin/LoadingSpinner";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import HallOwnerApplications from "@/components/admin/HallOwnerApplications";
 
 interface AnalyticsData {
   totalUsers: number;
@@ -72,10 +71,6 @@ const AdminDashboardPage = () => {
         </ResponsiveContainer>
       </div>
 
-      <div>
-        <h2 className="text-2xl font-bold mb-4 text-primary">Pending Hall Owner Applications</h2>
-        <HallOwnerApplications />
-      </div>
     </div>
   );
 };

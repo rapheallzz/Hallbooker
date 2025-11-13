@@ -14,6 +14,7 @@ import {
   Shield,
   Briefcase,
   DollarSign,
+  FileCheck,
 } from "lucide-react";
 
 const AdminSidebar = () => {
@@ -40,6 +41,11 @@ const AdminSidebar = () => {
       href: "/admin/dashboard/analytics",
       label: "Analytics",
       icon: <BarChart size={24} />,
+    },
+    {
+      href: "/admin/dashboard/applications",
+      label: "Applications",
+      icon: <FileCheck size={24} />,
     },
     {
       href: "/admin/dashboard/users",
