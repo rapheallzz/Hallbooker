@@ -304,7 +304,7 @@ const PendingApplicationsTab = () => {
               <tr key={app._id}>
                 <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{app.fullName}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{app.email}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{app.role.join(", ")}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{app.role?.join(", ") || 'N/A'}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <button
                     onClick={() => handleApprove(app._id)}
