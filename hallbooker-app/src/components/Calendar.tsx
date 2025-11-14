@@ -1,17 +1,18 @@
 // components/Calendar.tsx
 'use client';
 
-import React, { useState } from 'react';
-import { DateRange } from 'react-date-range';
+import React from 'react';
+import { DateRange, Range } from 'react-date-range';
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
 
 interface CalendarProps {
   unavailableDates: Date[];
+  onChange: (range: Range) => void;
 }
 
-const Calendar: React.FC<CalendarProps> = ({ unavailableDates }) => {
-  const [state, setState] = useState([
+const Calendar: React.FC<CalendarProps> = ({ unavailableDates, onChange }) => {
+  const [state, setState] = React.useState<Range[]>([
     {
       startDate: new Date(),
       endDate: new Date(),
@@ -19,10 +20,16 @@ const Calendar: React.FC<CalendarProps> = ({ unavailableDates }) => {
     },
   ]);
 
+  const handleOnChange = (ranges: any) => {
+    const { selection } = ranges;
+    onChange(selection);
+    setState([selection]);
+  };
+
   return (
     <DateRange
       editableDateInputs={true}
-      onChange={(item) => setState([item.selection] as any)}
+      onChange={handleOnChange}
       moveRangeOnFirstSelection={false}
       ranges={state}
       disabledDates={unavailableDates}
