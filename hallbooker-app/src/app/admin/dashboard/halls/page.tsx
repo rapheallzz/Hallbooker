@@ -57,14 +57,15 @@ const HallManagementPage = () => {
   }, []);
 
   // Halls Functions
-  const fetchHalls = async () => {
-    try {
-      const response = await api.get("/halls");
-      setHalls(response.data.data);
-    } catch (error) {
-      console.error("Error fetching halls:", error);
-      // Swal is handled in the main fetch
-    }
+  const fetchHalls = () => {
+    return api.get("/halls")
+      .then(response => {
+        setHalls(response.data.data);
+      })
+      .catch(error => {
+        console.error("Error fetching halls:", error);
+        throw error; // Re-throw to be caught by Promise.all
+      });
   };
 
   const filteredHalls = useMemo(() => {
@@ -157,14 +158,15 @@ const HallManagementPage = () => {
   };
 
   // Facilities Functions
-  const fetchFacilities = async () => {
-    try {
-      const response = await api.get("/facilities");
-      setFacilities(response.data.data);
-    } catch (error) {
-      console.error("Error fetching facilities:", error);
-      // Swal is handled in the main fetch
-    }
+  const fetchFacilities = () => {
+    return api.get("/facilities")
+      .then(response => {
+        setFacilities(response.data.data);
+      })
+      .catch(error => {
+        console.error("Error fetching facilities:", error);
+        throw error; // Re-throw to be caught by Promise.all
+      });
   };
 
   const handleAddFacility = async () => {
