@@ -47,11 +47,6 @@ const AdminSidebar = () => {
       icon: <Users size={24} />,
     },
     {
-      href: "/admin/dashboard/facilities",
-      label: "Facilities",
-      icon: <Briefcase size={24} />,
-    },
-    {
       href: "/admin/dashboard/license-tiers",
       label: "License Tiers",
       icon: <Shield size={24} />,
