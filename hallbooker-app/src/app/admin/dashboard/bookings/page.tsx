@@ -18,22 +18,45 @@ interface Booking {
   totalPrice: number;
 }
 
+interface Hall {
+  _id: string;
+  name: string;
+}
+
 const BookingsPage = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [halls, setHalls] = useState<Hall[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("");
+  const [selectedHall, setSelectedHall] = useState<string>("");
   const [sortConfig, setSortConfig] = useState<{ key: keyof Booking; direction: "ascending" | "descending" } | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
-    fetchBookings();
+    const fetchHalls = async () => {
+      try {
+        const response = await api.get('/halls');
+        if (response.data && Array.isArray(response.data.data)) {
+          setHalls(response.data.data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch halls", error);
+        // Optionally show an alert for halls failing to load
+      }
+    };
+    fetchHalls();
   }, []);
+
+  useEffect(() => {
+    fetchBookings();
+  }, [selectedHall]);
 
   const fetchBookings = async () => {
     try {
       setLoading(true);
-      const response = await api.get("/bookings/my-bookings");
+      const url = selectedHall ? `/admin/halls/${selectedHall}/bookings` : '/admin/bookings';
+      const response = await api.get(url);
       setBookings(Array.isArray(response.data.data) ? response.data.data : []);
     } catch (error) {
       console.error("Error fetching bookings:", error);
@@ -141,6 +164,20 @@ const BookingsPage = () => {
                     <option value="pending">Pending</option>
                     <option value="confirmed">Confirmed</option>
                     <option value="cancelled">Cancelled</option>
+                </select>
+            </div>
+            <div className="w-full md:w-1/4">
+                <select
+                    value={selectedHall}
+                    onChange={(e) => setSelectedHall(e.target.value)}
+                    className="block w-full p-2 border border-gray-300 rounded-md"
+                >
+                    <option value="">All Halls</option>
+                    {halls.map((hall) => (
+                        <option key={hall._id} value={hall._id}>
+                            {hall.name}
+                        </option>
+                    ))}
                 </select>
             </div>
         </div>
