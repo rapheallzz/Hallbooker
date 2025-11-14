@@ -223,7 +223,7 @@ const PendingApplicationsTab = () => {
   const fetchApplications = async () => {
     setLoading(true);
     try {
-      const response = await api.get("/admin");
+      const response = await api.get("/admin/hall-owner-applications");
       setApplications(response.data.data);
     } catch (error) {
       console.error("Error fetching applications:", error);
@@ -245,7 +245,7 @@ const PendingApplicationsTab = () => {
 
     if (result.isConfirmed) {
       try {
-        await api.patch(`/admin/${userId}/approve`);
+        await api.patch(`/admin/hall-owner-applications/${userId}/approve`);
         Swal.fire('Approved!', 'The application has been approved.', 'success');
         fetchApplications(); // Refresh data
       } catch (error) {
@@ -267,7 +267,7 @@ const PendingApplicationsTab = () => {
 
     if (result.isConfirmed) {
       try {
-        await api.patch(`/admin/${userId}/reject`);
+        await api.patch(`/admin/hall-owner-applications/${userId}/reject`);
         Swal.fire('Rejected!', 'The application has been rejected.', 'success');
         fetchApplications(); // Refresh data
       } catch (error) {
