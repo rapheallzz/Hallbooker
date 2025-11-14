@@ -143,10 +143,10 @@ const BookingsPage = () => {
             <table className="min-w-full bg-white">
               <thead className="bg-gray-50">
                 <tr>
+                  <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Booking ID</th>
                   <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Hall</th>
                   <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Event Details</th>
-                  <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Start Time</th>
-                  <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">End Time</th>
+                  <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Booking Duration</th>
                   <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
                   <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Total Price</th>
                   <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
@@ -156,10 +156,17 @@ const BookingsPage = () => {
                 {bookings.length > 0 ? (
                   bookings.map((booking) => (
                     <tr key={booking._id} className="hover:bg-gray-50">
+                      <td className="py-3 px-4 text-sm text-gray-900 font-mono text-xs">{booking._id.slice(-8)}...</td>
                       <td className="py-3 px-4 text-sm text-gray-900">{getHallName(booking.hall)}</td>
                       <td className="py-3 px-4 text-sm text-gray-900">{booking.eventDetails || 'N/A'}</td>
-                      <td className="py-3 px-4 text-sm text-gray-900">{new Date(booking.startTime).toLocaleString()}</td>
-                      <td className="py-3 px-4 text-sm text-gray-900">{new Date(booking.endTime).toLocaleString()}</td>
+                      <td className="py-3 px-4 text-sm text-gray-900">
+                        <div>
+                          <span className="font-semibold">From:</span> {new Date(booking.startTime).toLocaleString()}
+                        </div>
+                        <div>
+                          <span className="font-semibold">To:</span> {new Date(booking.endTime).toLocaleString()}
+                        </div>
+                      </td>
                       <td className="py-3 px-4 text-sm text-gray-900">
                         <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
                           booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
