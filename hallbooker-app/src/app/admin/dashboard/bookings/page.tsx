@@ -106,7 +106,6 @@ const BookingsPage = () => {
     }
   };
 
-  // Helper to find hall name from ID
   const getHallName = (hallId: string) => {
     const hall = halls.find(h => h._id === hallId);
     return hall ? hall.name : 'N/A';
@@ -114,10 +113,10 @@ const BookingsPage = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Bookings</h1>
+      <h1 className="text-2xl font-bold mb-4 text-gray-800">Bookings</h1>
 
       <div className="mb-4">
-        <label htmlFor="hallFilter" className="mr-2">Filter by Hall:</label>
+        <label htmlFor="hallFilter" className="mr-2 font-medium text-gray-800">Filter by Hall:</label>
         <select
           id="hallFilter"
           value={selectedHall}
@@ -125,7 +124,7 @@ const BookingsPage = () => {
             setSelectedHall(e.target.value);
             setCurrentPage(1);
           }}
-          className="p-2 border rounded"
+          className="p-2 border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
         >
           <option value="">All Halls</option>
           {halls.map((hall) => (
@@ -137,36 +136,44 @@ const BookingsPage = () => {
       </div>
 
       {loading ? (
-        <p>Loading bookings...</p>
+        <p className="text-gray-800">Loading bookings...</p>
       ) : (
         <>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto shadow-sm border rounded-lg">
             <table className="min-w-full bg-white">
-              <thead>
+              <thead className="bg-gray-50">
                 <tr>
-                  <th className="py-2 px-4 border-b">Hall</th>
-                  <th className="py-2 px-4 border-b">Event Details</th>
-                  <th className="py-2 px-4 border-b">Start Time</th>
-                  <th className="py-2 px-4 border-b">End Time</th>
-                  <th className="py-2 px-4 border-b">Status</th>
-                  <th className="py-2 px-4 border-b">Total Price</th>
-                  <th className="py-2 px-4 border-b">Actions</th>
+                  <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Hall</th>
+                  <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Event Details</th>
+                  <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Start Time</th>
+                  <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">End Time</th>
+                  <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                  <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Total Price</th>
+                  <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-gray-200">
                 {bookings.length > 0 ? (
                   bookings.map((booking) => (
-                    <tr key={booking._id}>
-                      <td className="py-2 px-4 border-b text-gray-900">{getHallName(booking.hall)}</td>
-                      <td className="py-2 px-4 border-b text-gray-900">{booking.eventDetails || 'N/A'}</td>
-                      <td className="py-2 px-4 border-b text-gray-900">{new Date(booking.startTime).toLocaleString()}</td>
-                      <td className="py-2 px-4 border-b text-gray-900">{new Date(booking.endTime).toLocaleString()}</td>
-                      <td className="py-2 px-4 border-b text-gray-900">{booking.status}</td>
-                      <td className="py-2 px-4 border-b text-gray-900">${booking.totalPrice.toFixed(2)}</td>
-                      <td className="py-2 px-4 border-b">
+                    <tr key={booking._id} className="hover:bg-gray-50">
+                      <td className="py-3 px-4 text-sm text-gray-900">{getHallName(booking.hall)}</td>
+                      <td className="py-3 px-4 text-sm text-gray-900">{booking.eventDetails || 'N/A'}</td>
+                      <td className="py-3 px-4 text-sm text-gray-900">{new Date(booking.startTime).toLocaleString()}</td>
+                      <td className="py-3 px-4 text-sm text-gray-900">{new Date(booking.endTime).toLocaleString()}</td>
+                      <td className="py-3 px-4 text-sm text-gray-900">
+                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                          booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
+                          booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-red-100 text-red-800'
+                        }`}>
+                          {booking.status}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-sm text-gray-900">${booking.totalPrice.toFixed(2)}</td>
+                      <td className="py-3 px-4 text-sm">
                         <button
                           onClick={() => handleViewDetails(booking)}
-                          className="text-blue-500 hover:underline"
+                          className="text-indigo-600 hover:text-indigo-900 font-medium"
                         >
                           View
                         </button>
@@ -175,7 +182,7 @@ const BookingsPage = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={7} className="py-4 text-center text-gray-500">
+                    <td colSpan={7} className="py-4 text-center text-gray-800">
                       No bookings found.
                     </td>
                   </tr>
@@ -188,17 +195,17 @@ const BookingsPage = () => {
             <button
               onClick={handlePreviousPage}
               disabled={currentPage === 1 || loading}
-              className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+              className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Previous
             </button>
-            <span>
+            <span className="text-sm text-gray-800">
               Page {currentPage} of {totalPages}
             </span>
             <button
               onClick={handleNextPage}
               disabled={currentPage === totalPages || loading}
-              className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+              className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Next
             </button>
