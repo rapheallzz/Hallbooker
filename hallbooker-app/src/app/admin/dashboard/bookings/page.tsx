@@ -17,6 +17,7 @@ interface Booking {
   startTime: string; // Changed from bookingDate
   status: "pending" | "confirmed" | "cancelled";
   totalPrice: number;
+  eventDetails: string;
 }
 
 interface Hall {
@@ -35,6 +36,9 @@ const BookingsPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [limit, setLimit] = useState(10);
 
   useEffect(() => {
     const fetchHalls = async () => {
@@ -43,7 +47,7 @@ const BookingsPage = () => {
         if (response.data && Array.isArray(response.data.data)) {
           setHalls(response.data.data);
         }
-      } catch (error) {
+      } catch (error {
         console.error("Failed to fetch halls", error);
       }
     };
@@ -52,15 +56,21 @@ const BookingsPage = () => {
 
   useEffect(() => {
     fetchBookings();
-  }, [selectedHall]);
+  }, [selectedHall, currentPage, limit]);
 
   const fetchBookings = async () => {
     try {
       setLoading(true);
       const url = selectedHall ? `/admin/halls/${selectedHall}/bookings` : '/admin/bookings';
-      const response = await api.get(url);
+      const response = await api.get(url, {
+        params: {
+          page: currentPage,
+          limit,
+        },
+      });
       if (response.data && response.data.data && Array.isArray(response.data.data.bookings)) {
         setBookings(response.data.data.bookings);
+        setTotalPages(response.data.data.totalPages);
       } else {
         setBookings([]);
       }
@@ -85,7 +95,8 @@ const BookingsPage = () => {
         return (
           (booking.bookingId && booking.bookingId.toLowerCase().includes(searchTerm.toLowerCase())) ||
           hallName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (booking.user && booking.user.toLowerCase().includes(searchTerm.toLowerCase()))
+          (booking.user && booking.user.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (booking.eventDetails && booking.eventDetails.toLowerCase().includes(searchTerm.toLowerCase()))
         );
       });
     }
@@ -195,7 +206,7 @@ const BookingsPage = () => {
                 <tr>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => requestSort('bookingId')}>Booking ID</th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => requestSort('hall')}>Hall</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => requestSort('user')}>User ID</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => requestSort('eventDetails')}>Event Details</th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => requestSort('startTime')}>Date</th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => requestSort('totalPrice')}>Total Price</th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => requestSort('status')}>Status</th>
@@ -209,7 +220,7 @@ const BookingsPage = () => {
                         <tr key={booking._id}>
                             <td className="px-6 py-4 whitespace-nowrap font-mono text-sm text-gray-900">{booking.bookingId}</td>
                             <td className="px-6 py-4 whitespace-nowrap text-gray-900">{hallName}</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-gray-900">{booking.user}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-gray-900">{booking.eventDetails}</td>
                             <td className="px-6 py-4 whitespace-nowrap text-gray-900">{new Date(booking.startTime).toLocaleDateString()}</td>
                             <td className="px-6 py-4 whitespace-nowrap text-gray-900">${booking.totalPrice.toLocaleString()}</td>
                             <td className="px-6 py-4 whitespace-nowrap">
@@ -229,6 +240,15 @@ const BookingsPage = () => {
                 })}
                 </tbody>
             </table>
+        </div>
+        <div className="flex justify-between items-center mt-4">
+            <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-md disabled:bg-gray-300">
+                Previous
+            </button>
+            <span>Page {currentPage} of {totalPages}</span>
+            <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-md disabled:bg-gray-300">
+                Next
+            </button>
         </div>
         {filteredAndSortedBookings.length === 0 && !loading && (
             <div className="text-center py-8">
