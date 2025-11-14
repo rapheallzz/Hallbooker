@@ -66,9 +66,9 @@ const AnalyticsPage = () => {
                 {icon}
             </div>
             <div>
-                <p className="text-sm font-medium text-gray-500">{title}</p>
+                <p className="text-sm font-medium text-gray-600">{title}</p>
                 <p className="text-2xl font-bold text-gray-800">{value}</p>
-                {subtext && <p className="text-xs text-gray-400">{subtext}</p>}
+                {subtext && <p className="text-xs text-gray-500">{subtext}</p>}
             </div>
         </div>
     );

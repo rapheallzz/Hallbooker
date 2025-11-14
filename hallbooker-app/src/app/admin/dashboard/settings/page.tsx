@@ -55,7 +55,7 @@ const SettingsPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start py-6 border-b border-gray-400 last:border-b-0">
             <div className="md:col-span-1">
                 <label htmlFor={id} className="font-semibold text-gray-800">{label}</label>
-                <p className="text-sm text-gray-500 mt-1">{description}</p>
+                <p className="text-sm text-gray-600 mt-1">{description}</p>
             </div>
             <div className="md:col-span-2 flex items-center space-x-4">
                 <input
@@ -64,7 +64,7 @@ const SettingsPage = () => {
                     id={id}
                     value={value || ''}
                     onChange={handleInputChange}
-                    className="flex-grow w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-focus"
+                    className="flex-grow w-full px-4 py-2 border border-gray-400 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-focus"
                     placeholder={placeholder}
                 />
                 <button

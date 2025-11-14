@@ -291,7 +291,7 @@ const HallManagementPage = () => {
             <div className="bg-white p-6 shadow-lg rounded-lg">
                 <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
                     <div className="relative w-full md:w-1/3">
-                        <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                        <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600" />
                         <input
                             type="text"
                             placeholder="Search by name, location, owner..."
@@ -316,10 +316,10 @@ const HallManagementPage = () => {
                 <table className="min-w-full divide-y divide-gray-300">
                     <thead className="bg-gray-50">
                     <tr>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Owner</th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Online Booking</th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Name</th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Location</th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Owner</th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Online Booking</th>
                         <th scope="col" className="relative px-6 py-3"><span className="sr-only">Actions</span></th>
                     </tr>
                     </thead>
@@ -365,7 +365,7 @@ const HallManagementPage = () => {
                 <table className="min-w-full divide-y divide-gray-300">
                     <thead className="bg-gray-50">
                     <tr>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Name</th>
                         <th scope="col" className="relative px-6 py-3"><span className="sr-only">Actions</span></th>
                     </tr>
                     </thead>
@@ -386,7 +386,7 @@ const HallManagementPage = () => {
                     </tbody>
                 </table>
                 {facilities.length === 0 && (
-                    <div className="text-center py-8 text-gray-500">
+                    <div className="text-center py-8 text-gray-600">
                         No facilities found. Click "Add Facility" to create one.
                     </div>
                 )}

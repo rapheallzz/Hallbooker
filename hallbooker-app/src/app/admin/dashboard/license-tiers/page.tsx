@@ -123,14 +123,14 @@ const LicenseTiersPage = () => {
                             {tier.maxHalls} Halls
                         </span>
                     </div>
-                    <p className="text-4xl font-extrabold text-primary my-4">${tier.price}<span className="text-lg font-medium text-gray-500">/{tier.durationInDays} days</span></p>
+                    <p className="text-4xl font-extrabold text-primary my-4">${tier.price}<span className="text-lg font-medium text-gray-600">/{tier.durationInDays} days</span></p>
 
-                    <p className="text-sm font-semibold text-gray-500 mb-3">FEATURES</p>
+                    <p className="text-sm font-semibold text-gray-600 mb-3">FEATURES</p>
                     <ul className="space-y-2">
                         {Array.isArray(tier.features) && tier.features.map((feature, index) => (
                             <li key={index} className="flex items-center">
                                 <ShieldCheck className="text-green-500 mr-3" size={18}/>
-                                <span className="text-gray-700 text-sm">{feature}</span>
+                                <span className="text-gray-800 text-sm">{feature}</span>
                             </li>
                         ))}
                     </ul>
@@ -144,7 +144,7 @@ const LicenseTiersPage = () => {
       </div>
 
       {tiers.length === 0 && !loading && (
-        <div className="text-center py-12 text-gray-500">
+        <div className="text-center py-12 text-gray-600">
             <h3 className="text-lg font-medium">No license tiers found.</h3>
             <p>Click "Add New Tier" to get started.</p>
         </div>

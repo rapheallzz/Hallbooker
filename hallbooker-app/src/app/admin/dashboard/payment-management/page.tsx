@@ -243,7 +243,7 @@ const SubaccountsTab = () => {
               <h2 className="text-xl font-bold text-gray-800 mb-4">Create New Subaccount</h2>
               <form onSubmit={handleCreateSubaccount} className="space-y-4">
                   <div>
-                      <label htmlFor="hallOwner" className="block text-sm font-medium text-gray-700">Hall Owner</label>
+                      <label htmlFor="hallOwner" className="block text-sm font-medium text-gray-800">Hall Owner</label>
                       <select
                           id="hallOwner"
                           value={selectedUserId}
@@ -258,7 +258,7 @@ const SubaccountsTab = () => {
                       </select>
                   </div>
                   <div>
-                      <label htmlFor="percentageCharge" className="block text-sm font-medium text-gray-700">Percentage Charge (%)</label>
+                      <label htmlFor="percentageCharge" className="block text-sm font-medium text-gray-800">Percentage Charge (%)</label>
                       <input
                           type="number"
                           id="percentageCharge"
@@ -290,15 +290,15 @@ const SubaccountsTab = () => {
                 <table className="min-w-full divide-y divide-gray-300">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hall Owner</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Percentage Charge</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Hall Owner</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Percentage Charge</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-300">
                     {subaccounts.map((subaccount) => (
                       <tr key={subaccount._id}>
                         <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{subaccount.userId}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{subaccount.percentageCharge}%</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{subaccount.percentageCharge}%</td>
                       </tr>
                     ))}
                   </tbody>
@@ -324,7 +324,7 @@ const PaymentManagementPage = () => {
               className={`${
                 activeTab === "settings"
                   ? "border-primary text-primary"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-400"
+                  : "border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-400"
               } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
             >
               Payment Settings
@@ -334,7 +334,7 @@ const PaymentManagementPage = () => {
               className={`${
                 activeTab === "subaccounts"
                   ? "border-primary text-primary"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-400"
+                  : "border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-400"
               } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
             >
               Subaccounts
