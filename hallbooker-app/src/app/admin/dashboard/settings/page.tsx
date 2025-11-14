@@ -52,7 +52,7 @@ const SettingsPage = () => {
     };
 
     const SettingRow = ({ id, label, description, value, onSave, placeholder }: any) => (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start py-6 border-b border-gray-200 last:border-b-0">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start py-6 border-b border-gray-400 last:border-b-0">
             <div className="md:col-span-1">
                 <label htmlFor={id} className="font-semibold text-gray-800">{label}</label>
                 <p className="text-sm text-gray-500 mt-1">{description}</p>
@@ -70,7 +70,7 @@ const SettingsPage = () => {
                 <button
                     onClick={onSave}
                     disabled={isSaving === id}
-                    className="bg-primary hover:bg-opacity-90 text-white font-semibold px-6 py-2 rounded-lg flex items-center justify-center space-x-2 transition-colors duration-200 disabled:bg-gray-400"
+                    className="bg-primary hover:bg-opacity-90 text-white font-semibold px-6 py-2 rounded-lg flex items-center justify-center space-x-2 transition-colors duration-200 disabled:bg-gray-500"
                 >
                     <Save size={18} />
                     <span>{isSaving === id ? 'Saving...' : 'Save'}</span>

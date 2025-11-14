@@ -291,20 +291,20 @@ const HallManagementPage = () => {
             <div className="bg-white p-6 shadow-lg rounded-lg">
                 <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
                     <div className="relative w-full md:w-1/3">
-                        <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
                         <input
                             type="text"
                             placeholder="Search by name, location, owner..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary w-full"
+                            className="pl-10 pr-4 py-2 rounded-lg border border-gray-400 focus:outline-none focus:ring-2 focus:ring-primary w-full"
                         />
                     </div>
                     <div className="w-full md:w-1/4">
                         <select
                             value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value)}
-                            className="block w-full p-2 border border-gray-300 rounded-md"
+                            className="block w-full p-2 border border-gray-400 rounded-md"
                         >
                             <option value="">All Booking Statuses</option>
                             <option value="enabled">Booking Enabled</option>
@@ -313,7 +313,7 @@ const HallManagementPage = () => {
                     </div>
                 </div>
                 <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
+                <table className="min-w-full divide-y divide-gray-300">
                     <thead className="bg-gray-50">
                     <tr>
                         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
@@ -323,12 +323,12 @@ const HallManagementPage = () => {
                         <th scope="col" className="relative px-6 py-3"><span className="sr-only">Actions</span></th>
                     </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
+                    <tbody className="bg-white divide-y divide-gray-300">
                     {filteredHalls.map((hall) => (
                         <tr key={hall._id}>
                         <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{hall.name}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{hall.location}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{hall.owner.fullName}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{hall.location}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{hall.owner.fullName}</td>
                         <td className="px-6 py-4 whitespace-nowrap">
                             <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                                 hall.isOnlineBookingEnabled ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
@@ -362,14 +362,14 @@ const HallManagementPage = () => {
         {activeTab === 'facilities' && (
              <div className="bg-white p-6 shadow-lg rounded-lg">
                 <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
+                <table className="min-w-full divide-y divide-gray-300">
                     <thead className="bg-gray-50">
                     <tr>
                         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                         <th scope="col" className="relative px-6 py-3"><span className="sr-only">Actions</span></th>
                     </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
+                    <tbody className="bg-white divide-y divide-gray-300">
                     {facilities.map((facility) => (
                         <tr key={facility._id}>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{facility.name}</td>

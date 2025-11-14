@@ -122,20 +122,20 @@ const BookingsPage = () => {
         {/* Filtering and Search UI */}
         <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
             <div className="relative w-full md:w-1/3">
-                <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
                 <input
                     type="text"
                     placeholder="Search by ID, Hall, or User..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary w-full"
+                    className="pl-10 pr-4 py-2 rounded-lg border border-gray-400 focus:outline-none focus:ring-2 focus:ring-primary w-full"
                 />
             </div>
             <div className="w-full md:w-1/4">
                 <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
-                    className="block w-full p-2 border border-gray-300 rounded-md"
+                    className="block w-full p-2 border border-gray-400 rounded-md"
                 >
                     <option value="">All Statuses</option>
                     <option value="pending">Pending</option>
@@ -147,7 +147,7 @@ const BookingsPage = () => {
 
         {/* Bookings Table */}
         <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
+            <table className="min-w-full divide-y divide-gray-300">
                 <thead className="bg-gray-50">
                 <tr>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => requestSort('bookingId')}>Booking ID</th>
@@ -159,7 +159,7 @@ const BookingsPage = () => {
                     <th scope="col" className="relative px-6 py-3"><span className="sr-only">Actions</span></th>
                 </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-white divide-y divide-gray-300">
                 {filteredAndSortedBookings.map((booking) => (
                     <tr key={booking._id}>
                         <td className="px-6 py-4 whitespace-nowrap font-mono text-sm">{booking.bookingId}</td>
@@ -187,7 +187,7 @@ const BookingsPage = () => {
         </div>
         {filteredAndSortedBookings.length === 0 && !loading && (
             <div className="text-center py-8">
-                <XCircle className="mx-auto h-12 w-12 text-gray-400" />
+                <XCircle className="mx-auto h-12 w-12 text-gray-500" />
                 <h3 className="mt-2 text-sm font-medium text-gray-900">No bookings found</h3>
                 <p className="mt-1 text-sm text-gray-500">No bookings matched your search criteria.</p>
             </div>

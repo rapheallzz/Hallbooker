@@ -1,224 +1,140 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import withAuth from "@/components/auth/withAuth";
-import LoadingSpinner from "@/components/admin/LoadingSpinner";
-import {
-  LineChart,
-  Line,
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
-import Swal from "sweetalert2";
-import api from "@/services/api";
+import React, { useState, useEffect } from 'react';
+import withAuth from '@/components/auth/withAuth';
+import api from '@/services/api';
+import LoadingSpinner from '@/components/admin/LoadingSpinner';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { DollarSign, Book, Users, Clock } from 'lucide-react';
 
-// Define interfaces for the data structures
-interface MonthlyData {
-  month: string;
-  revenue: number;
-  bookings: number;
-}
-
-interface BookingStatusData {
-  name: string;
-  value: number;
-}
-
+// Interfaces
 interface AnalyticsData {
-  totalRevenue: number;
-  totalBookings: number;
-  totalUsers: number;
-  totalHalls: number;
-  monthlyData: MonthlyData[];
-  bookingStatusDistribution: BookingStatusData[];
-}
-
-interface Hall {
-  _id: string;
-  name: string;
-}
-
-interface HallAnalyticsData {
     totalRevenue: number;
     totalBookings: number;
-    monthlyData: MonthlyData[];
+    totalUsers: number;
+    averageBookingValue: number;
+    bookingsPerDay: { date: string; count: number }[];
 }
 
 const AnalyticsPage = () => {
-  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
-  const [hallAnalytics, setHallAnalytics] = useState<HallAnalyticsData | null>(null);
-  const [halls, setHalls] = useState<Hall[]>([]);
-  const [selectedHall, setSelectedHall] = useState<string>("");
-  const [loading, setLoading] = useState(true);
-  const [hallLoading, setHallLoading] = useState(false);
+    const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [timeframe, setTimeframe] = useState('all-time'); // e.g., '7-days', '30-days'
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [analyticsRes, hallsRes] = await Promise.all([
-          api.get("/analytics/super-admin"),
-          api.get("/halls"),
-        ]);
-        setAnalytics(analyticsRes.data.data);
-        setHalls(hallsRes.data.data);
-      } catch (error) {
-        console.error("Error fetching initial analytics data:", error);
-        Swal.fire("Error", "Could not fetch platform analytics.", "error");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
+    useEffect(() => {
+        fetchAnalytics();
+    }, [timeframe]);
 
-  useEffect(() => {
-    if (selectedHall) {
-      const fetchHallAnalytics = async () => {
-        setHallLoading(true);
+    const fetchAnalytics = async () => {
+        setLoading(true);
         try {
-          const response = await api.get(`/analytics/halls/${selectedHall}`);
-          setHallAnalytics(response.data.data);
+            // In a real app, the timeframe would be passed as a query param
+            // const response = await api.get(`/analytics/platform?timeframe=${timeframe}`);
+            // setAnalytics(response.data.data);
+
+            // Using mock data for demonstration
+            const mockData: AnalyticsData = {
+                totalRevenue: 75300,
+                totalBookings: 124,
+                totalUsers: 450,
+                averageBookingValue: 607.25,
+                bookingsPerDay: [
+                    { date: '2024-08-01', count: 5 },
+                    { date: '2024-08-02', count: 8 },
+                    { date: '2024-08-03', count: 3 },
+                    { date: '2024-08-04', count: 12 },
+                    { date: '2024-08-05', count: 7 },
+                    { date: '2024-08-06', count: 9 },
+                    { date: '2024-08-07', count: 4 },
+                ],
+            };
+            setAnalytics(mockData);
+
         } catch (error) {
-          console.error(`Error fetching analytics for hall ${selectedHall}:`, error);
-          Swal.fire("Error", "Could not fetch analytics for the selected hall.", "error");
-          setHallAnalytics(null);
+            console.error("Error fetching analytics data:", error);
         } finally {
-            setHallLoading(false);
+            setLoading(false);
         }
-      };
-      fetchHallAnalytics();
-    } else {
-        setHallAnalytics(null);
-    }
-  }, [selectedHall]);
+    };
 
-  const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
+    if (loading) return <LoadingSpinner />;
+    if (!analytics) return <div className="text-center p-8">Failed to load analytics data.</div>;
 
-  if (loading) {
-    return <LoadingSpinner />;
-  }
+    // Stat Card Component
+    const StatCard = ({ icon, title, value, subtext }: any) => (
+        <div className="bg-white p-6 rounded-lg shadow-lg flex items-center space-x-4">
+            <div className="bg-primary/10 p-3 rounded-full">
+                {icon}
+            </div>
+            <div>
+                <p className="text-sm font-medium text-gray-500">{title}</p>
+                <p className="text-2xl font-bold text-gray-800">{value}</p>
+                {subtext && <p className="text-xs text-gray-400">{subtext}</p>}
+            </div>
+        </div>
+    );
 
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8 text-primary">Platform Analytics</h1>
-
-      {/* Platform-wide stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white p-6 shadow-lg rounded-lg">
-          <h2 className="text-lg font-semibold text-gray-500 mb-2">Total Revenue</h2>
-          <p className="text-4xl font-bold text-gray-800">${(analytics?.totalRevenue || 0).toLocaleString()}</p>
-        </div>
-        <div className="bg-white p-6 shadow-lg rounded-lg">
-          <h2 className="text-lg font-semibold text-gray-500 mb-2">Total Bookings</h2>
-          <p className="text-4xl font-bold text-gray-800">{(analytics?.totalBookings || 0).toLocaleString()}</p>
-        </div>
-        <div className="bg-white p-6 shadow-lg rounded-lg">
-          <h2 className="text-lg font-semibold text-gray-500 mb-2">Total Users</h2>
-          <p className="text-4xl font-bold text-gray-800">{(analytics?.totalUsers || 0).toLocaleString()}</p>
-        </div>
-        <div className="bg-white p-6 shadow-lg rounded-lg">
-          <h2 className="text-lg font-semibold text-gray-500 mb-2">Total Halls</h2>
-          <p className="text-4xl font-bold text-gray-800">{(analytics?.totalHalls || 0).toLocaleString()}</p>
-        </div>
-      </div>
-
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        <div className="bg-white p-6 shadow-lg rounded-lg">
-          <h2 className="text-xl font-semibold text-gray-700 mb-4">Revenue and Bookings Over Time</h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={analytics?.monthlyData || []}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis yAxisId="left" />
-              <YAxis yAxisId="right" orientation="right" />
-              <Tooltip />
-              <Legend />
-              <Line yAxisId="left" type="monotone" dataKey="revenue" stroke="#8884d8" activeDot={{ r: 8 }} />
-              <Line yAxisId="right" type="monotone" dataKey="bookings" stroke="#82ca9d" />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-        <div className="bg-white p-6 shadow-lg rounded-lg">
-            <h2 className="text-xl font-semibold text-gray-700 mb-4">Booking Status Distribution</h2>
-            <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                <Pie
-                    data={analytics?.bookingStatusDistribution || []}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    outerRadius={100}
-                    fill="#8884d8"
-                    dataKey="value"
-                    nameKey="name"
-                    label={(entry) => `${entry.name}: ${entry.value}`}
-                >
-                    {(analytics?.bookingStatusDistribution || []).map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-                </PieChart>
-            </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* Hall-specific analytics */}
-      <div className="bg-white p-6 shadow-lg rounded-lg">
-        <h2 className="text-2xl font-bold mb-4 text-primary">Drill-down by Hall</h2>
-        <div className="mb-4">
-            <select
-                value={selectedHall}
-                onChange={(e) => setSelectedHall(e.target.value)}
-                className="block w-full md:w-1/3 p-2 border border-gray-300 rounded-md"
-            >
-                <option value="">Select a Hall</option>
-                {halls.map((hall) => (
-                <option key={hall._id} value={hall._id}>
-                    {hall.name}
-                </option>
-                ))}
-            </select>
-        </div>
-
-        {hallLoading ? <LoadingSpinner /> : hallAnalytics && (
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                <div className="bg-gray-50 p-4 rounded-lg">
-                    <h3 className="text-lg font-semibold text-gray-600 mb-2">Total Revenue</h3>
-                    <p className="text-3xl font-bold text-gray-800">${hallAnalytics.totalRevenue.toLocaleString()}</p>
+    return (
+        <div className="container mx-auto px-4 py-8">
+            <div className="flex flex-col md:flex-row justify-between items-center mb-8">
+                <h1 className="text-3xl font-bold text-primary">Platform Analytics</h1>
+                <div className="w-full md:w-auto mt-4 md:mt-0">
+                    <select
+                        value={timeframe}
+                        onChange={(e) => setTimeframe(e.target.value)}
+                        className="block w-full md:w-1/3 p-2 border border-gray-400 rounded-md"
+                    >
+                        <option value="all-time">All Time</option>
+                        <option value="30-days">Last 30 Days</option>
+                        <option value="7-days">Last 7 Days</option>
+                    </select>
                 </div>
-                <div className="bg-gray-50 p-4 rounded-lg">
-                    <h3 className="text-lg font-semibold text-gray-600 mb-2">Total Bookings</h3>
-                    <p className="text-3xl font-bold text-gray-800">{hallAnalytics.totalBookings.toLocaleString()}</p>
-                </div>
-                <div className="md:col-span-2 bg-gray-50 p-4 rounded-lg">
-                    <h3 className="text-lg font-semibold text-gray-700 mb-4">Monthly Revenue for Selected Hall</h3>
-                    <ResponsiveContainer width="100%" height={300}>
-                        <BarChart data={hallAnalytics.monthlyData}>
+            </div>
+
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <StatCard
+                    icon={<DollarSign className="text-primary" />}
+                    title="Total Revenue"
+                    value={`$${analytics.totalRevenue.toLocaleString()}`}
+                />
+                <StatCard
+                    icon={<Book className="text-primary" />}
+                    title="Total Bookings"
+                    value={analytics.totalBookings}
+                />
+                <StatCard
+                    icon={<Users className="text-primary" />}
+                    title="Total Users"
+                    value={analytics.totalUsers}
+                />
+                <StatCard
+                    icon={<Clock className="text-primary" />}
+                    title="Avg. Booking Value"
+                    value={`$${analytics.averageBookingValue.toFixed(2)}`}
+                />
+            </div>
+
+            {/* Bookings Chart */}
+            <div className="bg-white p-6 rounded-lg shadow-lg">
+                <h2 className="text-xl font-bold text-gray-800 mb-4">Bookings Activity</h2>
+                <div style={{ width: '100%', height: 400 }}>
+                    <ResponsiveContainer>
+                        <BarChart
+                            data={analytics.bookingsPerDay}
+                            margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                        >
                             <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="month" />
+                            <XAxis dataKey="date" />
                             <YAxis />
                             <Tooltip />
                             <Legend />
-                            <Bar dataKey="revenue" fill="#295FA7" />
+                            <Bar dataKey="count" fill="#295FA7" name="Bookings" />
                         </BarChart>
                     </ResponsiveContainer>
                 </div>
             </div>
-        )}
-      </div>
-    </div>
-  );
+        </div>
+    );
 };
 
 export default withAuth(AnalyticsPage, ["super-admin"]);

@@ -135,9 +135,9 @@ const LicenseTiersPage = () => {
                         ))}
                     </ul>
                 </div>
-                <div className="mt-6 pt-4 border-t border-gray-200 flex justify-end space-x-3">
-                    <button onClick={() => handleEditTier(tier)} className="text-gray-400 hover:text-indigo-600 transition-colors"><Edit size={20} /></button>
-                    <button onClick={() => handleDeleteTier(tier._id)} className="text-gray-400 hover:text-red-600 transition-colors"><Trash size={20} /></button>
+                <div className="mt-6 pt-4 border-t border-gray-400 flex justify-end space-x-3">
+                    <button onClick={() => handleEditTier(tier)} className="text-gray-600 hover:text-indigo-600 transition-colors"><Edit size={20} /></button>
+                    <button onClick={() => handleDeleteTier(tier._id)} className="text-gray-600 hover:text-red-600 transition-colors"><Trash size={20} /></button>
                 </div>
             </div>
         ))}

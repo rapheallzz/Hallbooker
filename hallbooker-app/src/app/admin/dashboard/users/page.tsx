@@ -103,21 +103,21 @@ const AllUsersTab = () => {
         <div className="relative w-full md:w-1/3">
           <Search
             size={18}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
           />
           <input
             type="text"
             placeholder="Search by name or email..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary w-full"
+            className="pl-10 pr-4 py-2 rounded-lg border border-gray-400 focus:outline-none focus:ring-2 focus:ring-primary w-full"
           />
         </div>
         <div className="w-full md:w-1/4">
           <select
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
-            className="block w-full p-2 border border-gray-300 rounded-md"
+            className="block w-full p-2 border border-gray-400 rounded-md"
           >
             <option value="">All Roles</option>
             <option value="user">User</option>
@@ -130,7 +130,7 @@ const AllUsersTab = () => {
 
       {/* Users Table */}
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
+        <table className="min-w-full divide-y divide-gray-300">
           <thead className="bg-gray-50">
             <tr>
               <th
@@ -156,7 +156,7 @@ const AllUsersTab = () => {
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-white divide-y divide-gray-300">
             {paginatedUsers.map((user) => (
               <tr key={user._id}>
                 <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">
@@ -193,7 +193,7 @@ const AllUsersTab = () => {
         <button
           onClick={() => handlePageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
+          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-400 rounded-md hover:bg-gray-50 disabled:opacity-50"
         >
           <ChevronLeft size={18} /> Previous
         </button>
@@ -203,7 +203,7 @@ const AllUsersTab = () => {
         <button
           onClick={() => handlePageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
+          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-400 rounded-md hover:bg-gray-50 disabled:opacity-50"
         >
           Next <ChevronRight size={18} />
         </button>
@@ -281,7 +281,7 @@ const PendingApplicationsTab = () => {
 
   return (
     <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-gray-200">
+      <table className="min-w-full divide-y divide-gray-300">
         <thead className="bg-gray-50">
           <tr>
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -298,7 +298,7 @@ const PendingApplicationsTab = () => {
             </th>
           </tr>
         </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
+        <tbody className="bg-white divide-y divide-gray-300">
           {applications.length > 0 ? (
             applications.map((app) => (
               <tr key={app._id}>
@@ -341,14 +341,14 @@ const UsersPage = () => {
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8 text-primary">Manage Users</h1>
       <div className="bg-white p-6 shadow-lg rounded-lg">
-        <div className="border-b border-gray-200">
+        <div className="border-b border-gray-400">
           <nav className="-mb-px flex space-x-8" aria-label="Tabs">
             <button
               onClick={() => setActiveTab("allUsers")}
               className={`${
                 activeTab === "allUsers"
                   ? "border-primary text-primary"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-400"
               } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
             >
               All Users
@@ -358,7 +358,7 @@ const UsersPage = () => {
               className={`${
                 activeTab === "pending"
                   ? "border-primary text-primary"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-400"
               } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
             >
               Pending Applications
