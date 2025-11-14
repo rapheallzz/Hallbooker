@@ -16,18 +16,15 @@ interface Settings {
 const SettingsPage = () => {
     const [settings, setSettings] = useState<Partial<Settings>>({});
     const [loading, setLoading] = useState(true);
-    const [isSaving, setIsSaving] = useState(false);
+    const [isSaving, setIsSaving] = useState<string | null>(null); // To track which setting is being saved
 
     useEffect(() => {
         const fetchSettings = async () => {
             try {
-                // Assuming there's a GET endpoint for the commission rate.
-                // The other settings don't have specified GET endpoints in the doc.
                 const commissionRes = await api.get('/settings/commission-rate');
                 setSettings({ commissionRate: commissionRes.data.data.rate });
             } catch (error) {
                 console.error("Error fetching initial settings:", error);
-                // Silently fail on fetch, as user can still set values.
             } finally {
                 setLoading(false);
             }
@@ -37,11 +34,12 @@ const SettingsPage = () => {
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        setSettings(prev => ({ ...prev, [name]: parseInt(value, 10) }));
+        // Allow empty string for clearing input, but store as number if valid
+        setSettings(prev => ({ ...prev, [name]: value === '' ? '' : parseInt(value, 10) }));
     };
 
     const handleSave = async (settingName: keyof Settings, endpoint: string, payload: object, successMessage: string) => {
-        setIsSaving(true);
+        setIsSaving(settingName);
         try {
             await api.patch(endpoint, payload);
             Swal.fire('Success', successMessage, 'success');
@@ -49,136 +47,86 @@ const SettingsPage = () => {
             console.error(`Error updating ${settingName}:`, error);
             Swal.fire('Error', `Could not update ${settingName}.`, 'error');
         } finally {
-            setIsSaving(false);
+            setIsSaving(null);
         }
     };
 
-    const onCommissionSave = () => {
-        handleSave(
-            'commissionRate',
-            '/settings/commission-rate',
-            { rate: settings.commissionRate },
-            'Commission rate updated successfully.'
-        );
-    };
-
-    const onPendingBookingSave = () => {
-        handleSave(
-            'pendingBookingDeletionTime',
-            '/settings/pending-booking-deletion-time',
-            { time: settings.pendingBookingDeletionTime },
-            'Pending booking deletion time updated successfully.'
-        );
-    };
-
-    const onReactivationTimeSave = () => {
-        handleSave(
-            'onlineBookingReactivationTime',
-            '/settings/online-booking-reactivation-time',
-            { time: settings.onlineBookingReactivationTime },
-            'Online booking reactivation time updated successfully.'
-        );
-    };
-
-    const onDeactivationTimeSave = () => {
-        handleSave(
-            'onlineBookingDeactivationTime',
-            '/settings/online-booking-deactivation-time',
-            { time: settings.onlineBookingDeactivationTime },
-            'Online booking deactivation time updated successfully.'
-        );
-    };
+    const SettingRow = ({ id, label, description, value, onSave, placeholder }: any) => (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start py-6 border-b border-gray-200 last:border-b-0">
+            <div className="md:col-span-1">
+                <label htmlFor={id} className="font-semibold text-gray-800">{label}</label>
+                <p className="text-sm text-gray-500 mt-1">{description}</p>
+            </div>
+            <div className="md:col-span-2 flex items-center space-x-4">
+                <input
+                    type="number"
+                    name={id}
+                    id={id}
+                    value={value || ''}
+                    onChange={handleInputChange}
+                    className="flex-grow w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-focus"
+                    placeholder={placeholder}
+                />
+                <button
+                    onClick={onSave}
+                    disabled={isSaving === id}
+                    className="bg-primary hover:bg-opacity-90 text-white font-semibold px-6 py-2 rounded-lg flex items-center justify-center space-x-2 transition-colors duration-200 disabled:bg-gray-400"
+                >
+                    <Save size={18} />
+                    <span>{isSaving === id ? 'Saving...' : 'Save'}</span>
+                </button>
+            </div>
+        </div>
+    );
 
 
     if (loading) return <LoadingSpinner />;
 
     return (
-        <div className="container mx-auto px-4 py-8">
-            <h1 className="text-3xl font-bold mb-8 text-primary">Application Settings</h1>
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-10">
+            <h1 className="text-4xl font-bold mb-10 text-primary">Application Settings</h1>
 
-            <div className="space-y-8">
-                {/* Commission Settings */}
-                <div className="bg-white p-6 shadow-lg rounded-lg">
-                    <h2 className="text-xl font-bold text-gray-800 mb-4">Commission Settings</h2>
-                    <div className="flex items-center space-x-4">
-                        <div className="flex-1">
-                            <label htmlFor="commissionRate" className="block text-sm font-medium text-gray-700">Commission Rate (%)</label>
-                            <input
-                                type="number"
-                                name="commissionRate"
-                                id="commissionRate"
-                                value={settings.commissionRate || ''}
-                                onChange={handleInputChange}
-                                className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
-                                placeholder="e.g., 10"
-                            />
-                            <p className="mt-2 text-xs text-gray-500">The percentage the platform takes from each online booking.</p>
-                        </div>
-                        <button onClick={onCommissionSave} disabled={isSaving} className="bg-primary text-white px-4 py-2 rounded-lg flex items-center space-x-2 self-end">
-                            <Save size={18} /><span>{isSaving ? 'Saving...' : 'Save'}</span>
-                        </button>
-                    </div>
+            <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div className="p-8">
+                    <h2 className="text-2xl font-bold text-gray-900 mb-6">Commission Settings</h2>
+                    <SettingRow
+                        id="commissionRate"
+                        label="Commission Rate (%)"
+                        description="The percentage the platform takes from each online booking."
+                        value={settings.commissionRate}
+                        onSave={() => handleSave('commissionRate', '/settings/commission-rate', { rate: settings.commissionRate }, 'Commission rate updated.')}
+                        placeholder="e.g., 10"
+                    />
                 </div>
+            </div>
 
-                {/* Booking Settings */}
-                <div className="bg-white p-6 shadow-lg rounded-lg">
-                    <h2 className="text-xl font-bold text-gray-800 mb-4">Booking Automation Settings</h2>
-                    <div className="space-y-6">
-                        <div className="flex items-center space-x-4">
-                            <div className="flex-1">
-                                <label htmlFor="pendingBookingDeletionTime" className="block text-sm font-medium text-gray-700">Pending Booking Deletion Time (minutes)</label>
-                                <input
-                                    type="number"
-                                    name="pendingBookingDeletionTime"
-                                    id="pendingBookingDeletionTime"
-                                    value={settings.pendingBookingDeletionTime || ''}
-                                    onChange={handleInputChange}
-                                    className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
-                                    placeholder="e.g., 30"
-                                />
-                                <p className="mt-2 text-xs text-gray-500">Time to wait before an unpaid, pending booking is automatically deleted.</p>
-                            </div>
-                            <button onClick={onPendingBookingSave} disabled={isSaving} className="bg-primary text-white px-4 py-2 rounded-lg flex items-center space-x-2 self-end">
-                                <Save size={18} /><span>{isSaving ? 'Saving...' : 'Save'}</span>
-                            </button>
-                        </div>
-                         <div className="flex items-center space-x-4">
-                            <div className="flex-1">
-                                <label htmlFor="onlineBookingReactivationTime" className="block text-sm font-medium text-gray-700">Online Booking Reactivation Lockout (minutes)</label>
-                                <input
-                                    type="number"
-                                    name="onlineBookingReactivationTime"
-                                    id="onlineBookingReactivationTime"
-                                    value={settings.onlineBookingReactivationTime || ''}
-                                    onChange={handleInputChange}
-                                    className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
-                                    placeholder="e.g., 1440 (24 hours)"
-                                />
-                                <p className="mt-2 text-xs text-gray-500">Time a hall owner must wait before they can re-enable online booking after disabling it.</p>
-                            </div>
-                            <button onClick={onReactivationTimeSave} disabled={isSaving} className="bg-primary text-white px-4 py-2 rounded-lg flex items-center space-x-2 self-end">
-                                <Save size={18} /><span>{isSaving ? 'Saving...' : 'Save'}</span>
-                            </button>
-                        </div>
-                        <div className="flex items-center space-x-4">
-                            <div className="flex-1">
-                                <label htmlFor="onlineBookingDeactivationTime" className="block text-sm font-medium text-gray-700">Online Booking Deactivation Lockout (minutes)</label>
-                                <input
-                                    type="number"
-                                    name="onlineBookingDeactivationTime"
-                                    id="onlineBookingDeactivationTime"
-                                    value={settings.onlineBookingDeactivationTime || ''}
-                                    onChange={handleInputChange}
-                                    className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
-                                    placeholder="e.g., 60"
-                                />
-                                <p className="mt-2 text-xs text-gray-500">Time a hall owner must wait after re-enabling online booking before they can disable it again.</p>
-                            </div>
-                            <button onClick={onDeactivationTimeSave} disabled={isSaving} className="bg-primary text-white px-4 py-2 rounded-lg flex items-center space-x-2 self-end">
-                                <Save size={18} /><span>{isSaving ? 'Saving...' : 'Save'}</span>
-                            </button>
-                        </div>
-                    </div>
+            <div className="bg-white rounded-2xl shadow-xl overflow-hidden mt-12">
+                <div className="p-8">
+                    <h2 className="text-2xl font-bold text-gray-900 mb-6">Booking Automation</h2>
+                    <SettingRow
+                        id="pendingBookingDeletionTime"
+                        label="Pending Booking Deletion Time"
+                        description="Time (in minutes) to wait before an unpaid, pending booking is auto-deleted."
+                        value={settings.pendingBookingDeletionTime}
+                        onSave={() => handleSave('pendingBookingDeletionTime', '/settings/pending-booking-deletion-time', { time: settings.pendingBookingDeletionTime }, 'Pending booking deletion time updated.')}
+                        placeholder="e.g., 30"
+                    />
+                    <SettingRow
+                        id="onlineBookingReactivationTime"
+                        label="Reactivation Lockout"
+                        description="Time (in minutes) a hall owner must wait before re-enabling online booking."
+                        value={settings.onlineBookingReactivationTime}
+                        onSave={() => handleSave('onlineBookingReactivationTime', '/settings/online-booking-reactivation-time', { time: settings.onlineBookingReactivationTime }, 'Reactivation lockout time updated.')}
+                        placeholder="e.g., 1440"
+                    />
+                    <SettingRow
+                        id="onlineBookingDeactivationTime"
+                        label="Deactivation Lockout"
+                        description="Time (in minutes) a hall owner must wait before disabling online booking again."
+                        value={settings.onlineBookingDeactivationTime}
+                        onSave={() => handleSave('onlineBookingDeactivationTime', '/settings/online-booking-deactivation-time', { time: settings.onlineBookingDeactivationTime }, 'Deactivation lockout time updated.')}
+                        placeholder="e.g., 60"
+                    />
                 </div>
             </div>
         </div>
