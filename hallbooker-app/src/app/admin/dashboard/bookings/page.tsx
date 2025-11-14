@@ -6,6 +6,7 @@ import Swal from "sweetalert2";
 import LoadingSpinner from "@/components/admin/LoadingSpinner";
 import { Search, XCircle, PlusCircle } from "lucide-react";
 import AdminBookingModal from "@/components/admin/AdminBookingModal";
+import AdminBookingDetailsModal from "@/components/admin/AdminBookingDetailsModal";
 
 // Updated Booking interface to match the API response
 interface Booking {
@@ -32,6 +33,8 @@ const BookingsPage = () => {
   const [selectedHall, setSelectedHall] = useState<string>("");
   const [sortConfig, setSortConfig] = useState<{ key: keyof Booking; direction: "ascending" | "descending" } | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
 
   useEffect(() => {
     const fetchHalls = async () => {
@@ -42,7 +45,6 @@ const BookingsPage = () => {
         }
       } catch (error) {
         console.error("Failed to fetch halls", error);
-        // Optionally show an alert for halls failing to load
       }
     };
     fetchHalls();
@@ -57,7 +59,6 @@ const BookingsPage = () => {
       setLoading(true);
       const url = selectedHall ? `/admin/halls/${selectedHall}/bookings` : '/admin/bookings';
       const response = await api.get(url);
-      // Correctly extract bookings from the nested structure
       if (response.data && response.data.data && Array.isArray(response.data.data.bookings)) {
         setBookings(response.data.data.bookings);
       } else {
@@ -71,9 +72,13 @@ const BookingsPage = () => {
     }
   };
 
+  const handleViewBooking = (booking: Booking) => {
+    setSelectedBooking(booking);
+    setIsDetailsModalOpen(true);
+  };
+
   const filteredAndSortedBookings = useMemo(() => {
     let sortableItems = [...bookings];
-
     if (searchTerm) {
       sortableItems = sortableItems.filter(booking => {
         const hallName = halls.find(h => h._id === booking.hall)?.name || '';
@@ -84,11 +89,9 @@ const BookingsPage = () => {
         );
       });
     }
-
     if (statusFilter) {
         sortableItems = sortableItems.filter(booking => booking.status === statusFilter);
     }
-
     if (sortConfig !== null) {
       sortableItems.sort((a, b) => {
         if (a[sortConfig.key] < b[sortConfig.key]) {
@@ -100,7 +103,6 @@ const BookingsPage = () => {
         return 0;
       });
     }
-
     return sortableItems;
   }, [bookings, searchTerm, statusFilter, sortConfig, halls]);
 
@@ -132,7 +134,6 @@ const BookingsPage = () => {
     }
   };
 
-
   if (loading) {
     return <LoadingSpinner />;
   }
@@ -150,7 +151,6 @@ const BookingsPage = () => {
         </button>
       </div>
       <div className="bg-white p-6 shadow-lg rounded-lg">
-        {/* Filtering and Search UI */}
         <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
             <div className="relative w-full md:w-1/3">
                 <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -189,8 +189,6 @@ const BookingsPage = () => {
                 </select>
             </div>
         </div>
-
-        {/* Bookings Table */}
         <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
@@ -209,11 +207,11 @@ const BookingsPage = () => {
                     const hallName = halls.find(h => h._id === booking.hall)?.name || 'N/A';
                     return (
                         <tr key={booking._id}>
-                            <td className="px-6 py-4 whitespace-nowrap font-mono text-sm">{booking.bookingId}</td>
-                            <td className="px-6 py-4 whitespace-nowrap">{hallName}</td>
-                            <td className="px-6 py-4 whitespace-nowrap">{booking.user}</td>
-                            <td className="px-6 py-4 whitespace-nowrap">{new Date(booking.startTime).toLocaleDateString()}</td>
-                            <td className="px-6 py-4 whitespace-nowrap">${booking.totalPrice.toLocaleString()}</td>
+                            <td className="px-6 py-4 whitespace-nowrap font-mono text-sm text-gray-900">{booking.bookingId}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-gray-900">{hallName}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-gray-900">{booking.user}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-gray-900">{new Date(booking.startTime).toLocaleDateString()}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-gray-900">${booking.totalPrice.toLocaleString()}</td>
                             <td className="px-6 py-4 whitespace-nowrap">
                                 <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                                     booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
@@ -224,8 +222,7 @@ const BookingsPage = () => {
                                 </span>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                {/* Actions like view details or cancel could go here */}
-                                <button className="text-indigo-600 hover:text-indigo-900">View</button>
+                                <button data-testid={`view-booking-${booking._id}`} onClick={() => handleViewBooking(booking)} className="text-indigo-600 hover:text-indigo-900">View</button>
                             </td>
                         </tr>
                     )
@@ -246,6 +243,14 @@ const BookingsPage = () => {
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleCreateBooking}
       />
+      {isDetailsModalOpen && selectedBooking && (
+        <AdminBookingDetailsModal
+            isOpen={isDetailsModalOpen}
+            onClose={() => setIsDetailsModalOpen(false)}
+            booking={selectedBooking}
+            halls={halls}
+        />
+      )}
     </div>
   );
 };
