@@ -1,205 +1,217 @@
-"use client";
-import React, { useState, useEffect, useMemo } from "react";
-import withAuth from "@/components/auth/withAuth";
-import api from "@/services/api";
-import Swal from "sweetalert2";
-import LoadingSpinner from "@/components/admin/LoadingSpinner";
-import { Search, XCircle, PlusCircle } from "lucide-react";
-import AdminBookingModal from "@/components/admin/AdminBookingModal";
 
-// Assuming a structure for the Booking object based on common patterns
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import api from '@/services/api';
+import AdminBookingDetailsModal from '@/components/admin/AdminBookingDetailsModal';
+
+// Define the Booking interface to match the API response
 interface Booking {
   _id: string;
-  bookingId: string;
-  hall: { name: string };
-  user: { fullName: string };
-  bookingDate: string;
-  status: "pending" | "confirmed" | "cancelled";
+  hall: string; // Now just an ID
+  user: string; // Now just an ID
+  startTime: string;
+  endTime: string;
+  status: 'pending' | 'confirmed' | 'cancelled';
   totalPrice: number;
+  eventDetails?: string; // Optional field for more descriptive event info
+  createdAt: string;
+}
+
+interface Hall {
+  _id: string;
+  name: string;
 }
 
 const BookingsPage = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [halls, setHalls] = useState<Hall[]>([]);
+  const [selectedHall, setSelectedHall] = useState('');
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("");
-  const [sortConfig, setSortConfig] = useState<{ key: keyof Booking; direction: "ascending" | "descending" } | null>(null);
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const limit = 10; // Number of bookings per page
 
-  useEffect(() => {
-    fetchBookings();
-  }, []);
-
-  const fetchBookings = async () => {
+  const fetchBookings = useCallback(async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      const response = await api.get("/bookings/my-bookings");
-      setBookings(Array.isArray(response.data.data) ? response.data.data : []);
+      // Construct query parameters
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: limit.toString(),
+        sortBy: 'createdAt',
+        sortOrder: 'desc',
+      });
+
+      if (selectedHall) {
+        params.append('hall', selectedHall);
+      }
+
+      const response = await api.get(`/admin/bookings?${params.toString()}`);
+
+      // Adjusted to handle the nested data structure
+      if (response.data && response.data.data) {
+        setBookings(response.data.data.bookings || []);
+        setTotalPages(response.data.data.totalPages || 1);
+      } else {
+        setBookings([]);
+        setTotalPages(1);
+      }
+
     } catch (error) {
-      console.error("Error fetching bookings:", error);
-      Swal.fire("Error", "Could not fetch bookings. Please try again.", "error");
+      console.error("Failed to fetch bookings", error);
+      setBookings([]); // Reset on error
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, selectedHall]);
 
-  const filteredAndSortedBookings = useMemo(() => {
-    let sortableItems = [...bookings];
+  useEffect(() => {
+    fetchBookings();
+  }, [fetchBookings]);
 
-    if (searchTerm) {
-      sortableItems = sortableItems.filter(booking =>
-        booking.bookingId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        booking.hall.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        booking.user.fullName.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    if (statusFilter) {
-        sortableItems = sortableItems.filter(booking => booking.status === statusFilter);
-    }
-
-    if (sortConfig !== null) {
-      sortableItems.sort((a, b) => {
-        if (a[sortConfig.key] < b[sortConfig.key]) {
-          return sortConfig.direction === 'ascending' ? -1 : 1;
+  useEffect(() => {
+    const fetchHalls = async () => {
+      try {
+        const response = await api.get('/halls');
+        if (response.data && Array.isArray(response.data.data)) {
+          setHalls(response.data.data);
         }
-        if (a[sortConfig.key] > b[sortConfig.key]) {
-          return sortConfig.direction === 'ascending' ? 1 : -1;
-        }
-        return 0;
-      });
-    }
-
-    return sortableItems;
-  }, [bookings, searchTerm, statusFilter, sortConfig]);
-
-  const requestSort = (key: keyof Booking) => {
-    let direction: "ascending" | "descending" = 'ascending';
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'ascending') {
-      direction = 'descending';
-    }
-    setSortConfig({ key, direction });
-  };
-
-  const handleCreateBooking = async (formData: any, type: string) => {
-    try {
-      let endpoint = '';
-      if (type === 'standard') {
-        endpoint = '/bookings';
-      } else if (type === 'recurring') {
-        endpoint = '/bookings/recurring';
-      } else if (type === 'walk-in') {
-        endpoint = '/bookings/walk-in';
+      } catch (error) {
+        console.error("Failed to fetch halls", error);
       }
-      await api.post(endpoint, formData);
-      fetchBookings();
-      setIsModalOpen(false);
-      Swal.fire("Success", "Booking created successfully.", "success");
-    } catch (error) {
-      console.error('Failed to create booking:', error);
-      Swal.fire("Error", "Failed to create the booking.", "error");
+    };
+    fetchHalls();
+  }, []);
+
+  const handleViewDetails = (booking: Booking) => {
+    setSelectedBooking(booking);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedBooking(null);
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
     }
   };
 
-
-  if (loading) {
-    return <LoadingSpinner />;
-  }
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-primary">Manage Bookings</h1>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="bg-primary text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-opacity-90"
-        >
-          <PlusCircle size={20} />
-          <span>Create Booking</span>
-        </button>
-      </div>
-      <div className="bg-white p-6 shadow-lg rounded-lg">
-        {/* Filtering and Search UI */}
-        <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-            <div className="relative w-full md:w-1/3">
-                <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input
-                    type="text"
-                    placeholder="Search by ID, Hall, or User..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary w-full"
-                />
-            </div>
-            <div className="w-full md:w-1/4">
-                <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="block w-full p-2 border border-gray-300 rounded-md"
-                >
-                    <option value="">All Statuses</option>
-                    <option value="pending">Pending</option>
-                    <option value="confirmed">Confirmed</option>
-                    <option value="cancelled">Cancelled</option>
-                </select>
-            </div>
-        </div>
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4 text-gray-800">Bookings</h1>
 
-        {/* Bookings Table */}
-        <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                <tr>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => requestSort('bookingId')}>Booking ID</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => requestSort('hall')}>Hall</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => requestSort('user')}>User</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => requestSort('bookingDate')}>Date</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => requestSort('totalPrice')}>Total Price</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => requestSort('status')}>Status</th>
-                    <th scope="col" className="relative px-6 py-3"><span className="sr-only">Actions</span></th>
-                </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                {filteredAndSortedBookings.map((booking) => (
-                    <tr key={booking._id}>
-                        <td className="px-6 py-4 whitespace-nowrap font-mono text-sm">{booking.bookingId}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">{booking.hall.name}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">{booking.user.fullName}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">{new Date(booking.bookingDate).toLocaleDateString()}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">${booking.totalPrice.toLocaleString()}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                                booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                'bg-red-100 text-red-800'
-                            }`}>
-                                {booking.status}
-                            </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            {/* Actions like view details or cancel could go here */}
-                            <button className="text-indigo-600 hover:text-indigo-900">View</button>
-                        </td>
-                    </tr>
-                ))}
-                </tbody>
-            </table>
-        </div>
-        {filteredAndSortedBookings.length === 0 && !loading && (
-            <div className="text-center py-8">
-                <XCircle className="mx-auto h-12 w-12 text-gray-400" />
-                <h3 className="mt-2 text-sm font-medium text-gray-900">No bookings found</h3>
-                <p className="mt-1 text-sm text-gray-500">No bookings matched your search criteria.</p>
-            </div>
-        )}
+      {/* Hall Filter */}
+      <div className="mb-4">
+        <label htmlFor="hallFilter" className="mr-2 font-medium text-gray-700">Filter by Hall:</label>
+        <select
+          id="hallFilter"
+          value={selectedHall}
+          onChange={(e) => {
+            setSelectedHall(e.target.value);
+            setCurrentPage(1); // Reset to first page on filter change
+          }}
+          className="p-2 border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+        >
+          <option value="">All Halls</option>
+          {halls.map((hall) => (
+            <option key={hall._id} value={hall._id}>
+              {hall.name}
+            </option>
+          ))}
+        </select>
       </div>
-      <AdminBookingModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSubmit={handleCreateBooking}
-      />
+
+      {loading ? (
+        <p>Loading bookings...</p>
+      ) : (
+        <>
+          <div className="overflow-x-auto">
+            <table className="min-w-full bg-white border border-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="py-3 px-4 border-b text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Event Details</th>
+                  <th className="py-3 px-4 border-b text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                  <th className="py-3 px-4 border-b text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {bookings.length > 0 ? (
+                  bookings.map((booking) => (
+                    <tr key={booking._id} className="hover:bg-gray-50">
+                      <td className="py-3 px-4 border-b text-sm text-gray-900">{booking.eventDetails || 'N/A'}</td>
+                      <td className="py-3 px-4 border-b text-sm text-gray-900">
+                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                          booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
+                          booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-red-100 text-red-800'
+                        }`}>
+                          {booking.status}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 border-b text-sm">
+                        <button
+                          onClick={() => handleViewDetails(booking)}
+                          className="text-indigo-600 hover:text-indigo-900 font-medium"
+                        >
+                          View
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={3} className="py-4 px-4 text-center text-gray-500">
+                      No bookings found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination Controls */}
+          <div className="mt-4 flex justify-between items-center">
+            <button
+              onClick={handlePreviousPage}
+              disabled={currentPage === 1 || loading}
+              className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+            <span className="text-sm text-gray-700">
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              onClick={handleNextPage}
+              disabled={currentPage === totalPages || loading}
+              className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+          </div>
+        </>
+      )}
+
+      {isModalOpen && selectedBooking && (
+        <AdminBookingDetailsModal
+          booking={selectedBooking}
+          onClose={handleCloseModal}
+        />
+      )}
     </div>
   );
 };
 
-export default withAuth(BookingsPage, ["super-admin"]);
+export default BookingsPage;
