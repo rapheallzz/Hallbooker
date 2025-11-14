@@ -7,13 +7,13 @@ import LoadingSpinner from "@/components/admin/LoadingSpinner";
 import { Search, XCircle, PlusCircle } from "lucide-react";
 import AdminBookingModal from "@/components/admin/AdminBookingModal";
 
-// Assuming a structure for the Booking object based on common patterns
+// Updated Booking interface to match the API response
 interface Booking {
   _id: string;
   bookingId: string;
-  hall: { name: string };
-  user: { fullName: string };
-  bookingDate: string;
+  hall: string; // This is now an ID
+  user: string; // This is now an ID
+  startTime: string; // Changed from bookingDate
   status: "pending" | "confirmed" | "cancelled";
   totalPrice: number;
 }
@@ -57,7 +57,12 @@ const BookingsPage = () => {
       setLoading(true);
       const url = selectedHall ? `/admin/halls/${selectedHall}/bookings` : '/admin/bookings';
       const response = await api.get(url);
-      setBookings(Array.isArray(response.data.data) ? response.data.data : []);
+      // Correctly extract bookings from the nested structure
+      if (response.data && response.data.data && Array.isArray(response.data.data.bookings)) {
+        setBookings(response.data.data.bookings);
+      } else {
+        setBookings([]);
+      }
     } catch (error) {
       console.error("Error fetching bookings:", error);
       Swal.fire("Error", "Could not fetch bookings. Please try again.", "error");
@@ -70,11 +75,14 @@ const BookingsPage = () => {
     let sortableItems = [...bookings];
 
     if (searchTerm) {
-      sortableItems = sortableItems.filter(booking =>
-        booking.bookingId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        booking.hall.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        booking.user.fullName.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      sortableItems = sortableItems.filter(booking => {
+        const hallName = halls.find(h => h._id === booking.hall)?.name || '';
+        return (
+          (booking.bookingId && booking.bookingId.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          hallName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (booking.user && booking.user.toLowerCase().includes(searchTerm.toLowerCase()))
+        );
+      });
     }
 
     if (statusFilter) {
@@ -94,7 +102,7 @@ const BookingsPage = () => {
     }
 
     return sortableItems;
-  }, [bookings, searchTerm, statusFilter, sortConfig]);
+  }, [bookings, searchTerm, statusFilter, sortConfig, halls]);
 
   const requestSort = (key: keyof Booking) => {
     let direction: "ascending" | "descending" = 'ascending';
@@ -189,36 +197,39 @@ const BookingsPage = () => {
                 <tr>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => requestSort('bookingId')}>Booking ID</th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => requestSort('hall')}>Hall</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => requestSort('user')}>User</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => requestSort('bookingDate')}>Date</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => requestSort('user')}>User ID</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => requestSort('startTime')}>Date</th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => requestSort('totalPrice')}>Total Price</th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => requestSort('status')}>Status</th>
                     <th scope="col" className="relative px-6 py-3"><span className="sr-only">Actions</span></th>
                 </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                {filteredAndSortedBookings.map((booking) => (
-                    <tr key={booking._id}>
-                        <td className="px-6 py-4 whitespace-nowrap font-mono text-sm">{booking.bookingId}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">{booking.hall.name}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">{booking.user.fullName}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">{new Date(booking.bookingDate).toLocaleDateString()}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">${booking.totalPrice.toLocaleString()}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                                booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                'bg-red-100 text-red-800'
-                            }`}>
-                                {booking.status}
-                            </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            {/* Actions like view details or cancel could go here */}
-                            <button className="text-indigo-600 hover:text-indigo-900">View</button>
-                        </td>
-                    </tr>
-                ))}
+                {filteredAndSortedBookings.map((booking) => {
+                    const hallName = halls.find(h => h._id === booking.hall)?.name || 'N/A';
+                    return (
+                        <tr key={booking._id}>
+                            <td className="px-6 py-4 whitespace-nowrap font-mono text-sm">{booking.bookingId}</td>
+                            <td className="px-6 py-4 whitespace-nowrap">{hallName}</td>
+                            <td className="px-6 py-4 whitespace-nowrap">{booking.user}</td>
+                            <td className="px-6 py-4 whitespace-nowrap">{new Date(booking.startTime).toLocaleDateString()}</td>
+                            <td className="px-6 py-4 whitespace-nowrap">${booking.totalPrice.toLocaleString()}</td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                    booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
+                                    booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                    'bg-red-100 text-red-800'
+                                }`}>
+                                    {booking.status}
+                                </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                {/* Actions like view details or cancel could go here */}
+                                <button className="text-indigo-600 hover:text-indigo-900">View</button>
+                            </td>
+                        </tr>
+                    )
+                })}
                 </tbody>
             </table>
         </div>
