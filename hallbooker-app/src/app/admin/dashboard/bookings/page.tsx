@@ -6,74 +6,35 @@ import Swal from "sweetalert2";
 import LoadingSpinner from "@/components/admin/LoadingSpinner";
 import { Search, XCircle, PlusCircle } from "lucide-react";
 import AdminBookingModal from "@/components/admin/AdminBookingModal";
-import AdminBookingDetailsModal from "@/components/admin/AdminBookingDetailsModal";
 
-// Updated Booking interface to match the API response
+// Assuming a structure for the Booking object based on common patterns
 interface Booking {
   _id: string;
   bookingId: string;
-  hall: string; // This is now an ID
-  user: string; // This is now an ID
-  startTime: string; // Changed from bookingDate
+  hall: { name: string };
+  user: { fullName: string };
+  bookingDate: string;
   status: "pending" | "confirmed" | "cancelled";
   totalPrice: number;
-  eventDetails: string;
-}
-
-interface Hall {
-  _id: string;
-  name: string;
 }
 
 const BookingsPage = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
-  const [halls, setHalls] = useState<Hall[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("");
-  const [selectedHall, setSelectedHall] = useState<string>("");
   const [sortConfig, setSortConfig] = useState<{ key: keyof Booking; direction: "ascending" | "descending" } | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
-  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [limit, setLimit] = useState(10);
-
-  useEffect(() => {
-    const fetchHalls = async () => {
-      try {
-        const response = await api.get('/halls');
-        if (response.data && Array.isArray(response.data.data)) {
-          setHalls(response.data.data);
-        }
-      } catch (error {
-        console.error("Failed to fetch halls", error);
-      }
-    };
-    fetchHalls();
-  }, []);
 
   useEffect(() => {
     fetchBookings();
-  }, [selectedHall, currentPage, limit]);
+  }, []);
 
   const fetchBookings = async () => {
     try {
       setLoading(true);
-      const url = selectedHall ? `/admin/halls/${selectedHall}/bookings` : '/admin/bookings';
-      const response = await api.get(url, {
-        params: {
-          page: currentPage,
-          limit,
-        },
-      });
-      if (response.data && response.data.data && Array.isArray(response.data.data.bookings)) {
-        setBookings(response.data.data.bookings);
-        setTotalPages(response.data.data.totalPages);
-      } else {
-        setBookings([]);
-      }
+      const response = await api.get("/bookings/my-bookings");
+      setBookings(Array.isArray(response.data.data) ? response.data.data : []);
     } catch (error) {
       console.error("Error fetching bookings:", error);
       Swal.fire("Error", "Could not fetch bookings. Please try again.", "error");
@@ -82,27 +43,21 @@ const BookingsPage = () => {
     }
   };
 
-  const handleViewBooking = (booking: Booking) => {
-    setSelectedBooking(booking);
-    setIsDetailsModalOpen(true);
-  };
-
   const filteredAndSortedBookings = useMemo(() => {
     let sortableItems = [...bookings];
+
     if (searchTerm) {
-      sortableItems = sortableItems.filter(booking => {
-        const hallName = halls.find(h => h._id === booking.hall)?.name || '';
-        return (
-          (booking.bookingId && booking.bookingId.toLowerCase().includes(searchTerm.toLowerCase())) ||
-          hallName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (booking.user && booking.user.toLowerCase().includes(searchTerm.toLowerCase())) ||
-          (booking.eventDetails && booking.eventDetails.toLowerCase().includes(searchTerm.toLowerCase()))
-        );
-      });
+      sortableItems = sortableItems.filter(booking =>
+        booking.bookingId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        booking.hall.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        booking.user.fullName.toLowerCase().includes(searchTerm.toLowerCase())
+      );
     }
+
     if (statusFilter) {
         sortableItems = sortableItems.filter(booking => booking.status === statusFilter);
     }
+
     if (sortConfig !== null) {
       sortableItems.sort((a, b) => {
         if (a[sortConfig.key] < b[sortConfig.key]) {
@@ -114,8 +69,9 @@ const BookingsPage = () => {
         return 0;
       });
     }
+
     return sortableItems;
-  }, [bookings, searchTerm, statusFilter, sortConfig, halls]);
+  }, [bookings, searchTerm, statusFilter, sortConfig]);
 
   const requestSort = (key: keyof Booking) => {
     let direction: "ascending" | "descending" = 'ascending';
@@ -145,6 +101,7 @@ const BookingsPage = () => {
     }
   };
 
+
   if (loading) {
     return <LoadingSpinner />;
   }
@@ -162,6 +119,7 @@ const BookingsPage = () => {
         </button>
       </div>
       <div className="bg-white p-6 shadow-lg rounded-lg">
+        {/* Filtering and Search UI */}
         <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
             <div className="relative w-full md:w-1/3">
                 <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -185,70 +143,47 @@ const BookingsPage = () => {
                     <option value="cancelled">Cancelled</option>
                 </select>
             </div>
-            <div className="w-full md:w-1/4">
-                <select
-                    value={selectedHall}
-                    onChange={(e) => setSelectedHall(e.target.value)}
-                    className="block w-full p-2 border border-gray-300 rounded-md"
-                >
-                    <option value="">All Halls</option>
-                    {halls.map((hall) => (
-                        <option key={hall._id} value={hall._id}>
-                            {hall.name}
-                        </option>
-                    ))}
-                </select>
-            </div>
         </div>
+
+        {/* Bookings Table */}
         <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                 <tr>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => requestSort('bookingId')}>Booking ID</th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => requestSort('hall')}>Hall</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => requestSort('eventDetails')}>Event Details</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => requestSort('startTime')}>Date</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => requestSort('user')}>User</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => requestSort('bookingDate')}>Date</th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => requestSort('totalPrice')}>Total Price</th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => requestSort('status')}>Status</th>
                     <th scope="col" className="relative px-6 py-3"><span className="sr-only">Actions</span></th>
                 </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                {filteredAndSortedBookings.map((booking) => {
-                    const hallName = halls.find(h => h._id === booking.hall)?.name || 'N/A';
-                    return (
-                        <tr key={booking._id}>
-                            <td className="px-6 py-4 whitespace-nowrap font-mono text-sm text-gray-900">{booking.bookingId}</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-gray-900">{hallName}</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-gray-900">{booking.eventDetails}</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-gray-900">{new Date(booking.startTime).toLocaleDateString()}</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-gray-900">${booking.totalPrice.toLocaleString()}</td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                    booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                                    booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                    'bg-red-100 text-red-800'
-                                }`}>
-                                    {booking.status}
-                                </span>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <button data-testid={`view-booking-${booking._id}`} onClick={() => handleViewBooking(booking)} className="text-indigo-600 hover:text-indigo-900">View</button>
-                            </td>
-                        </tr>
-                    )
-                })}
+                {filteredAndSortedBookings.map((booking) => (
+                    <tr key={booking._id}>
+                        <td className="px-6 py-4 whitespace-nowrap font-mono text-sm">{booking.bookingId}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">{booking.hall.name}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">{booking.user.fullName}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">{new Date(booking.bookingDate).toLocaleDateString()}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">${booking.totalPrice.toLocaleString()}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
+                                booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-red-100 text-red-800'
+                            }`}>
+                                {booking.status}
+                            </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            {/* Actions like view details or cancel could go here */}
+                            <button className="text-indigo-600 hover:text-indigo-900">View</button>
+                        </td>
+                    </tr>
+                ))}
                 </tbody>
             </table>
-        </div>
-        <div className="flex justify-between items-center mt-4">
-            <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-md disabled:bg-gray-300">
-                Previous
-            </button>
-            <span>Page {currentPage} of {totalPages}</span>
-            <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-md disabled:bg-gray-300">
-                Next
-            </button>
         </div>
         {filteredAndSortedBookings.length === 0 && !loading && (
             <div className="text-center py-8">
@@ -263,14 +198,6 @@ const BookingsPage = () => {
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleCreateBooking}
       />
-      {isDetailsModalOpen && selectedBooking && (
-        <AdminBookingDetailsModal
-            isOpen={isDetailsModalOpen}
-            onClose={() => setIsDetailsModalOpen(false)}
-            booking={selectedBooking}
-            halls={halls}
-        />
-      )}
     </div>
   );
 };
