@@ -55,7 +55,7 @@ const HallsPage = () => {
   const handleUpdate = async (formData: any) => {
     if (!editingHall) return;
     try {
-      await api.put(`/halls/${editingHall.id}`, formData);
+      await api.patch(`/halls/${editingHall.id}`, formData);
       fetchHalls();
       closeHallModal();
       setEditingHall(undefined);

@@ -138,7 +138,7 @@ const HallManagementPage = () => {
   const handleUpdateHall = async (formData: any) => {
     if (!editingHall) return;
     try {
-      await api.put(`/halls/${editingHall._id}`, formData);
+      await api.patch(`/halls/${editingHall._id}`, formData);
       fetchHalls();
       setIsModalOpen(false);
       setEditingHall(undefined);

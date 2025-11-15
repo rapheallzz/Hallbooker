@@ -46,8 +46,18 @@ const MediaUpload: React.FC<MediaUploadProps> = ({ hallId, onUploadSuccess }) =>
 
       // 2. Send the URLs to our backend to associate with the hall
       if (validUrls.length > 0) {
-        await api.post(`/halls/${hallId}/media`, { imageUrl: validUrls[0] });
-        onUploadSuccess([validUrls[0]]);
+        // The backend endpoint for media upload only accepts one URL at a time.
+        // To handle multiple file uploads, we create an array of promises,
+        // where each promise is a POST request for a single image URL.
+        const backendUploadPromises = validUrls.map(url =>
+          api.post(`/halls/${hallId}/media`, { imageUrl: url })
+        );
+
+        // We wait for all these promises to resolve.
+        await Promise.all(backendUploadPromises);
+
+        // After all URLs have been successfully sent, we call the success callback.
+        onUploadSuccess(validUrls);
       } else {
         onUploadSuccess([]);
       }
