@@ -15,6 +15,7 @@ const RegisterPage = () => {
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -25,9 +26,11 @@ const RegisterPage = () => {
     e.preventDefault();
     setError('');
     setSuccess('');
+    setIsLoading(true);
 
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match.');
+      setIsLoading(false);
       return;
     }
 
@@ -39,6 +42,8 @@ const RegisterPage = () => {
       }, 3000);
     } catch (err: any) {
       setError(err.response?.data?.message || 'An error occurred during registration.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -116,9 +121,10 @@ const RegisterPage = () => {
             {success && <p className="text-sm text-green-600">{success}</p>}
             <button
               type="submit"
-              className="w-full px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              disabled={isLoading}
+              className="w-full px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Register
+              {isLoading ? 'Registering...' : 'Register'}
             </button>
           </form>
           <p className="text-sm text-center text-gray-600">
