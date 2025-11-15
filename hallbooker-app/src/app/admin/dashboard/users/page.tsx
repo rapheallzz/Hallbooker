@@ -195,11 +195,52 @@ const PendingApplicationsTab = () => {
   };
 
   const handleApprove = async (userId: string) => {
-    // ... (logic unchanged)
+    Swal.fire({
+      title: "Approving...",
+      text: "Please wait while the application is being approved.",
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+    });
+    try {
+      await api.patch(`/admin/hall-owner-applications/${userId}/approve`);
+      Swal.fire("Approved!", "The application has been approved.", "success");
+      fetchApplications(); // Refresh data
+    } catch (error) {
+      console.error("Error approving application:", error);
+      Swal.fire("Error", "Could not approve the application.", "error");
+    }
   };
 
   const handleReject = async (userId: string) => {
-    // ... (logic unchanged)
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You are about to reject this application.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      confirmButtonText: "Yes, reject it!",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        Swal.fire({
+          title: "Rejecting...",
+          text: "Please wait while the application is being rejected.",
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
+          },
+        });
+        try {
+          await api.patch(`/admin/hall-owner-applications/${userId}/reject`);
+          Swal.fire("Rejected!", "The application has been rejected.", "success");
+          fetchApplications(); // Refresh data
+        } catch (error) {
+          console.error("Error rejecting application:", error);
+          Swal.fire("Error", "Could not reject the application.", "error");
+        }
+      }
+    });
   };
 
   if (loading) return <LoadingSpinner />;
