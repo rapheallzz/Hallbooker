@@ -73,28 +73,32 @@ const Header = () => {
       );
     }
 
-    if (user.role?.includes('hall-owner')) {
-      return null; // Don't show the button if the user is already a hall owner
+    // Hide button if user is a hall-owner or super-admin
+    if (user.role?.includes('hall-owner') || user.role?.includes('super-admin')) {
+      return null;
     }
 
-    if (user.status === 'pending') {
-      return (
-        <button disabled className="text-gray-600 cursor-not-allowed">
-          Pending
-        </button>
-      );
-    }
+    // Show button only to users with the "user" role
+    if (user.role?.includes('user')) {
+      if (user.status === 'pending') {
+        return (
+          <button disabled className="text-gray-600 cursor-not-allowed">
+            Pending
+          </button>
+        );
+      }
 
-    if (user.status === 'not-applied') {
-      return (
-        <button
-          onClick={() => setIsTermsModalOpen(true)}
-          disabled={loading}
-          className="text-gray-600 hover:text-gray-900"
-        >
-          {loading ? "Applying..." : "Become an owner"}
-        </button>
-      );
+      if (user.status === 'not-applied') {
+        return (
+          <button
+            onClick={() => setIsTermsModalOpen(true)}
+            disabled={loading}
+            className="text-gray-600 hover:text-gray-900"
+          >
+            {loading ? "Applying..." : "Become an owner"}
+          </button>
+        );
+      }
     }
 
     return null;
