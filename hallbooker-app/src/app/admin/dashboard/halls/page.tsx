@@ -4,9 +4,10 @@ import withAuth from "@/components/auth/withAuth";
 import api from "@/services/api";
 import Swal from "sweetalert2";
 import LoadingSpinner from "@/components/admin/LoadingSpinner";
-import { Search, Trash, Edit, Power, PowerOff, Eye, PlusCircle } from "lucide-react";
+import { Search, Trash, Edit, Power, PowerOff, Eye, PlusCircle, Calendar as CalendarIcon } from "lucide-react";
 import Link from "next/link";
 import HallModal from "@/components/vendor/HallModal";
+import ReservationModal from "@/components/vendor/ReservationModal";
 import Tabs from "@/components/admin/Tabs"; // New Import
 
 // Hall Interface
@@ -37,6 +38,8 @@ const HallManagementPage = () => {
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingHall, setEditingHall] = useState<Hall | undefined>(undefined);
+  const [isReservationModalOpen, setIsReservationModalOpen] = useState(false);
+  const [selectedHallId, setSelectedHallId] = useState<string | null>(null);
 
   // Facilities State
   const [facilities, setFacilities] = useState<Facility[]>([]);
@@ -157,6 +160,22 @@ const HallManagementPage = () => {
     setIsModalOpen(true);
   };
 
+  const handleCreateReservation = async (reservationData: any) => {
+    try {
+      await api.post(`/halls/${reservationData.hallId}/reservations`, reservationData);
+      setIsReservationModalOpen(false);
+      Swal.fire('Success!', 'Reservation created successfully.', 'success');
+    } catch (error) {
+      console.error('Failed to create reservation:', error);
+      Swal.fire('Error', 'Could not create reservation.', 'error');
+    }
+  };
+
+  const openReservationModal = (hallId: string) => {
+    setSelectedHallId(hallId);
+    setIsReservationModalOpen(true);
+  };
+
   // Facilities Functions
   const fetchFacilities = () => {
     return api.get("/facilities")
@@ -262,6 +281,15 @@ const HallManagementPage = () => {
         />
       )}
 
+      {selectedHallId && (
+        <ReservationModal
+          isOpen={isReservationModalOpen}
+          onClose={() => setIsReservationModalOpen(false)}
+          onSubmit={handleCreateReservation}
+          hallId={selectedHallId}
+        />
+      )}
+
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-3xl font-bold text-primary">Hall Management</h1>
         {activeTab === 'halls' && (
@@ -347,6 +375,9 @@ const HallManagementPage = () => {
                                 className="text-yellow-600 hover:text-yellow-900 mr-3"
                             >
                                 {hall.isOnlineBookingEnabled ? <PowerOff size={18} /> : <Power size={18} />}
+                            </button>
+                            <button onClick={() => openReservationModal(hall._id)} title="Block Dates" className="text-green-600 hover:text-green-900 mr-3">
+                                <CalendarIcon size={18} />
                             </button>
                             <button onClick={() => handleDeleteHall(hall._id)} title="Delete Hall" className="text-red-600 hover:text-red-900">
                                 <Trash size={18} />

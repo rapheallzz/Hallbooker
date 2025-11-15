@@ -4,6 +4,7 @@ import api from "@/services/api";
 import HallModal from "@/components/vendor/HallModal";
 import ReservationModal from "@/components/vendor/ReservationModal";
 import { useUI } from "@/context/UIContext";
+import { Calendar as CalendarIcon } from "lucide-react";
 
 interface Hall {
   id: string;
@@ -143,7 +144,13 @@ const HallsPage = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-no-wrap text-right border-b border-gray-500 text-gray-900">
                       <button onClick={() => openEditModal(hall)} className="px-5 py-2 border-primary border text-primary rounded transition duration-300 hover:bg-primary hover:text-white focus:outline-none">Edit</button>
-                      <button onClick={() => openReservationModal(hall.id)} className="ml-2 px-5 py-2 border-yellow-500 border text-yellow-500 rounded transition duration-300 hover:bg-yellow-500 hover:text-white focus:outline-none">Block Dates</button>
+                      <button
+                        onClick={() => openReservationModal(hall.id)}
+                        className="ml-2 px-3 py-2 border-yellow-500 border text-yellow-500 rounded transition duration-300 hover:bg-yellow-500 hover:text-white focus:outline-none"
+                        title="Block Dates"
+                      >
+                        <CalendarIcon size={18} />
+                      </button>
                       <button onClick={() => handleDelete(hall.id)} className="ml-2 px-5 py-2 border-red-500 border text-red-500 rounded transition duration-300 hover:bg-red-500 hover:text-white focus:outline-none">Delete</button>
                     </td>
                   </tr>

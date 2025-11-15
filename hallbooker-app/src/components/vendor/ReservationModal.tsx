@@ -21,13 +21,16 @@ const weekDays = [
 
 const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, onSubmit, hallId }) => {
   const [formData, setFormData] = useState({
-    pattern: 'date-range',
+    reservationPattern: 'date-range',
     startDate: '',
     endDate: '',
+    year: new Date().getFullYear(),
+    month: new Date().getMonth() + 1,
+    week: 1,
     days: [] as number[],
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -47,7 +50,17 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, on
       alert('A hall must be selected to create a reservation.');
       return;
     }
-    onSubmit({ ...formData, hallId });
+    const { reservationPattern, startDate, endDate, year, month, week, days } = formData;
+    onSubmit({
+      hallId,
+      reservationPattern,
+      startDate,
+      endDate,
+      year: Number(year),
+      month: Number(month),
+      week: Number(week),
+      days,
+    });
   };
 
   if (!isOpen) return null;
@@ -57,16 +70,31 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, on
       <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-lg">
         <h2 className="text-2xl font-bold mb-6">Block Dates (Create Reservation)</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="startDate" className="block text-sm font-medium text-gray-700">Start Date</label>
-            <input type="date" id="startDate" name="startDate" value={formData.startDate} onChange={handleChange} className="w-full px-4 py-2 border rounded-md" required />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="startDate" className="block text-sm font-medium text-gray-700">Start Date</label>
+              <input type="date" id="startDate" name="startDate" value={formData.startDate} onChange={handleChange} className="w-full px-4 py-2 border rounded-md" required />
+            </div>
+            <div>
+              <label htmlFor="endDate" className="block text-sm font-medium text-gray-700">End Date</label>
+              <input type="date" id="endDate" name="endDate" value={formData.endDate} onChange={handleChange} className="w-full px-4 py-2 border rounded-md" required />
+            </div>
+            <div>
+              <label htmlFor="year" className="block text-sm font-medium text-gray-700">Year</label>
+              <input type="number" id="year" name="year" value={formData.year} onChange={handleChange} className="w-full px-4 py-2 border rounded-md" required />
+            </div>
+            <div>
+              <label htmlFor="month" className="block text-sm font-medium text-gray-700">Month</label>
+              <input type="number" id="month" name="month" value={formData.month} onChange={handleChange} className="w-full px-4 py-2 border rounded-md" required />
+            </div>
+            <div>
+              <label htmlFor="week" className="block text-sm font-medium text-gray-700">Week</label>
+              <input type="number" id="week" name="week" value={formData.week} onChange={handleChange} className="w-full px-4 py-2 border rounded-md" required />
+            </div>
           </div>
+
           <div>
-            <label htmlFor="endDate" className="block text-sm font-medium text-gray-700">End Date</label>
-            <input type="date" id="endDate" name="endDate" value={formData.endDate} onChange={handleChange} className="w-full px-4 py-2 border rounded-md" required />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Select Days of the Week</label>
+            <label className="block text-sm font-medium text-gray-700">Select Days of the Week to Block</label>
             <div className="grid grid-cols-3 gap-2 mt-2">
               {weekDays.map((day) => (
                 <label key={day.value} className="flex items-center space-x-2">
