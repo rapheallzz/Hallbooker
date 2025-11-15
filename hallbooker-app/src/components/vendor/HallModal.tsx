@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import MediaUpload from './MediaUpload';
 import api from '@/services/api';
+import Swal from 'sweetalert2';
 
 interface Facility {
   name: string;
@@ -24,6 +25,7 @@ interface HallModalProps {
 const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [hallId, setHallId] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [countries, setCountries] = useState([]);
   const [states, setStates] = useState([]);
   const [lgas, setLgas] = useState([]);
@@ -223,12 +225,29 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
         hallSize: formData.hallSize,
         rules: rulesArray,
       };
+      setIsSubmitting(true);
+      Swal.fire({
+        title: 'Creating Hall...',
+        text: 'Please wait while we set things up.',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
       try {
         const response = await api.post('/halls', payload);
         setHallId(response.data.data._id);
+        Swal.close();
         // handleNext() is removed from here. The useEffect will handle the step change.
       } catch (error) {
         console.error('Failed to create hall:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Oops...',
+          text: 'Failed to create hall. Please try again.',
+        });
+      } finally {
+        setIsSubmitting(false);
       }
     } else {
       onClose(); // Just close the modal on the final step
@@ -505,12 +524,21 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
 
           <div className="flex justify-end mt-8 space-x-4">
             {!hall && currentStep > 1 && (
-              <button type="button" onClick={handleBack} className="px-4 py-2 rounded-md text-gray-600 bg-gray-100 hover:bg-gray-200">
+              <button
+                type="button"
+                onClick={handleBack}
+                disabled={isSubmitting}
+                className="px-4 py-2 rounded-md text-gray-600 bg-gray-100 hover:bg-gray-200 disabled:opacity-50"
+              >
                 Back
               </button>
             )}
-            <button type="submit" className="px-4 py-2 rounded-md text-white bg-primary hover:bg-primary-dark">
-              {hall ? 'Save Changes' : (currentStep === 1 || currentStep === 2 ? 'Continue' : 'Finish')}
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="px-4 py-2 rounded-md text-white bg-primary hover:bg-primary-dark disabled:opacity-50"
+            >
+              {isSubmitting ? 'Submitting...' : (hall ? 'Save Changes' : (currentStep === 1 || currentStep === 2 ? 'Continue' : 'Finish'))}
             </button>
           </div>
         </form>
