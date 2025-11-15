@@ -35,7 +35,7 @@ const RegisterPage = () => {
       await api.post('/auth/register', formData);
       setSuccess('Registration successful! Please check your email to verify your account.');
       setTimeout(() => {
-        router.push('/auth/login');
+        router.push('/auth/verify-email');
       }, 3000);
     } catch (err: any) {
       setError(err.response?.data?.message || 'An error occurred during registration.');
