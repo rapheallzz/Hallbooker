@@ -35,6 +35,7 @@ interface AuthContextType {
   login: (token: string, user: User) => void;
   logout: () => void;
   updateToken: (token: string) => void;
+  updateUserApplicationStatus: (status: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -104,8 +105,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const updateUserApplicationStatus = (status: string) => {
+    if (user) {
+      const updatedUser = {
+        ...user,
+        hallOwnerApplication: {
+          ...user.hallOwnerApplication,
+          status,
+        },
+      };
+      setUser(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout, updateToken }}>
+    <AuthContext.Provider value={{ user, token, loading, login, logout, updateToken, updateUserApplicationStatus }}>
       {children}
     </AuthContext.Provider>
   );

@@ -10,9 +10,10 @@ import CollapsedSearchBar from "./CollapsedSearchBar";
 import NotificationIcon from "./notifications/NotificationIcon";
 import NotificationDropdown from "./notifications/NotificationDropdown";
 import TermsOfServiceModal from "./TermsOfServiceModal";
+import Swal from "sweetalert2";
 
 const Header = () => {
-  const { user, logout, updateToken } = useAuth();
+  const { user, logout, updateToken, updateUserApplicationStatus } = useAuth();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -33,10 +34,19 @@ const Header = () => {
     setMessage("");
     try {
       await api.post("/users/apply-hall-owner", { hasReadTermsOfService: true });
-      setMessage("Application successful!");
+      updateUserApplicationStatus("pending");
+      Swal.fire({
+        icon: "success",
+        title: "Application Submitted!",
+        text: "Your application to become a hall owner has been submitted successfully.",
+      });
     } catch (error: any) {
         const errorMessage = error.response?.data?.message || "An error occurred. Please try again.";
-        setMessage(errorMessage);
+        Swal.fire({
+          icon: "error",
+          title: "Application Failed",
+          text: errorMessage,
+        });
     } finally {
       setLoading(false);
     }
