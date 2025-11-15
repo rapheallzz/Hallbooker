@@ -319,20 +319,20 @@ const HallManagementPage = () => {
             <div className="bg-white p-6 shadow-lg rounded-lg">
                 <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
                     <div className="relative w-full md:w-1/3">
-                        <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600" />
                         <input
                             type="text"
                             placeholder="Search by name, location, owner..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary w-full"
+                            className="pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary w-full text-gray-600"
                         />
                     </div>
                     <div className="w-full md:w-1/4">
                         <select
                             value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value)}
-                            className="block w-full p-2 border border-gray-300 rounded-md"
+                            className="block w-full p-2 border border-gray-300 rounded-md text-gray-600"
                         >
                             <option value="">All Booking Statuses</option>
                             <option value="enabled">Booking Enabled</option>

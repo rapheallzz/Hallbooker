@@ -180,7 +180,7 @@ const AnalyticsPage = () => {
             <select
                 value={selectedHall}
                 onChange={(e) => setSelectedHall(e.target.value)}
-                className="block w-full md:w-1/3 p-2 border border-gray-300 rounded-md"
+                className="block w-full md:w-1/3 p-2 border border-gray-300 rounded-md text-gray-600"
             >
                 <option value="">Select a Hall</option>
                 {halls.map((hall) => (

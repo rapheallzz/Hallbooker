@@ -68,34 +68,34 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ isOpen, onClose, on
   return (
     <div className="fixed inset-0 z-50 flex justify-center items-center">
       <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-lg">
-        <h2 className="text-2xl font-bold mb-6">Block Dates (Create Reservation)</h2>
+        <h2 className="text-2xl font-bold mb-6 text-primary">Block Dates (Create Reservation)</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label htmlFor="startDate" className="block text-sm font-medium text-gray-700">Start Date</label>
-              <input type="date" id="startDate" name="startDate" value={formData.startDate} onChange={handleChange} className="w-full px-4 py-2 border rounded-md" required />
+              <input type="date" id="startDate" name="startDate" value={formData.startDate} onChange={handleChange} className="w-full px-4 py-2 border rounded-md text-gray-600" required />
             </div>
             <div>
               <label htmlFor="endDate" className="block text-sm font-medium text-gray-700">End Date</label>
-              <input type="date" id="endDate" name="endDate" value={formData.endDate} onChange={handleChange} className="w-full px-4 py-2 border rounded-md" required />
+              <input type="date" id="endDate" name="endDate" value={formData.endDate} onChange={handleChange} className="w-full px-4 py-2 border rounded-md text-gray-600" required />
             </div>
             <div>
               <label htmlFor="year" className="block text-sm font-medium text-gray-700">Year</label>
-              <input type="number" id="year" name="year" value={formData.year} onChange={handleChange} className="w-full px-4 py-2 border rounded-md" required />
+              <input type="number" id="year" name="year" value={formData.year} onChange={handleChange} className="w-full px-4 py-2 border rounded-md text-gray-600" required />
             </div>
             <div>
               <label htmlFor="month" className="block text-sm font-medium text-gray-700">Month</label>
-              <input type="number" id="month" name="month" value={formData.month} onChange={handleChange} className="w-full px-4 py-2 border rounded-md" required />
+              <input type="number" id="month" name="month" value={formData.month} onChange={handleChange} className="w-full px-4 py-2 border rounded-md text-gray-600" required />
             </div>
             <div>
               <label htmlFor="week" className="block text-sm font-medium text-gray-700">Week</label>
-              <input type="number" id="week" name="week" value={formData.week} onChange={handleChange} className="w-full px-4 py-2 border rounded-md" required />
+              <input type="number" id="week" name="week" value={formData.week} onChange={handleChange} className="w-full px-4 py-2 border rounded-md text-gray-600" required />
             </div>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700">Select Days of the Week to Block</label>
-            <div className="grid grid-cols-3 gap-2 mt-2">
+            <div className="grid grid-cols-3 gap-2 mt-2 text-gray-600">
               {weekDays.map((day) => (
                 <label key={day.value} className="flex items-center space-x-2">
                   <input

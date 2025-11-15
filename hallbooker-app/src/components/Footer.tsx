@@ -28,12 +28,7 @@ const Footer = () => {
             <ul className="mt-4 space-y-2">
               <li>
                 <a href="#" className="text-gray-600 hover:text-gray-900">
-                  Airbnb.org: disaster relief housing
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-gray-600 hover:text-gray-900">
-                  Support Afghan refugees
+                 Gohallbooker.org: disaster relief housing
                 </a>
               </li>
               <li>
@@ -53,7 +48,7 @@ const Footer = () => {
               </li>
               <li>
                 <a href="#" className="text-gray-600 hover:text-gray-900">
-                  AirCover: protection for Hosts
+                  GoCover: protection for Hosts
                 </a>
               </li>
               <li>

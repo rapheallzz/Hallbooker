@@ -102,15 +102,15 @@ const HallOwnerApplications = () => {
   }
 
   return (
-    <div className="bg-white p-4 shadow-lg rounded-lg">
+    <div className="bg-white p-4 shadow-lg rounded-lg text-gray-600">
       {applications.length === 0 ? (
         <p>No pending applications.</p>
       ) : (
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Name</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Email</th>
               <th scope="col" className="relative px-6 py-3"><span className="sr-only">Actions</span></th>
             </tr>
           </thead>

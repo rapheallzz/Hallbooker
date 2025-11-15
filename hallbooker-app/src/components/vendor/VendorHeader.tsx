@@ -35,7 +35,7 @@ const VendorHeader = () => {
           <input
             type="text"
             placeholder="Search..."
-            className="pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary w-full"
+            className="pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary w-full text-gray-600"
           />
         </div>
       </div>

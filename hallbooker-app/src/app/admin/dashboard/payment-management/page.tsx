@@ -120,7 +120,7 @@ const PaymentSettingsTab = () => {
             value={newMethod}
             onChange={(e) => setNewMethod(e.target.value)}
             placeholder="New payment method"
-            className="flex-grow p-2 border border-gray-300 rounded-md"
+            className="flex-grow p-2 border border-gray-300 rounded-md text-gray-600"
           />
           <button type="submit" className="bg-primary text-white px-4 py-2 rounded-lg">
             <PlusCircle size={20} />
@@ -147,7 +147,7 @@ const PaymentSettingsTab = () => {
             value={newStatus}
             onChange={(e) => setNewStatus(e.target.value)}
             placeholder="New payment status"
-            className="flex-grow p-2 border border-gray-300 rounded-md"
+            className="flex-grow p-2 border border-gray-300 rounded-md text-gray-600"
           />
           <button type="submit" className="bg-primary text-white px-4 py-2 rounded-lg">
             <PlusCircle size={20} />
@@ -248,7 +248,7 @@ const SubaccountsTab = () => {
                           id="hallOwner"
                           value={selectedUserId}
                           onChange={(e) => setSelectedUserId(e.target.value)}
-                          className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
+                          className="mt-1 block w-full p-2 border border-gray-300 rounded-md text-gray-600"
                           required
                       >
                           <option value="" disabled>Select a hall owner</option>
@@ -264,7 +264,7 @@ const SubaccountsTab = () => {
                           id="percentageCharge"
                           value={percentageCharge}
                           onChange={(e) => setPercentageCharge(Number(e.target.value))}
-                          className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
+                          className="mt-1 block w-full p-2 border border-gray-300 rounded-md text-gray-600"
                           placeholder="e.g., 10"
                           min="0"
                           max="100"

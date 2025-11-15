@@ -49,7 +49,7 @@ const AnalyticsPage = () => {
         </div>
       </div>
       <div className="bg-white p-4 shadow-lg rounded-lg">
-        <h2 className="text-xl font-bold mb-2">Bookings by Hall</h2>
+        <h2 className="text-xl font-bold mb-2 text-gray-600">Bookings by Hall</h2>
         <ul>
           {analytics?.bookingsByHall && analytics.bookingsByHall.map((hall) => (
             <li key={hall.hallName} className="flex justify-between py-2 border-b">

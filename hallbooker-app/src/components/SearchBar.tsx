@@ -80,7 +80,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
             id="location"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
-            placeholder="Where are you going?"
+            placeholder="Where is your event?"
             className="w-full bg-transparent border-none focus:ring-0 text-gray-600 placeholder-gray-400"
           />
         </div>
@@ -122,7 +122,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
               dateRange[0].endDate,
               'MMM d'
             )}`}
-            className="w-full bg-transparent border-none focus:ring-0 text-gray-600"
+            className="w-full bg-transparent border-none focus:ring-0 text-gray-600 placeholder-gray-400"
           />
         </div>
         {showCalendar && (
@@ -155,7 +155,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
           <input
             type="text"
             readOnly
-            value={capacity || 'Add guests'}
+            value={capacity || 'number of Guest'}
             className="w-full bg-transparent border-none focus:ring-0 text-gray-600"
           />
         </div>

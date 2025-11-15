@@ -123,7 +123,7 @@ const StaffPage = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={3} className="text-center py-10">
+                  <td colSpan={3} className="text-center py-10 text-gray-600">
                     {!error && "No staff members found. Add one to get started."}
                   </td>
                 </tr>
