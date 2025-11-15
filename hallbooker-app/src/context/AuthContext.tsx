@@ -48,20 +48,39 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
-
-    if (storedToken && storedUser) {
+    if (storedToken) {
       try {
-        setUser(JSON.parse(storedUser));
-        setToken(storedToken);
-        api.defaults.headers.Authorization = `Bearer ${storedToken}`;
+        const decodedToken = jwtDecode<DecodedToken>(storedToken);
+        // Check if token is expired
+        if (decodedToken.exp * 1000 < Date.now()) {
+          logout(); // This will clear storage and redirect
+        } else {
+          setToken(storedToken);
+          api.defaults.headers.Authorization = `Bearer ${storedToken}`;
+          // Fetch user data if not in local storage or if it's stale
+          const storedUser = localStorage.getItem('user');
+          if (storedUser) {
+            setUser(JSON.parse(storedUser));
+          } else {
+            // This part is tricky without a /me endpoint,
+            // We'll rely on the login process to store the user
+            // For now, let's just decode and set what we have.
+            const userFromToken: User = {
+                id: decodedToken._id,
+                email: decodedToken.email,
+                role: decodedToken.role,
+                activeRole: decodedToken.activeRole,
+                fullName: '', // This will be incomplete
+                hallOwnerApplication: decodedToken.hallOwnerApplication
+            };
+            setUser(userFromToken);
+          }
+        }
       } catch (error) {
-        console.error("Failed to parse user from localStorage", error);
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+        console.error("Failed to initialize auth from localStorage", error);
+        logout(); // Token might be invalid, so clear everything
       }
     }
-
     setLoading(false);
   }, []);
 
