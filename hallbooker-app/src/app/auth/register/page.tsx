@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import api from '@/services/api';
 
 const RegisterPage = () => {
@@ -120,6 +121,12 @@ const RegisterPage = () => {
               Register
             </button>
           </form>
+          <p className="text-sm text-center text-gray-600">
+            Already have an account?{' '}
+            <Link href="/auth/login" className="font-medium text-indigo-600 hover:text-indigo-500">
+              Login
+            </Link>
+          </p>
         </div>
       </div>
     </div>
