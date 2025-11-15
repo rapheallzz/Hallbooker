@@ -10,6 +10,7 @@ import ReviewCard from '@/components/ReviewCard';
 import Calendar from '@/components/Calendar';
 import HallDetailSkeleton from '@/components/HallDetailSkeleton';
 import { Range } from 'react-date-range';
+import MediaViewerModal from '@/components/MediaViewerModal';
 
 interface Hall {
   id: string;
@@ -39,6 +40,8 @@ const HallDetailPage = () => {
   const { isBookingModalOpen, openBookingModal, closeBookingModal } = useUI();
   const [isDemoModalOpen, setDemoModalOpen] = useState(false);
   const [ownerContact, setOwnerContact] = useState({ phone: '', whatsappNumber: '' });
+  const [isMediaViewerOpen, setMediaViewerOpen] = useState(false);
+  const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);
   const params = useParams();
   const { id } = params;
 
@@ -85,6 +88,13 @@ const HallDetailPage = () => {
     return <div>Hall not found</div>;
   }
 
+  const openMediaViewer = (index: number) => {
+    setSelectedMediaIndex(index);
+    setMediaViewerOpen(true);
+  };
+
+  const media = [...(hall.images || []), ...(hall.videos || [])];
+
   return (
     <div className="bg-white min-h-screen">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-28">
@@ -110,39 +120,45 @@ const HallDetailPage = () => {
 
         {/* Image gallery */}
         <div className="grid grid-cols-1 md:grid-cols-2 md:grid-rows-2 gap-2 h-96 rounded-xl overflow-hidden">
-          <div className="md:col-span-1 md:row-span-2 h-full">
+          <div className="md:col-span-1 md:row-span-2 h-full cursor-pointer" onClick={() => openMediaViewer(0)}>
             <img
-              src={hall.images?.[0] || '/hall_default.jpg'}
+              src={media[0] || '/hall_default.jpg'}
               alt={hall.name}
               className="w-full h-full object-cover"
             />
           </div>
           <div className="hidden md:grid grid-cols-2 grid-rows-1 gap-2 h-full">
             <img
-              src={hall.images?.[1] || '/hall_default.jpg'}
+              src={media[1] || '/hall_default.jpg'}
               alt=""
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover cursor-pointer"
+              onClick={() => openMediaViewer(1)}
             />
             <img
-              src={hall.images?.[2] || '/hall_default.jpg'}
+              src={media[2] || '/hall_default.jpg'}
               alt=""
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover cursor-pointer"
+              onClick={() => openMediaViewer(2)}
             />
           </div>
           <div className="hidden md:grid grid-cols-2 grid-rows-1 gap-2 h-full">
             <img
-              src={hall.images?.[3] || '/hall_default.jpg'}
+              src={media[3] || '/hall_default.jpg'}
               alt=""
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover cursor-pointer"
+              onClick={() => openMediaViewer(3)}
             />
-             <div className="relative w-full h-full">
+            <div className="relative w-full h-full cursor-pointer" onClick={() => openMediaViewer(4)}>
               <img
-                src={hall.images?.[4] || '/hall_default.jpg'}
+                src={media[4] || '/hall_default.jpg'}
                 alt=""
                 className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center">
-                <button className="bg-white text-black px-4 py-2 rounded-lg text-sm font-semibold">
+                <button
+                  onClick={() => openMediaViewer(0)}
+                  className="bg-white text-black px-4 py-2 rounded-lg text-sm font-semibold"
+                >
                   Show all photos
                 </button>
               </div>
@@ -257,6 +273,12 @@ const HallDetailPage = () => {
           />
         </>
       )}
+      <MediaViewerModal
+        isOpen={isMediaViewerOpen}
+        onClose={() => setMediaViewerOpen(false)}
+        media={media}
+        startIndex={selectedMediaIndex}
+      />
     </div>
   );
 };
