@@ -121,11 +121,11 @@ const HomePage = () => {
             </section>
             <section className="mt-12">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Featured Locations</h2>
-              <Carousel halls={allHalls.slice(0, 5)} />
+              <Carousel halls={allHalls.slice(0, 7)} />
             </section>
             <section className="mt-12">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Newly Added</h2>
-              <Carousel halls={allHalls.slice(6, 11)} />
+              <Carousel halls={allHalls.slice(7, 14)} />
             </section>
           </div>
         )}
