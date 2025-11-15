@@ -37,10 +37,18 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
     setError('');
 
     try {
+      const { startDate, endDate } = dateRange;
+      let finalEndDate = endDate;
+
+      if (startDate && endDate && startDate.getTime() === endDate.getTime()) {
+        finalEndDate = new Date(startDate);
+        finalEndDate.setHours(23, 59, 59, 999);
+      }
+
       const bookingResponse = await api.post('/bookings', {
         hallId: hallId,
-        startTime: dateRange.startDate?.toISOString(),
-        endTime: dateRange.endDate?.toISOString(),
+        startTime: startDate?.toISOString(),
+        endTime: finalEndDate?.toISOString(),
         numberOfPeople,
         eventType,
       });
