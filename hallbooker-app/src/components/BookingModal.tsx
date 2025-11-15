@@ -38,7 +38,7 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
 
     try {
       const bookingResponse = await api.post('/bookings', {
-        hall: hallId,
+        hallId: hallId,
         startTime: dateRange.startDate?.toISOString(),
         endTime: dateRange.endDate?.toISOString(),
         numberOfPeople,
