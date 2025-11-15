@@ -11,7 +11,9 @@ interface User {
   email: string;
   role: string[];
   activeRole: string;
-  status?: string;
+  hallOwnerApplication?: {
+    status: string;
+  };
 }
 
 interface DecodedToken {
@@ -21,7 +23,9 @@ interface DecodedToken {
   activeRole: string;
   iat: number;
   exp: number;
-  status?: string;
+  hallOwnerApplication?: {
+    status: string;
+  };
 }
 
 interface AuthContextType {
@@ -90,7 +94,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         role: decodedToken.role,
         activeRole: decodedToken.activeRole,
         fullName: user?.fullName || '', // Preserve fullName from the old state
-        status: decodedToken.status,
+        hallOwnerApplication: decodedToken.hallOwnerApplication,
       };
       setUser(updatedUser);
       localStorage.setItem('user', JSON.stringify(updatedUser));

@@ -80,7 +80,7 @@ const Header = () => {
 
     // Show button only to users with the "user" role
     if (user.role?.includes('user')) {
-      if (user.status === 'pending') {
+      if (user.hallOwnerApplication?.status === 'pending') {
         return (
           <button disabled className="text-gray-600 cursor-not-allowed">
             Pending
@@ -88,7 +88,7 @@ const Header = () => {
         );
       }
 
-      if (user.status === 'not-applied') {
+      if (user.hallOwnerApplication?.status === 'not-applied') {
         return (
           <button
             onClick={() => setIsTermsModalOpen(true)}
