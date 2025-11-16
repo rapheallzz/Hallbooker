@@ -30,7 +30,7 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({ tier, isCurrent, is
       <p className="text-gray-500 mb-6">per {tier.durationInDays} days</p>
 
       <ul className="space-y-3 text-gray-700 mb-6">
-        {tier.features.map((feature, index) => (
+        {Array.isArray(tier.features) && tier.features.map((feature, index) => (
           <li key={index} className="flex items-center">
             <CheckCircle className="text-green-500 w-5 h-5 mr-2" />
             <span>{feature}</span>
