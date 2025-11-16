@@ -53,7 +53,7 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
         eventDetails,
       });
 
-      const bookingId = bookingResponse.data.data._id;
+      const bookingId = bookingResponse.data.data.bookingId;
       const paymentResponse = await api.post(`/payments/initialize/${bookingId}`);
       const { authorization_url } = paymentResponse.data.data;
 
