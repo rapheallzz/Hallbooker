@@ -16,12 +16,6 @@ interface Tier {
   name: string;
 }
 
-interface SubscriptionTier {
-  tier: string;
-  price: string;
-  features: string[];
-}
-
 interface CurrentSubscription {
   tier: Tier;
   status: string;
@@ -37,16 +31,17 @@ interface SubscriptionHistoryItem {
   status: string;
 }
 
-// Hardcoded tiers as API for all tiers is not specified
-const subscriptionTiersData: SubscriptionTier[] = [
-  { tier: "Basic Package", price: "50,000", features: ["Up to 2 halls", "Basic Analytics", "Email Support"] },
-  { tier: "Standard Package", price: "100,000", features: ["Up to 5 halls", "Standard Analytics", "Priority Support"] },
-  { tier: "Premium Package", price: "200,000", features: ["Up to 10 halls", "Advanced Analytics", "24/7 Support", "Featured Listings"] },
-];
-
+interface LicenseTier {
+  _id: string;
+  name: string;
+  price: number;
+  durationInDays: number;
+  features: string[];
+  maxHalls: number;
+}
 
 const SettingsPage = () => {
-  const [activeTab, setActiveTab] = useState("account");
+  const [activeTab, setActiveTab] = useState("licenses");
 
   // State for Bank Account
   const [bankAccount, setBankAccount] = useState<BankAccount>({ accountNumber: "", bankName: "", accountName: "" });
@@ -54,6 +49,7 @@ const SettingsPage = () => {
   const [bankError, setBankError] = useState<string | null>(null);
 
   // State for Licenses
+  const [licenseTiers, setLicenseTiers] = useState<LicenseTier[]>([]);
   const [currentSubscription, setCurrentSubscription] = useState<CurrentSubscription | null>(null);
   const [subscriptionHistory, setSubscriptionHistory] = useState<SubscriptionHistoryItem[]>([]);
   const [recommendedTier, setRecommendedTier] = useState<string | null>(null);
@@ -64,14 +60,16 @@ const SettingsPage = () => {
     setLicenseLoading(true);
     setLicenseError(null);
     try {
-      const [subRes, historyRes, recommendRes] = await Promise.all([
+      const [tiersRes, subRes, historyRes, recommendRes] = await Promise.all([
+        api.get("/license-tiers"),
         api.get("/licenses/my-subscription"),
         api.get("/licenses/my-history"),
         api.get("/licenses/recommend"),
       ]);
+      setLicenseTiers(tiersRes.data.data);
       setCurrentSubscription(subRes.data.data);
       setSubscriptionHistory(historyRes.data.data);
-      setRecommendedTier(recommendRes.data.data.recommendedTier.name);
+      setRecommendedTier(recommendRes.data.data.recommendedTier._id);
     } catch (error) {
       console.error("Error fetching license data:", error);
       setLicenseError("Failed to load subscription details. Please try again later.");
@@ -169,8 +167,8 @@ const SettingsPage = () => {
             <div className="mb-12">
               <h2 className="text-2xl font-semibold text-gray-800 mb-6">Upgrade or Purchase a Subscription</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {subscriptionTiersData.map((tier) => (
-                  <SubscriptionCard key={tier.tier} tier={tier.tier} price={tier.price} features={tier.features} isCurrent={currentSubscription?.tier.name === tier.tier} isRecommended={tier.tier === recommendedTier} onSelect={() => handleSelectPlan(tier.tier)} />
+                {licenseTiers.map((tier) => (
+                  <SubscriptionCard key={tier._id} tier={tier} isCurrent={currentSubscription?.tier._id === tier._id} isRecommended={tier._id === recommendedTier} onSelect={() => handleSelectPlan(tier._id)} />
                 ))}
               </div>
             </div>
