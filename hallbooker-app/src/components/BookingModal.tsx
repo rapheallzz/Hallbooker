@@ -20,7 +20,7 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
     key: 'selection',
   });
   const [numberOfPeople, setNumberOfPeople] = useState(1);
-  const [eventType, setEventType] = useState('');
+  const [eventDetails, setEventDetails] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -50,7 +50,7 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
         startTime: startDate?.toISOString(),
         endTime: finalEndDate?.toISOString(),
         numberOfPeople,
-        eventType,
+        eventDetails,
       });
 
       const bookingId = bookingResponse.data.data._id;
@@ -113,14 +113,14 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
                 />
               </div>
               <div className="mb-6">
-                <label htmlFor="eventType" className="block text-sm font-medium text-gray-700 mb-1">
-                  Event Type
+                <label htmlFor="eventDetails" className="block text-sm font-medium text-gray-700 mb-1">
+                  Event Details
                 </label>
                 <input
                   type="text"
-                  id="eventType"
-                  value={eventType}
-                  onChange={(e) => setEventType(e.target.value)}
+                  id="eventDetails"
+                  value={eventDetails}
+                  onChange={(e) => setEventDetails(e.target.value)}
                   className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#295FA7] focus:border-transparent sm:text-sm"
                   required
                 />
@@ -141,8 +141,8 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
                   <span className="font-medium text-gray-900">{numberOfPeople}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Event Type:</span>
-                  <span className="font-medium text-gray-900">{eventType}</span>
+                  <span className="text-gray-600">Event Details:</span>
+                  <span className="font-medium text-gray-900">{eventDetails}</span>
                 </div>
               </div>
             </div>
