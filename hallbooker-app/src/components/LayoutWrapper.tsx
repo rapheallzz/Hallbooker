@@ -16,8 +16,9 @@ const LayoutWrapper = ({ children }: { children: React.ReactNode }) => {
   const isDashboardPage =
     pathname.startsWith("/vendor") ||
     pathname.startsWith("/admin");
+  const isPaymentPage = pathname.startsWith("/payment/verify");
 
-  if (isDashboardPage || isAuthPage) {
+  if (isDashboardPage || isAuthPage || isPaymentPage) {
     return <>{children}</>;
   }
 
