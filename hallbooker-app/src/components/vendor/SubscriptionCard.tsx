@@ -12,7 +12,7 @@ interface SubscriptionCardProps {
 const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
   tier,
   price,
-  features,
+  features = [],
   isCurrent,
   isRecommended,
   onSelect,
