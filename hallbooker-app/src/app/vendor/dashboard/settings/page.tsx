@@ -63,14 +63,16 @@ const SettingsPage = () => {
     try {
       const [tiersRes, subRes, historyRes, recommendRes] = await Promise.all([
         api.get("/license-tiers"),
-        api.get("/licenses/my-subscription"),
+        api.get("/licenses/my-subscription").catch(err => (err.response?.status === 404 ? null : Promise.reject(err))),
         api.get("/licenses/my-history"),
-        api.get("/licenses/recommend"),
+        api.get("/licenses/recommend").catch(err => (err.response?.status === 404 ? null : Promise.reject(err))),
       ]);
       setLicenseTiers(tiersRes.data.data);
-      setCurrentSubscription(subRes.data.data);
+      setCurrentSubscription(subRes ? subRes.data.data : null);
       setSubscriptionHistory(historyRes.data.data);
-      setRecommendedTier(recommendRes.data.data.recommendedTier._id);
+      if (recommendRes && recommendRes.data.data.recommendedTier) {
+        setRecommendedTier(recommendRes.data.data.recommendedTier._id);
+      }
     } catch (error) {
       console.error("Error fetching license data:", error);
       setLicenseError("Failed to load subscription details. Please try again later.");
