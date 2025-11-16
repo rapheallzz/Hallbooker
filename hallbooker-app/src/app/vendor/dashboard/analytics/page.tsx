@@ -37,7 +37,7 @@ const AnalyticsPage = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <div className="bg-white p-4 shadow-lg rounded-lg">
           <h2 className="text-sm font-semibold text-gray-500 mb-2">Total Revenue</h2>
-          <p className="text-3xl font-bold text-gray-800">${analytics?.totalRevenue}</p>
+          <p className="text-3xl font-bold text-gray-800">₦{analytics?.totalRevenue}</p>
         </div>
         <div className="bg-white p-4 shadow-lg rounded-lg">
           <h2 className="text-sm font-semibold text-gray-500 mb-2">Total Bookings</h2>

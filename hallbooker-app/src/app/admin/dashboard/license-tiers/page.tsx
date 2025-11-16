@@ -123,7 +123,7 @@ const LicenseTiersPage = () => {
                             {tier.maxHalls} Halls
                         </span>
                     </div>
-                    <p className="text-4xl font-extrabold text-primary my-4">${tier.price}<span className="text-lg font-medium text-gray-500">/{tier.durationInDays} days</span></p>
+                    <p className="text-4xl font-extrabold text-primary my-4">₦{tier.price}<span className="text-lg font-medium text-gray-500">/{tier.durationInDays} days</span></p>
 
                     <p className="text-sm font-semibold text-gray-500 mb-3">FEATURES</p>
                     <ul className="space-y-2">

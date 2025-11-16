@@ -27,7 +27,7 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
     <div className={cardClasses}>
       {isRecommended && <span className="inline-block bg-primary text-white text-xs px-3 py-1 rounded-full uppercase font-semibold tracking-wide -mt-10 mb-4">Recommended</span>}
       <h3 className="text-2xl font-bold text-primary mb-2">{tier}</h3>
-      <p className="text-4xl font-bold text-gray-900 mb-4">{price}</p>
+      <p className="text-4xl font-bold text-gray-900 mb-4">₦{price}</p>
       <ul className="text-left mb-6 space-y-2">
         {features.map((feature, index) => (
           <li key={index} className="flex items-center">

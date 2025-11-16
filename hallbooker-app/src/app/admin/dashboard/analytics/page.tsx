@@ -114,7 +114,7 @@ const AnalyticsPage = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div className="bg-white p-6 shadow-lg rounded-lg">
           <h2 className="text-lg font-semibold text-gray-500 mb-2">Total Revenue</h2>
-          <p className="text-4xl font-bold text-gray-800">${(analytics?.totalRevenue || 0).toLocaleString()}</p>
+          <p className="text-4xl font-bold text-gray-800">₦{(analytics?.totalRevenue || 0).toLocaleString()}</p>
         </div>
         <div className="bg-white p-6 shadow-lg rounded-lg">
           <h2 className="text-lg font-semibold text-gray-500 mb-2">Total Bookings</h2>
@@ -195,7 +195,7 @@ const AnalyticsPage = () => {
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                 <div className="bg-gray-50 p-4 rounded-lg">
                     <h3 className="text-lg font-semibold text-gray-600 mb-2">Total Revenue</h3>
-                    <p className="text-3xl font-bold text-gray-800">${hallAnalytics.totalRevenue.toLocaleString()}</p>
+                    <p className="text-3xl font-bold text-gray-800">₦{hallAnalytics.totalRevenue.toLocaleString()}</p>
                 </div>
                 <div className="bg-gray-50 p-4 rounded-lg">
                     <h3 className="text-lg font-semibold text-gray-600 mb-2">Total Bookings</h3>

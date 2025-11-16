@@ -162,7 +162,7 @@ const BookingsPage = () => {
                             'bg-red-100 text-red-800'
                           }`}>{booking.status}</span>
                         </td>
-                        <td className="py-3 px-4 text-sm text-gray-900">${booking.totalPrice.toFixed(2)}</td>
+                        <td className="py-3 px-4 text-sm text-gray-900">₦{booking.totalPrice.toFixed(2)}</td>
                         <td className="py-3 px-4 text-sm">
                           <button onClick={() => handleViewDetails(booking)} className="text-indigo-600 hover:text-indigo-900 font-medium">View</button>
                         </td>
