@@ -233,7 +233,7 @@ const HallDetailPage = () => {
             <div className="sticky top-28 border rounded-xl shadow-lg p-6">
               <div className="flex items-baseline mb-4">
                 <p className="text-2xl font-bold text-gray-900">
-                  ${hall.pricing?.dailyRate?.toLocaleString() || 'N/A'}
+                  ₦{hall.pricing?.dailyRate?.toLocaleString() || 'N/A'}
                 </p>
                 <span className="ml-1 text-gray-600">/ day</span>
               </div>

@@ -32,7 +32,7 @@ const HallCard = ({ hall }: HallCardProps) => {
           <p className="mt-0 text-[10px] text-gray-500 truncate">{hall.location}</p>
           <div className="mt-0.5 flex justify-between items-center">
             <p className="text-[11px] font-semibold text-gray-800">
-              <span className="font-bold">${hall.price}</span> / day
+              <span className="font-bold">₦{hall.price}</span> / day
             </p>
             <div className="flex items-center text-[10px]">
               <Star className="h-3 w-3 text-gray-400" />
