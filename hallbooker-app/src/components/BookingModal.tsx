@@ -55,10 +55,10 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
 
       const bookingId = bookingResponse.data.data.bookingId;
       const paymentResponse = await api.post(`/payments/initialize/${bookingId}`);
-      const { authorization_url } = paymentResponse.data.data;
+      const { checkoutUrl } = paymentResponse.data.data;
 
-      if (authorization_url) {
-        window.location.href = authorization_url;
+      if (checkoutUrl) {
+        window.location.href = checkoutUrl;
       } else {
         setError('Could not retrieve payment URL. Please try again.');
       }
