@@ -14,11 +14,12 @@ const VerifyPaymentContent = () => {
   const router = useRouter();
 
   useEffect(() => {
-    const reference = searchParams.get('reference');
+    const reference = searchParams.get('paymentReference'); // Corrected parameter name
     if (reference) {
       const verify = async () => {
         try {
-          const response = await api.get(`/payments/verify?reference=${reference}`);
+          // Pass the reference with the correct key
+          const response = await api.get(`/payments/verify?paymentReference=${reference}`);
           if (response.data.success) {
             setPaymentStatus({ status: 'success', message: response.data.message || 'Payment verified successfully!' });
           } else {
