@@ -1,9 +1,28 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import HallCard from '@/components/HallCard';
 import api from '@/services/api';
 import { Hall } from '@/types/hall';
+import useIntersectionObserver from '@/hooks/useIntersectionObserver';
+
+const AnimatedHallCard = ({ hall, index }: { hall: Hall; index: number }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const isVisible = useIntersectionObserver(ref);
+  const isInitiallyVisible = index < 6;
+
+  return (
+    <div
+      ref={ref}
+      className={`transition-all duration-1000 ${
+        isVisible || isInitiallyVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+      }`}
+    >
+      <HallCard hall={hall} />
+    </div>
+  );
+};
+
 
 const SearchPage = () => {
   const [halls, setHalls] = useState<Hall[]>([]);
@@ -20,9 +39,14 @@ const SearchPage = () => {
           minCapacity: minCapacity || undefined,
         },
       });
-      setHalls(response.data.data || []);
+      if (Array.isArray(response.data.data)) {
+        setHalls(response.data.data);
+      } else {
+        setHalls([]);
+      }
     } catch (error) {
       console.error('Error fetching halls:', error);
+      setHalls([]);
     } finally {
       setLoading(false);
     }
@@ -87,8 +111,8 @@ const SearchPage = () => {
             <p>Loading...</p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {halls.map((hall) => (
-                <HallCard key={hall._id} hall={hall} />
+              {halls.map((hall, index) => (
+                <AnimatedHallCard key={hall._id} hall={hall} index={index} />
               ))}
             </div>
           )}

@@ -6,17 +6,7 @@ import SkeletonCard from '@/components/SkeletonCard';
 import SearchBar from '@/components/SearchBar';
 import api from '@/services/api';
 import useScroll from '@/hooks/useScroll';
-
-interface Hall {
-  id: string;
-  name: string;
-  description: string;
-  images: string[];
-  price: number;
-  location: string;
-  averageRating: number;
-  numReviews: number;
-}
+import { Hall } from '@/types/hall';
 
 const HomePage = () => {
   const [allHalls, setAllHalls] = useState<Hall[]>([]);
