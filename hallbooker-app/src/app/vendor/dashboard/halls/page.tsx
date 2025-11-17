@@ -1,10 +1,12 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import api from "@/services/api";
 import HallModal from "@/components/vendor/HallModal";
 import ReservationModal from "@/components/vendor/ReservationModal";
 import { useUI } from "@/context/UIContext";
 import { Calendar as CalendarIcon } from "lucide-react";
+import Swal from "sweetalert2";
 
 interface Hall {
   id: string;
@@ -16,10 +18,12 @@ interface Hall {
 }
 
 const HallsPage = () => {
+  const router = useRouter();
   const [halls, setHalls] = useState<Hall[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [editingHall, setEditingHall] = useState<Hall | undefined>(undefined);
+  const [subscription, setSubscription] = useState<any>(null);
   const { isHallModalOpen, openHallModal, closeHallModal } = useUI();
 
   const [isReservationModalOpen, setIsReservationModalOpen] = useState(false);
@@ -40,7 +44,25 @@ const HallsPage = () => {
   };
 
   useEffect(() => {
-    fetchHalls();
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [hallsResponse, subscriptionResponse] = await Promise.all([
+          api.get("/halls/by-owner"),
+          api.get("/licenses/my-subscription").catch(() => ({ data: { data: null } })),
+        ]);
+        setHalls(hallsResponse.data.data);
+        setSubscription(subscriptionResponse.data.data);
+        setError('');
+      } catch (err) {
+        setError('Failed to fetch data. Please try again.');
+        setHalls([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
 
   const handleCreate = async (formData: any) => {
@@ -98,8 +120,23 @@ const HallsPage = () => {
   };
 
   const handleOpenCreateModal = () => {
-    setEditingHall(undefined);
-    openHallModal();
+    if (subscription && halls.length >= subscription.tier.maxHalls) {
+      Swal.fire({
+        title: 'Upgrade Required',
+        text: `You have reached the maximum number of halls (${subscription.tier.maxHalls}) for your current plan.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Upgrade Now',
+        cancelButtonText: 'Later',
+      }).then((result) => {
+        if (result.isConfirmed) {
+          router.push('/vendor/dashboard/settings?tab=licenses');
+        }
+      });
+    } else {
+      setEditingHall(undefined);
+      openHallModal();
+    }
   };
 
   return (
