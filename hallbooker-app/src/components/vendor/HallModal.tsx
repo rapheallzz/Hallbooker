@@ -8,11 +8,16 @@ import api from '@/services/api';
 import Swal from 'sweetalert2';
 
 interface Facility {
-  name: string;
+  facility: string; // Changed from name to facility to store ID
+  name: string; // To store the facility name for display
   available: boolean;
   chargeable: boolean;
-  chargeMethod: 'per_hour' | 'per_booking' | 'per_person';
-  cost: number;
+  chargeMethod?: 'free' | 'flat' | 'per_hour';
+  cost?: number;
+}
+interface APIFacility {
+  _id: string;
+  name: string;
 }
 
 interface HallModalProps {
@@ -26,6 +31,8 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
   const [currentStep, setCurrentStep] = useState(1);
   const [hallId, setHallId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [availableFacilities, setAvailableFacilities] = useState<APIFacility[]>([]);
+  const [chargeMethods, setChargeMethods] = useState<string[]>([]);
   const [countries, setCountries] = useState([]);
   const [states, setStates] = useState([]);
   const [lgas, setLgas] = useState([]);
@@ -49,15 +56,26 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
 
   useEffect(() => {
     if (isOpen) {
-      const fetchCountries = async () => {
+      const fetchInitialData = async () => {
         try {
-          const response = await api.get('/locations/countries');
-          setCountries(response.data.data);
+          // Fetch facilities and charge methods
+          const facilitiesResponse = await api.get('/facilities');
+          setAvailableFacilities(facilitiesResponse.data.data.facilities);
+          setChargeMethods(facilitiesResponse.data.data.chargeMethods);
+
+          // Fetch countries
+          const countriesResponse = await api.get('/locations/countries');
+          setCountries(countriesResponse.data.data);
         } catch (error) {
-          console.error('Failed to fetch countries:', error);
+          console.error('Failed to fetch initial data:', error);
+          Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: 'Failed to load necessary data. Please try again.',
+          });
         }
       };
-      fetchCountries();
+      fetchInitialData();
     }
   }, [isOpen]);
 
@@ -99,6 +117,16 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
 
   useEffect(() => {
     if (hall) {
+      // Map incoming hall facilities to the new structure
+      const mappedFacilities = hall.facilities ? hall.facilities.map((fac: any) => ({
+        facility: fac.facility?._id || fac.facility, // Handle populated and non-populated facility
+        name: fac.facility?.name || fac.name, // Display name
+        available: fac.available,
+        chargeable: fac.chargeable,
+        chargeMethod: fac.chargeMethod,
+        cost: fac.cost,
+      })) : [];
+
       setFormData({
         name: hall.name || '',
         description: hall.description || '',
@@ -108,7 +136,7 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
         location: hall.location || '',
         hourlyRate: hall.pricing?.hourlyRate || hall.pricing?.perHour || 0,
         dailyRate: hall.pricing?.dailyRate || hall.pricing?.perDay || 0,
-        facilities: hall.facilities || [],
+        facilities: mappedFacilities,
         carParkCapacity: hall.carParkCapacity || 0,
         hallSize: hall.hallSize || '',
         rules: Array.isArray(hall.rules) ? hall.rules.join('\n') : '',
@@ -147,13 +175,25 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
 
   const handleFacilityChange = (index: number, field: keyof Facility, value: any) => {
     const newFacilities = [...formData.facilities];
-    if (field === 'available' || field === 'chargeable') {
-      newFacilities[index][field] = value as boolean;
+    const facility = newFacilities[index];
+
+    if (field === 'facility') {
+      const selectedFacility = availableFacilities.find(f => f._id === value);
+      facility.facility = selectedFacility?._id || '';
+      facility.name = selectedFacility?.name || '';
+    } else if (field === 'available' || field === 'chargeable') {
+      facility[field] = value as boolean;
+      if (field === 'chargeable' && !value) {
+        // If chargeable is unchecked, reset charge method and cost
+        delete facility.chargeMethod;
+        delete facility.cost;
+      }
     } else if (field === 'cost') {
-      newFacilities[index][field] = Number(value);
+      facility.cost = Number(value);
     } else {
-      newFacilities[index][field] = value;
+      facility[field] = value;
     }
+
     setFormData((prev) => ({ ...prev, facilities: newFacilities }));
   };
 
@@ -162,7 +202,8 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
       ...prev,
       facilities: [
         ...prev.facilities,
-        { name: '', available: true, chargeable: false, chargeMethod: 'per_booking', cost: 0 },
+        // Initialize with empty values, user will select a facility
+        { facility: '', name: '', available: true, chargeable: false },
       ],
     }));
   };
@@ -183,9 +224,19 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Clean up facilities data before submission
+    const facilitiesPayload = formData.facilities.map(({ name, ...rest }) => {
+      const facilityData: any = { ...rest };
+      if (!facilityData.chargeable) {
+        delete facilityData.chargeMethod;
+        delete facilityData.cost;
+      }
+      return facilityData;
+    });
+
     if (hall) {
       // If we are editing, just submit the whole form at once
-      const { hourlyRate, dailyRate, ...rest } = formData;
+      const { hourlyRate, dailyRate, facilities, ...rest } = formData;
       const pricing = {
         hourlyRate: Number(hourlyRate),
         dailyRate: Number(dailyRate),
@@ -194,6 +245,7 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
       onSubmit({
         ...rest,
         pricing,
+        facilities: facilitiesPayload,
         rules: rulesArray,
         capacity: Number(formData.capacity),
         carParkCapacity: Number(formData.carParkCapacity),
@@ -220,7 +272,7 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
           hourlyRate: Number(formData.hourlyRate),
           dailyRate: Number(formData.dailyRate),
         },
-        facilities: formData.facilities,
+        facilities: facilitiesPayload,
         carParkCapacity: Number(formData.carParkCapacity),
         hallSize: formData.hallSize,
         rules: rulesArray,
@@ -370,19 +422,62 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
                 </div>
                 <div className="space-y-3 max-h-48 overflow-y-auto border p-3 rounded-md border-gray-300">
                   {formData.facilities.map((facility, index) => (
-                    <div key={index} className="grid grid-cols-12 gap-2 p-2 border rounded-md border-gray-300">
-                      <input type="text" placeholder="Name" value={facility.name} onChange={(e) => handleFacilityChange(index, 'name', e.target.value)} className="col-span-3 px-2 py-1 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" />
-                      <select value={facility.chargeMethod} onChange={(e) => handleFacilityChange(index, 'chargeMethod', e.target.value)} className="col-span-3 px-2 py-1 border border-gray-300 rounded-md text-gray-900">
-                        <option value="per_hour">Per Hour</option>
-                        <option value="per_booking">Per Booking</option>
-                        <option value="per_person">Per Person</option>
-                      </select>
-                      <input type="number" placeholder="Cost" value={facility.cost} onChange={(e) => handleFacilityChange(index, 'cost', e.target.value)} className="col-span-2 px-2 py-1 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" />
-                      <div className="col-span-3 flex items-center space-x-2">
-                        <label><input type="checkbox" checked={facility.available} onChange={(e) => handleFacilityChange(index, 'available', e.target.checked)} /> Available</label>
-                        <label><input type="checkbox" checked={facility.chargeable} onChange={(e) => handleFacilityChange(index, 'chargeable', e.target.checked)} /> Chargeable</label>
+                    <div key={index} className="p-2 border rounded-md border-gray-300 grid grid-cols-12 gap-2 items-center">
+                      <div className="col-span-4">
+                        <select
+                          value={facility.facility}
+                          onChange={(e) => handleFacilityChange(index, 'facility', e.target.value)}
+                          className="w-full px-2 py-1 border border-gray-300 rounded-md text-gray-900"
+                        >
+                          <option value="">Select Facility</option>
+                          {availableFacilities.map((f) => (
+                            <option key={f._id} value={f._id}>{f.name}</option>
+                          ))}
+                        </select>
                       </div>
-                      <button type="button" onClick={() => removeFacility(index)} className="col-span-1 text-red-500 hover:text-red-700">X</button>
+
+                      <div className="col-span-3 flex items-center space-x-2">
+                        <label className="flex items-center">
+                          <input type="checkbox" checked={facility.available} onChange={(e) => handleFacilityChange(index, 'available', e.target.checked)} className="mr-1" />
+                          <span className="text-sm">Available</span>
+                        </label>
+                        <label className="flex items-center">
+                          <input type="checkbox" checked={facility.chargeable} onChange={(e) => handleFacilityChange(index, 'chargeable', e.target.checked)} className="mr-1" />
+                          <span className="text-sm">Chargeable</span>
+                        </label>
+                      </div>
+
+                      {facility.chargeable && (
+                        <>
+                          <div className="col-span-2">
+                            <select
+                              value={facility.chargeMethod || ''}
+                              onChange={(e) => handleFacilityChange(index, 'chargeMethod', e.target.value)}
+                              className="w-full px-2 py-1 border border-gray-300 rounded-md text-gray-900"
+                            >
+                              <option value="" disabled>Charge Method</option>
+                              {chargeMethods.map((method) => (
+                                <option key={method} value={method}>{method.replace('_', ' ')}</option>
+                              ))}
+                            </select>
+                          </div>
+                          {(facility.chargeMethod === 'flat' || facility.chargeMethod === 'per_hour') && (
+                            <div className="col-span-2">
+                              <input
+                                type="number"
+                                placeholder="Cost"
+                                value={facility.cost || ''}
+                                onChange={(e) => handleFacilityChange(index, 'cost', e.target.value)}
+                                className="w-full px-2 py-1 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500"
+                              />
+                            </div>
+                          )}
+                        </>
+                      )}
+
+                      <div className="col-span-1 flex justify-end">
+                        <button type="button" onClick={() => removeFacility(index)} className="text-red-500 hover:text-red-700">X</button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -491,19 +586,62 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
                     </div>
                     <div className="space-y-3 max-h-48 overflow-y-auto border p-3 rounded-md border-gray-300">
                       {formData.facilities.map((facility, index) => (
-                        <div key={index} className="grid grid-cols-12 gap-2 p-2 border rounded-md border-gray-300">
-                          <input type="text" placeholder="Name" value={facility.name} onChange={(e) => handleFacilityChange(index, 'name', e.target.value)} className="col-span-3 px-2 py-1 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" />
-                          <select value={facility.chargeMethod} onChange={(e) => handleFacilityChange(index, 'chargeMethod', e.target.value)} className="col-span-3 px-2 py-1 border border-gray-300 rounded-md text-gray-900">
-                            <option value="per_hour">Per Hour</option>
-                            <option value="per_booking">Per Booking</option>
-                            <option value="per_person">Per Person</option>
-                          </select>
-                          <input type="number" placeholder="Cost" value={facility.cost} onChange={(e) => handleFacilityChange(index, 'cost', e.target.value)} className="col-span-2 px-2 py-1 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" />
-                          <div className="col-span-3 flex items-center space-x-2">
-                            <label><input type="checkbox" checked={facility.available} onChange={(e) => handleFacilityChange(index, 'available', e.target.checked)} /> Available</label>
-                            <label><input type="checkbox" checked={facility.chargeable} onChange={(e) => handleFacilityChange(index, 'chargeable', e.target.checked)} /> Chargeable</label>
+                        <div key={index} className="p-2 border rounded-md border-gray-300 grid grid-cols-12 gap-2 items-center">
+                          <div className="col-span-4">
+                            <select
+                              value={facility.facility}
+                              onChange={(e) => handleFacilityChange(index, 'facility', e.target.value)}
+                              className="w-full px-2 py-1 border border-gray-300 rounded-md text-gray-900"
+                            >
+                              <option value="">Select Facility</option>
+                              {availableFacilities.map((f) => (
+                                <option key={f._id} value={f._id}>{f.name}</option>
+                              ))}
+                            </select>
                           </div>
-                          <button type="button" onClick={() => removeFacility(index)} className="col-span-1 text-red-500 hover:text-red-700">X</button>
+
+                          <div className="col-span-3 flex items-center space-x-2">
+                            <label className="flex items-center">
+                              <input type="checkbox" checked={facility.available} onChange={(e) => handleFacilityChange(index, 'available', e.target.checked)} className="mr-1" />
+                              <span className="text-sm">Available</span>
+                            </label>
+                            <label className="flex items-center">
+                              <input type="checkbox" checked={facility.chargeable} onChange={(e) => handleFacilityChange(index, 'chargeable', e.target.checked)} className="mr-1" />
+                              <span className="text-sm">Chargeable</span>
+                            </label>
+                          </div>
+
+                          {facility.chargeable && (
+                            <>
+                              <div className="col-span-2">
+                                <select
+                                  value={facility.chargeMethod || ''}
+                                  onChange={(e) => handleFacilityChange(index, 'chargeMethod', e.target.value)}
+                                  className="w-full px-2 py-1 border border-gray-300 rounded-md text-gray-900"
+                                >
+                                  <option value="" disabled>Charge Method</option>
+                                  {chargeMethods.map((method) => (
+                                    <option key={method} value={method}>{method.replace('_', ' ')}</option>
+                                  ))}
+                                </select>
+                              </div>
+                              {(facility.chargeMethod === 'flat' || facility.chargeMethod === 'per_hour') && (
+                                <div className="col-span-2">
+                                  <input
+                                    type="number"
+                                    placeholder="Cost"
+                                    value={facility.cost || ''}
+                                    onChange={(e) => handleFacilityChange(index, 'cost', e.target.value)}
+                                    className="w-full px-2 py-1 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500"
+                                  />
+                                </div>
+                              )}
+                            </>
+                          )}
+
+                          <div className="col-span-1 flex justify-end">
+                            <button type="button" onClick={() => removeFacility(index)} className="text-red-500 hover:text-red-700">X</button>
+                          </div>
                         </div>
                       ))}
                     </div>
