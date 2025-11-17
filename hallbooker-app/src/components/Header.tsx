@@ -134,7 +134,7 @@ const Header = () => {
 
           {scrolled && (
             <div className="flex-grow">
-              <CollapsedSearchBar onSearchClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} />
+              <CollapsedSearchBar />
             </div>
           )}
 

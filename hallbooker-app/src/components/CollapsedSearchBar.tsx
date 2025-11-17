@@ -1,10 +1,18 @@
 'use client';
 
-const CollapsedSearchBar = ({ onSearchClick }: { onSearchClick: () => void }) => {
+import { useRouter } from 'next/navigation';
+
+const CollapsedSearchBar = () => {
+  const router = useRouter();
+
+  const handleClick = () => {
+    router.push('/search');
+  };
+
   return (
     <div
       className="w-full max-w-md mx-auto cursor-pointer"
-      onClick={onSearchClick}
+      onClick={handleClick}
     >
       <div className="flex items-center justify-between px-2 py-1 bg-white border border-gray-200 rounded-full shadow-sm">
         <div className="flex items-center divide-x divide-gray-200">
