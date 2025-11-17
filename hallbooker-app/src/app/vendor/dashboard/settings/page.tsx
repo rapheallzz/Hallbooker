@@ -164,6 +164,12 @@ const SettingsPage = () => {
     }
   };
 
+  const getExpiryDate = (purchaseDate: string, durationInDays: number) => {
+    const date = new Date(purchaseDate);
+    date.setDate(date.getDate() + durationInDays);
+    return date.toLocaleDateString();
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6 text-primary">Settings</h1>
@@ -209,6 +215,13 @@ const SettingsPage = () => {
                     <h3 className="text-xl font-bold text-primary">{currentSubscription.tier.name}</h3>
                     <p className="text-gray-800">Status: <span className="font-semibold text-green-600">{currentSubscription.status}</span></p>
                     <p className="text-gray-800">Purchased on: {new Date(currentSubscription.purchaseDate).toLocaleDateString()}</p>
+                    {(() => {
+                      const currentTierDetails = licenseTiers.find(t => t._id === currentSubscription.tier._id);
+                      if (currentTierDetails) {
+                        return <p className="text-gray-800">Expires on: {getExpiryDate(currentSubscription.purchaseDate, currentTierDetails.durationInDays)}</p>;
+                      }
+                      return null;
+                    })()}
                   </>
                 ) : <p className="text-gray-800">No active subscription found.</p>}
               </div>
