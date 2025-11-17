@@ -236,20 +236,41 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
 
     if (hall) {
       // If we are editing, just submit the whole form at once
-      const { hourlyRate, dailyRate, facilities, ...rest } = formData;
+      const { hourlyRate, dailyRate, facilities, openingHour, closingHour, country, state, localGovernment, ...rest } = formData;
       const pricing = {
         hourlyRate: Number(hourlyRate),
         dailyRate: Number(dailyRate),
       };
       const rulesArray = formData.rules.split('\n').filter(rule => rule.trim() !== '');
-      onSubmit({
+
+      const payload: any = {
         ...rest,
         pricing,
         facilities: facilitiesPayload,
         rules: rulesArray,
         capacity: Number(formData.capacity),
         carParkCapacity: Number(formData.carParkCapacity),
-      });
+      };
+
+      // Convert time strings to numbers if they are strings
+      if (typeof openingHour === 'string' && openingHour.includes(':')) {
+        payload.openingHour = parseInt(openingHour.replace(':', ''), 10);
+      } else {
+        payload.openingHour = openingHour;
+      }
+
+      if (typeof closingHour === 'string' && closingHour.includes(':')) {
+        payload.closingHour = parseInt(closingHour.replace(':', ''), 10);
+      } else {
+        payload.closingHour = closingHour;
+      }
+
+      // Only include location fields if they have a value
+      if (country) payload.country = country;
+      if (state) payload.state = state;
+      if (localGovernment) payload.localGovernment = localGovernment;
+
+      onSubmit(payload);
       return;
     }
 
