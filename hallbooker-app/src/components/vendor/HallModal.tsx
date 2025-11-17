@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { X } from 'lucide-react';
 import MediaUpload from './MediaUpload';
 import api from '@/services/api';
@@ -23,9 +24,12 @@ interface HallModalProps {
 }
 
 const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }) => {
+  const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [hallId, setHallId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const [countries, setCountries] = useState([]);
   const [states, setStates] = useState([]);
   const [lgas, setLgas] = useState([]);
@@ -138,6 +142,10 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
       setCurrentStep(1);
       setHallId(null);
     }
+    if (!isOpen) {
+        setShowUpgradePrompt(false);
+        setErrorMessage('');
+    }
   }, [hall, isOpen]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -178,6 +186,10 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
 
   const handleBack = () => {
     setCurrentStep((prev) => prev - 1);
+  };
+
+  const handleUpgrade = () => {
+    router.push('/vendor/dashboard/settings?tab=licenses');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -239,13 +251,19 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
         setHallId(response.data.data._id);
         Swal.close();
         // handleNext() is removed from here. The useEffect will handle the step change.
-      } catch (error) {
-        console.error('Failed to create hall:', error);
-        Swal.fire({
-          icon: 'error',
-          title: 'Oops...',
-          text: 'Failed to create hall. Please try again.',
-        });
+      } catch (error: any) {
+        Swal.close();
+        if (error.response && error.response.status === 400 && error.response.data.message.includes('maximum number of halls')) {
+          setErrorMessage(error.response.data.message);
+          setShowUpgradePrompt(true);
+        } else {
+          console.error('Failed to create hall:', error);
+          Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: 'Failed to create hall. Please try again.',
+          });
+        }
       } finally {
         setIsSubmitting(false);
       }
@@ -284,6 +302,12 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
           )}
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
+            {showUpgradePrompt && (
+              <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4" role="alert">
+                <p className="font-bold">Limit Reached</p>
+                <p>{errorMessage}</p>
+              </div>
+            )}
           {hall ? (
             <>
               {/* Render all fields for editing */}
@@ -523,6 +547,16 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
           )}
 
           <div className="flex justify-end mt-8 space-x-4">
+            {showUpgradePrompt ? (
+               <button
+                type="button"
+                onClick={handleUpgrade}
+                className="px-4 py-2 rounded-md text-white bg-green-500 hover:bg-green-600"
+              >
+                Upgrade Plan
+              </button>
+            ) : (
+            <>
             {!hall && currentStep > 1 && (
               <button
                 type="button"
@@ -540,6 +574,8 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
             >
               {isSubmitting ? 'Submitting...' : (hall ? 'Save Changes' : (currentStep === 1 || currentStep === 2 ? 'Continue' : 'Finish'))}
             </button>
+            </>
+            )}
           </div>
         </form>
       </div>
