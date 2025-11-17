@@ -6,17 +6,7 @@ import 'slick-carousel/slick/slick-theme.css';
 import HallCard from './HallCard';
 import NextArrow from './NextArrow';
 import PrevArrow from './PrevArrow';
-
-interface Hall {
-  id: string;
-  name: string;
-  description: string;
-  images: string[];
-  price: number;
-  location: string;
-  averageRating: number;
-  numReviews: number;
-}
+import { Hall } from '@/types/hall';
 
 interface CarouselProps {
   halls: Hall[];
@@ -73,7 +63,7 @@ const Carousel = ({ halls }: CarouselProps) => {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {halls.map((hall) => (
-          <HallCard key={hall.id} hall={hall} />
+          <HallCard key={hall._id} hall={hall} />
         ))}
       </div>
     );
@@ -86,8 +76,8 @@ const Carousel = ({ halls }: CarouselProps) => {
       <Slider ref={sliderRef} {...settings}>
         {halls.map((hall) => {
           return (
-            <div key={hall.id} className="px-2">
-              <HallCard key={hall.id} hall={hall} />
+            <div key={hall._id} className="px-2">
+              <HallCard key={hall._id} hall={hall} />
             </div>
           );
         })}
