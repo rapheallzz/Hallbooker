@@ -252,15 +252,15 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
         carParkCapacity: Number(formData.carParkCapacity),
       };
 
-      // Convert time strings to numbers if they are strings
+      // Convert time strings to just the hour number
       if (typeof openingHour === 'string' && openingHour.includes(':')) {
-        payload.openingHour = parseInt(openingHour.replace(':', ''), 10);
+        payload.openingHour = parseInt(openingHour.split(':')[0], 10);
       } else {
         payload.openingHour = openingHour;
       }
 
       if (typeof closingHour === 'string' && closingHour.includes(':')) {
-        payload.closingHour = parseInt(closingHour.replace(':', ''), 10);
+        payload.closingHour = parseInt(closingHour.split(':')[0], 10);
       } else {
         payload.closingHour = closingHour;
       }
