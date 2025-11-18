@@ -25,16 +25,35 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
   const [eventDetails, setEventDetails] = useState('');
   const [selectedFacilities, setSelectedFacilities] = useState<Facility[]>([]);
   const [totalPrice, setTotalPrice] = useState(0);
-  const [facilityHours, setFacilityHours] = useState<{ [key: string]: number }>({});
+  const [startTime, setStartTime] = useState('');
+  const [endTime, setEndTime] = useState('');
+  const [durationInHours, setDurationInHours] = useState(0);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const nextStep = () => setStep(step + 1);
   const prevStep = () => setStep(step - 1);
 
-  const handleHourChange = (facilityId: string, hours: number) => {
-    setFacilityHours(prev => ({ ...prev, [facilityId]: hours }));
+  const generateTimeOptions = (openingHour: number, closingHour: number) => {
+    const options = [];
+    for (let i = openingHour; i <= closingHour; i++) {
+      const time = `${i.toString().padStart(2, '0')}:00`;
+      options.push(<option key={time} value={time}>{time}</option>);
+    }
+    return options;
   };
+
+  useEffect(() => {
+    if (startTime && endTime) {
+      const start = parseInt(startTime.split(':')[0]);
+      const end = parseInt(endTime.split(':')[0]);
+      if (end > start) {
+        setDurationInHours(end - start);
+      } else {
+        setDurationInHours(0);
+      }
+    }
+  }, [startTime, endTime]);
 
   useEffect(() => {
     if (hall && dateRange.startDate && dateRange.endDate) {
@@ -56,8 +75,7 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
           return total + (facility.cost * diffDays);
         }
         if (facility.chargeMethod === 'per_hour') {
-          const hours = facilityHours[facility._id] || 1;
-          return total + (facility.cost * hours * diffDays);
+          return total + (facility.cost * durationInHours * diffDays);
         }
         // Defaults to a flat charge
         return total + facility.cost;
@@ -65,7 +83,7 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
 
       setTotalPrice(hallCost + facilitiesCost);
     }
-  }, [hall, dateRange, selectedFacilities, facilityHours]);
+  }, [hall, dateRange, selectedFacilities, durationInHours]);
 
   useEffect(() => {
     if (isOpen) {
@@ -104,19 +122,22 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
 
     try {
       const { startDate, endDate } = dateRange;
-      let finalEndDate = endDate;
 
-      if (startDate && endDate && startDate.getTime() === endDate.getTime()) {
-        finalEndDate = new Date(startDate);
-        finalEndDate.setHours(23, 59, 59, 999);
-      }
+      const [startHour, startMinute] = startTime.split(':').map(Number);
+      const [endHour, endMinute] = endTime.split(':').map(Number);
+
+      const finalStartDate = new Date(startDate!);
+      finalStartDate.setHours(startHour, startMinute, 0, 0);
+
+      const finalEndDate = new Date(endDate || startDate!);
+      finalEndDate.setHours(endHour, endMinute, 0, 0);
 
       const selectedFacilityNames = selectedFacilities.map(f => f.facility?.name || f.name).filter(Boolean);
 
       const bookingResponse = await api.post('/bookings', {
         hallId: hallId,
-        startTime: startDate?.toISOString(),
-        endTime: finalEndDate?.toISOString(),
+        startTime: finalStartDate.toISOString(),
+        endTime: finalEndDate.toISOString(),
         numberOfPeople,
         eventDetails,
         selectedFacilityNames,
@@ -195,45 +216,55 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
                 />
               </div>
 
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label htmlFor="startTime" className="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
+                  <select
+                    id="startTime"
+                    value={startTime}
+                    onChange={(e) => setStartTime(e.target.value)}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-[#295FA7] sm:text-sm"
+                    required
+                  >
+                    <option value="">Select a time</option>
+                    {hall && generateTimeOptions(hall.openingHour || 0, hall.closingHour || 23)}
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="endTime" className="block text-sm font-medium text-gray-700 mb-1">End Time</label>
+                  <select
+                    id="endTime"
+                    value={endTime}
+                    onChange={(e) => setEndTime(e.target.value)}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-[#295FA7] sm:text-sm"
+                    required
+                  >
+                    <option value="">Select a time</option>
+                    {hall && generateTimeOptions(hall.openingHour || 0, hall.closingHour || 23)}
+                  </select>
+                </div>
+              </div>
+
               {hall && hall.facilities.length > 0 && (
                 <div className="mb-6">
                   <h4 className="text-md font-medium text-gray-800 mb-2">Add Facilities</h4>
                   <div className="max-h-48 overflow-y-auto pr-2">
                     <div className="grid grid-cols-1 gap-y-3">
                       {hall.facilities.map((facility) => (
-                        <div key={facility._id} className="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200">
-                          <label className="flex items-center space-x-3 text-sm cursor-pointer">
-                            <input
-                              type="checkbox"
-                              className="h-4 w-4 rounded border-gray-300 text-[#295FA7] focus:ring-[#295FA7]"
-                              checked={selectedFacilities.some(f => f._id === facility._id)}
-                              onChange={() => handleFacilityChange(facility)}
-                            />
-                            <div className="flex justify-between w-full items-center">
-                              <span className="text-gray-700 flex-grow">{facility.facility?.name || facility.name}</span>
-                              <span className="text-gray-500 font-medium text-right">
-                                + ₦{facility.cost.toLocaleString()}{facility.chargeMethod === 'per_day' ? '/day' : (facility.chargeMethod === 'per_hour' ? '/hour' : '')}
-                              </span>
-                            </div>
-                          </label>
-                          {facility.chargeMethod === 'per_hour' && selectedFacilities.some(f => f._id === facility._id) && (
-                            <div className="mt-2 pl-7">
-                              <label htmlFor={`hours-${facility._id}`} className="block text-xs font-medium text-gray-600 mb-1">
-                                Hours
-                              </label>
-                              <input
-                                type="number"
-                                id={`hours-${facility._id}`}
-                                value={facilityHours[facility._id] || 1}
-                                onChange={(e) => handleHourChange(facility._id, Number(e.target.value))}
-                                className="mt-1 block w-full px-3 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-[#295FA7] sm:text-sm"
-                                required
-                                min="1"
-                                max={hall?.closingHour && hall?.openingHour ? hall.closingHour - hall.openingHour : 24}
-                              />
-                            </div>
-                          )}
-                        </div>
+                        <label key={facility._id} className="flex items-center space-x-3 text-sm p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            className="h-4 w-4 rounded border-gray-300 text-[#295FA7] focus:ring-[#295FA7]"
+                            checked={selectedFacilities.some(f => f._id === facility._id)}
+                            onChange={() => handleFacilityChange(facility)}
+                          />
+                          <div className="flex justify-between w-full items-center">
+                            <span className="text-gray-700 flex-grow">{facility.facility?.name || facility.name}</span>
+                            <span className="text-gray-500 font-medium text-right">
+                              + ₦{facility.cost.toLocaleString()}{facility.chargeMethod === 'per_day' ? '/day' : (facility.chargeMethod === 'per_hour' ? '/hour' : '')}
+                            </span>
+                          </div>
+                        </label>
                       ))}
                     </div>
                   </div>
