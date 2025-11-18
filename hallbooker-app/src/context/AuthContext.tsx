@@ -1,9 +1,10 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { jwtDecode } from 'jwt-decode';
+import { jwtDecode, JwtPayload } from 'jwt-decode';
 import api from '@/services/api';
+import { getDashboardPath } from '@/utils/redirects';
 
 interface User {
   id: string;
@@ -16,13 +17,11 @@ interface User {
   };
 }
 
-interface DecodedToken {
+interface DecodedToken extends JwtPayload {
   _id: string;
   email: string;
-  role:string[];
+  role: string[];
   activeRole: string;
-  iat: number;
-  exp: number;
   hallOwnerApplication?: {
     status: string;
   };
@@ -47,43 +46,52 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
+  const logout = useCallback(() => {
+    setToken(null);
+    setUser(null);
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    delete api.defaults.headers.Authorization;
+    router.push('/auth/login');
+  }, [router]);
+
   useEffect(() => {
-    const storedToken = localStorage.getItem('token');
-    if (storedToken) {
-      try {
-        const decodedToken = jwtDecode<DecodedToken>(storedToken);
-        // Check if token is expired
-        if (decodedToken.exp * 1000 < Date.now()) {
-          logout(); // This will clear storage and redirect
-        } else {
-          setToken(storedToken);
-          api.defaults.headers.Authorization = `Bearer ${storedToken}`;
-          // Fetch user data if not in local storage or if it's stale
-          const storedUser = localStorage.getItem('user');
-          if (storedUser) {
-            setUser(JSON.parse(storedUser));
+    const initializeAuth = () => {
+      const storedToken = localStorage.getItem('token');
+      if (storedToken) {
+        try {
+          const decodedToken = jwtDecode<DecodedToken>(storedToken);
+          if (decodedToken.exp && decodedToken.exp * 1000 < Date.now()) {
+            logout();
           } else {
-            // This part is tricky without a /me endpoint,
-            // We'll rely on the login process to store the user
-            // For now, let's just decode and set what we have.
-            const userFromToken: User = {
+            setToken(storedToken);
+            api.defaults.headers.Authorization = `Bearer ${storedToken}`;
+            const storedUser = localStorage.getItem('user');
+            if (storedUser) {
+              setUser(JSON.parse(storedUser));
+            } else {
+              // Fallback for cases where user is not in localStorage
+              const userFromToken: User = {
                 id: decodedToken._id,
                 email: decodedToken.email,
                 role: decodedToken.role,
                 activeRole: decodedToken.activeRole,
-                fullName: '', // This will be incomplete
-                hallOwnerApplication: decodedToken.hallOwnerApplication
-            };
-            setUser(userFromToken);
+                fullName: '',
+                hallOwnerApplication: decodedToken.hallOwnerApplication,
+              };
+              setUser(userFromToken);
+              localStorage.setItem('user', JSON.stringify(userFromToken));
+            }
           }
+        } catch (error) {
+          console.error("Failed to initialize auth from localStorage", error);
+          logout();
         }
-      } catch (error) {
-        console.error("Failed to initialize auth from localStorage", error);
-        logout(); // Token might be invalid, so clear everything
       }
-    }
-    setLoading(false);
-  }, []);
+      setLoading(false);
+    };
+    initializeAuth();
+  }, [logout]);
 
   const redirectUser = (role: string) => {
     const path = getDashboardPath(role);
@@ -97,15 +105,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem('user', JSON.stringify(newUser));
     api.defaults.headers.Authorization = `Bearer ${newToken}`;
     redirectUser(newUser.activeRole);
-  };
-
-  const logout = () => {
-    setToken(null);
-    setUser(null);
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    delete api.defaults.headers.Authorization;
-    router.push('/auth/login');
   };
 
   const updateToken = (newToken: string, redirect = true) => {

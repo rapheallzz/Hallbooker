@@ -5,6 +5,11 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import api from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
+import { jwtDecode } from 'jwt-decode';
+
+interface DecodedToken {
+  activeRole: string;
+}
 
 const LoginPage = () => {
   const [role, setRole] = useState('user');
@@ -28,7 +33,11 @@ const LoginPage = () => {
 
     try {
       const response = await api.post('/auth/login', { ...formData, role });
-      const { accessToken, user } = response.data.data || response.data;
+      const { accessToken, user } = response.data.data;
+
+      // Decode the token to get the activeRole
+      const decodedToken = jwtDecode<DecodedToken>(accessToken);
+      user.activeRole = decodedToken.activeRole;
 
       // Ensure the user object has a fullName property
       if (user && !user.fullName && user.firstName && user.lastName) {
@@ -37,25 +46,6 @@ const LoginPage = () => {
 
       login(accessToken, user);
 
-      // If the user is a super-admin, automatically switch to the super-admin role
-      if (user.role.includes('super-admin')) {
-        try {
-          const switchResponse = await api.post('/auth/switch-role', { role: 'super-admin' });
-          const newAccessToken = switchResponse.data.data.accessToken;
-
-          updateToken(newAccessToken);
-
-          router.push('/admin/dashboard');
-        } catch (switchErr) {
-          console.error("Failed to switch to super-admin role:", switchErr);
-          setError('Logged in, but failed to switch to super-admin role.');
-          return; // Stop execution if role switch fails
-        }
-      } else if (user.role.includes('hall-owner') || user.role.includes('staff')) {
-        router.push('/vendor/dashboard');
-      } else {
-        router.push('/');
-      }
     } catch (err: any) {
       setError(err.response?.data?.message || 'An error occurred during login.');
     } finally {
