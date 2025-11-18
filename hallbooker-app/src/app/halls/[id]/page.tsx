@@ -11,32 +11,7 @@ import Calendar from '@/components/Calendar';
 import HallDetailSkeleton from '@/components/HallDetailSkeleton';
 import { Range } from 'react-date-range';
 import MediaViewerModal from '@/components/MediaViewerModal';
-
-interface Hall {
-  id: string;
-  name: string;
-  description: string;
-  images: string[];
-  videos: string[];
-  pricing: {
-    dailyRate?: number;
-    hourlyRate?: number;
-  };
-  location: string;
-  capacity: number;
-  averageRating: number;
-  numReviews: number;
-  facilities: {
-    name?: string;
-    facility?: {
-      name: string;
-    };
-  }[];
-  owner: {
-    _id: string;
-    fullName: string;
-  };
-}
+import { Hall } from '@/types';
 
 const HallDetailPage = () => {
   const [hall, setHall] = useState<Hall | null>(null);
