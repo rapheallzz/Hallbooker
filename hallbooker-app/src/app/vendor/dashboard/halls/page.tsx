@@ -66,12 +66,33 @@ const HallsPage = () => {
   }, []);
 
   const handleCreate = async (formData: any) => {
+    Swal.fire({
+      title: 'Creating Hall...',
+      text: 'Please wait while we set up your new hall.',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+    });
+
     try {
       await api.post('/halls', formData);
+      Swal.fire({
+        icon: 'success',
+        title: 'Hall Created!',
+        text: 'Your new hall has been created successfully.',
+        timer: 2000,
+        showConfirmButton: false,
+      });
       fetchHalls();
       closeHallModal();
     } catch (error) {
       console.error('Failed to create hall:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Creation Failed',
+        text: 'Something went wrong. Please try again.',
+      });
     }
   };
 
@@ -121,13 +142,32 @@ const HallsPage = () => {
   };
 
   const handleCreateReservation = async (reservationData: any) => {
+    Swal.fire({
+      title: 'Creating Reservation...',
+      text: 'Please wait while we block the dates.',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+    });
+
     try {
       await api.post(`/halls/${reservationData.hallId}/reservations`, reservationData);
       setIsReservationModalOpen(false);
-      alert('Reservation created successfully!');
+      Swal.fire({
+        icon: 'success',
+        title: 'Reservation Created!',
+        text: 'The dates have been successfully blocked.',
+        timer: 2000,
+        showConfirmButton: false,
+      });
     } catch (error) {
       console.error('Failed to create reservation:', error);
-      alert('Failed to create reservation.');
+      Swal.fire({
+        icon: 'error',
+        title: 'Reservation Failed',
+        text: 'Something went wrong. Please try again.',
+      });
     }
   };
 
