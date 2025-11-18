@@ -1,10 +1,33 @@
 'use client';
 
-import { FC, useState } from 'react';
+import { FC, useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import api from '@/services/api';
 import Calendar from './Calendar';
 import { Range } from 'react-date-range';
+
+interface Facility {
+  _id: string;
+  available: boolean;
+  chargeable: boolean;
+  chargeMethod: string;
+  cost: number;
+  facility?: {
+    _id: string;
+    name: string;
+  };
+  name?: string;
+}
+
+interface Hall {
+  _id: string;
+  name: string;
+  pricing: {
+    dailyRate?: number;
+    hourlyRate?: number;
+  };
+  facilities: Facility[];
+}
 
 interface BookingModalProps {
   hallId: string;
@@ -13,6 +36,7 @@ interface BookingModalProps {
 }
 
 const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
+  const [hall, setHall] = useState<Hall | null>(null);
   const [step, setStep] = useState(1);
   const [dateRange, setDateRange] = useState<Range>({
     startDate: new Date(),
@@ -21,11 +45,66 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
   });
   const [numberOfPeople, setNumberOfPeople] = useState(1);
   const [eventDetails, setEventDetails] = useState('');
+  const [selectedFacilities, setSelectedFacilities] = useState<Facility[]>([]);
+  const [totalPrice, setTotalPrice] = useState(0);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const nextStep = () => setStep(step + 1);
   const prevStep = () => setStep(step - 1);
+
+  useEffect(() => {
+    if (hall && dateRange.startDate && dateRange.endDate) {
+      const dailyRate = hall.pricing.dailyRate || 0;
+
+      // Normalize dates to midnight to ensure accurate day difference calculation
+      const startDate = new Date(dateRange.startDate);
+      startDate.setHours(0, 0, 0, 0);
+      const endDate = new Date(dateRange.endDate);
+      endDate.setHours(0, 0, 0, 0);
+
+      const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
+      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 to include the start day
+
+      const hallCost = dailyRate * diffDays;
+
+      const facilitiesCost = selectedFacilities.reduce((total, facility) => {
+        if (facility.chargeMethod === 'per_day') {
+          return total + (facility.cost * diffDays);
+        }
+        // Defaults to a flat charge
+        return total + facility.cost;
+      }, 0);
+
+      setTotalPrice(hallCost + facilitiesCost);
+    }
+  }, [hall, dateRange, selectedFacilities]);
+
+  useEffect(() => {
+    if (isOpen) {
+      const fetchHallDetails = async () => {
+        try {
+          const response = await api.get(`/halls/${hallId}`);
+          setHall(response.data.data);
+        } catch (error) {
+          console.error('Failed to fetch hall details:', error);
+          setError('Failed to load hall information. Please try again.');
+        }
+      };
+      fetchHallDetails();
+    }
+  }, [hallId, isOpen]);
+
+  const handleFacilityChange = (facility: Facility) => {
+    setSelectedFacilities((prevSelected) => {
+      const isSelected = prevSelected.some((f) => f._id === facility._id);
+      if (isSelected) {
+        return prevSelected.filter((f) => f._id !== facility._id);
+      } else {
+        return [...prevSelected, facility];
+      }
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,12 +124,15 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
         finalEndDate.setHours(23, 59, 59, 999);
       }
 
+      const selectedFacilityNames = selectedFacilities.map(f => f.facility?.name || f.name).filter(Boolean);
+
       const bookingResponse = await api.post('/bookings', {
         hallId: hallId,
         startTime: startDate?.toISOString(),
         endTime: finalEndDate?.toISOString(),
         numberOfPeople,
         eventDetails,
+        selectedFacilityNames,
       });
 
       const bookingId = bookingResponse.data.data.bookingId;
@@ -125,6 +207,30 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
                   required
                 />
               </div>
+
+              {hall && hall.facilities.length > 0 && (
+                <div className="mb-6">
+                  <h4 className="text-md font-medium text-gray-800 mb-2">Add Facilities</h4>
+                  <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+                    {hall.facilities.map((facility) => (
+                      <label key={facility._id} className="flex items-center space-x-3 text-sm">
+                        <input
+                          type="checkbox"
+                          className="h-4 w-4 rounded border-gray-300 text-[#295FA7] focus:ring-[#295FA7]"
+                          checked={selectedFacilities.some(f => f._id === facility._id)}
+                          onChange={() => handleFacilityChange(facility)}
+                        />
+                        <span className="text-gray-700">{facility.facility?.name || facility.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                   <div className="mt-4 text-right">
+                    <p className="text-lg font-semibold text-gray-800">
+                        Total: ₦{totalPrice.toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+              )}
             </>
           )}
 
@@ -143,6 +249,18 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
                 <div className="flex justify-between">
                   <span className="text-gray-600">Event Details:</span>
                   <span className="font-medium text-gray-900">{eventDetails}</span>
+                </div>
+                {selectedFacilities.length > 0 && (
+                  <div className="pt-2">
+                    <h4 className="font-medium text-gray-800">Selected Facilities:</h4>
+                    <ul className="list-disc list-inside pl-4 text-gray-600">
+                      {selectedFacilities.map(f => <li key={f._id}>{f.facility?.name || f.name}</li>)}
+                    </ul>
+                  </div>
+                )}
+                <div className="flex justify-between font-bold text-lg border-t pt-2 mt-2">
+                    <span className="text-gray-800">Total Price:</span>
+                    <span className="text-gray-900">₦{totalPrice.toLocaleString()}</span>
                 </div>
               </div>
             </div>
