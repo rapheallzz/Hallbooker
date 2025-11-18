@@ -34,8 +34,9 @@ interface AuthContextType {
   loading: boolean;
   login: (token: string, user: User) => void;
   logout: () => void;
-  updateToken: (token: string) => void;
+  updateToken: (token: string, redirect?: boolean) => void;
   updateUserApplicationStatus: (status: string) => void;
+  redirectUser: (role: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -84,12 +85,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setLoading(false);
   }, []);
 
+  const redirectUser = (role: string) => {
+    const path = getDashboardPath(role);
+    router.push(path);
+  };
+
   const login = (newToken: string, newUser: User) => {
     setToken(newToken);
     setUser(newUser);
     localStorage.setItem('token', newToken);
     localStorage.setItem('user', JSON.stringify(newUser));
     api.defaults.headers.Authorization = `Bearer ${newToken}`;
+    redirectUser(newUser.activeRole);
   };
 
   const logout = () => {
@@ -101,7 +108,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     router.push('/auth/login');
   };
 
-  const updateToken = (newToken: string) => {
+  const updateToken = (newToken: string, redirect = true) => {
     setToken(newToken);
     localStorage.setItem('token', newToken);
     api.defaults.headers.Authorization = `Bearer ${newToken}`;
@@ -118,6 +125,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       };
       setUser(updatedUser);
       localStorage.setItem('user', JSON.stringify(updatedUser));
+
+      if (redirect) {
+        redirectUser(decodedToken.activeRole);
+      }
     } catch (error) {
       console.error("Failed to decode token or update user", error);
       logout();
@@ -139,7 +150,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout, updateToken, updateUserApplicationStatus }}>
+    <AuthContext.Provider value={{ user, token, loading, login, logout, updateToken, updateUserApplicationStatus, redirectUser }}>
       {children}
     </AuthContext.Provider>
   );

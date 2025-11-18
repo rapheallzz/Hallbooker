@@ -13,7 +13,7 @@ import TermsOfServiceModal from "./TermsOfServiceModal";
 import Swal from "sweetalert2";
 
 const Header = () => {
-  const { user, logout, updateToken, updateUserApplicationStatus } = useAuth();
+  const { user, logout, updateToken, updateUserApplicationStatus, redirectUser } = useAuth();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -52,25 +52,22 @@ const Header = () => {
     }
   };
 
-  const dashboardUrl = user?.role?.includes('hall-owner') ? '/vendor/dashboard' : '/bookings';
+  const dashboardUrl = getDashboardPath(user?.activeRole);
 
   const handleRoleSwitch = async (role: string) => {
     try {
       const response = await api.post('/auth/switch-role', { role });
       const { accessToken } = response.data.data;
-      updateToken(accessToken);
-
-      // Redirect based on the new role
-      console.log(`Redirecting to /admin/dashboard for role: ${role}`);
-      if (role === 'super-admin') {
-        router.push('/admin/dashboard');
-      } else if (role === 'hall-owner' || role === 'staff') {
-        router.push('/vendor/dashboard');
-      } else {
-        router.push('/');
-      }
+      updateToken(accessToken); // This will now handle the redirect
+      setDropdownOpen(false); // Close dropdown after switching
+      setRoleSwitchOpen(false);
     } catch (error: any) {
       console.error("Failed to switch role", error.response?.data || error.message);
+      Swal.fire({
+        icon: "error",
+        title: "Role Switch Failed",
+        text: error.response?.data?.message || "An unexpected error occurred.",
+      });
     }
   };
 
