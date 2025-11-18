@@ -50,3 +50,12 @@ body {
   .next-arrow {
     right: 10px;
   }
+
+
+.custom-calendar .rdrDayDisabled {
+  background-color: rgba(182, 137, 69, 0.5) !important;
+}
+
+.custom-calendar .rdrDayDisabled .rdrDayNumber span {
+  color: #000000 !important;
+}

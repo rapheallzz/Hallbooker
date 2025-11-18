@@ -27,13 +27,16 @@ const Calendar: React.FC<CalendarProps> = ({ unavailableDates, onChange }) => {
   };
 
   return (
-    <DateRange
-      editableDateInputs={true}
-      onChange={handleOnChange}
-      moveRangeOnFirstSelection={false}
-      ranges={state}
-      disabledDates={unavailableDates}
-    />
+    <div className="custom-calendar">
+      <DateRange
+        editableDateInputs={true}
+        onChange={handleOnChange}
+        moveRangeOnFirstSelection={false}
+        ranges={state}
+        disabledDates={unavailableDates}
+        className="w-full"
+      />
+    </div>
   );
 };
 
