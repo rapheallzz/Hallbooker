@@ -183,9 +183,12 @@ const HallDetailPage = () => {
             {/* Availability Section */}
             <div className="py-6 border-b">
               <h3 className="font-semibold text-xl text-gray-800 mb-4">Availability</h3>
-              <Calendar unavailableDates={[new Date(2023, 9, 20), new Date(2023, 9, 21)]} onChange={function (range: Range): void {
-                throw new Error('Function not implemented.');
-              } } />
+              <Calendar
+                unavailableDates={hall.blockedDates?.map(date => new Date(date)) || []}
+                onChange={(range: Range) => {
+                  console.log(range);
+                }}
+              />
             </div>
 
             {/* Reviews Section */}
