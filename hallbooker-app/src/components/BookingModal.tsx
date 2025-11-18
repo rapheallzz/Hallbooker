@@ -23,7 +23,7 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
   });
   const [numberOfPeople, setNumberOfPeople] = useState(1);
   const [eventDetails, setEventDetails] = useState('');
-  const [selectedFacilities, setSelectedFacilities] = useState<Facility[]>([]);
+  const [selectedFacilities, setSelectedFacilities] = useState<(Facility & { quantity: number })[]>([]);
   const [totalPrice, setTotalPrice] = useState(0);
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
@@ -71,14 +71,15 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
       const hallCost = dailyRate * diffDays;
 
       const facilitiesCost = selectedFacilities.reduce((total, facility) => {
+        const quantity = facility.quantity || 1;
         if (facility.chargeMethod === 'per_day') {
-          return total + (facility.cost * diffDays);
+          return total + (facility.cost * diffDays * quantity);
         }
         if (facility.chargeMethod === 'per_hour') {
-          return total + (facility.cost * durationInHours * diffDays);
+          return total + (facility.cost * durationInHours * diffDays * quantity);
         }
         // Defaults to a flat charge
-        return total + facility.cost;
+        return total + (facility.cost * quantity);
       }, 0);
 
       setTotalPrice(hallCost + facilitiesCost);
@@ -106,9 +107,20 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
       if (isSelected) {
         return prevSelected.filter((f) => f._id !== facility._id);
       } else {
-        return [...prevSelected, facility];
+        // Add the facility with a default quantity of 1
+        return [...prevSelected, { ...facility, quantity: 1 }];
       }
     });
+  };
+
+  const handleQuantityChange = (facilityId: string, quantity: number) => {
+    // Ensure quantity is at least 1
+    const newQuantity = Math.max(1, quantity);
+    setSelectedFacilities((prevSelected) =>
+      prevSelected.map((f) =>
+        f._id === facilityId ? { ...f, quantity: newQuantity } : f
+      )
+    );
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -132,7 +144,10 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
       const finalEndDate = new Date(endDate || startDate!);
       finalEndDate.setHours(endHour, endMinute, 0, 0);
 
-      const selectedFacilityNames = selectedFacilities.map(f => f.facility?.name || f.name).filter(Boolean);
+      const facilitiesPayload = selectedFacilities.map(f => ({
+        facilityId: f._id,
+        quantity: f.quantity,
+      }));
 
       const bookingResponse = await api.post('/bookings', {
         hallId: hallId,
@@ -140,7 +155,7 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
         endTime: finalEndDate.toISOString(),
         numberOfPeople,
         eventDetails,
-        selectedFacilityNames,
+        selectedFacilities: facilitiesPayload,
       });
 
       const bookingId = bookingResponse.data.data.bookingId;
@@ -250,22 +265,37 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
                   <h4 className="text-md font-medium text-gray-800 mb-2">Add Facilities</h4>
                   <div className="max-h-48 overflow-y-auto pr-2">
                     <div className="grid grid-cols-1 gap-y-3">
-                      {hall.facilities.map((facility) => (
-                        <label key={facility._id} className="flex items-center space-x-3 text-sm p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            className="h-4 w-4 rounded border-gray-300 text-[#295FA7] focus:ring-[#295FA7]"
-                            checked={selectedFacilities.some(f => f._id === facility._id)}
-                            onChange={() => handleFacilityChange(facility)}
-                          />
-                          <div className="flex justify-between w-full items-center">
-                            <span className="text-gray-700 flex-grow">{facility.facility?.name || facility.name}</span>
-                            <span className="text-gray-500 font-medium text-right">
-                              + ₦{facility.cost.toLocaleString()}{facility.chargeMethod === 'per_day' ? '/day' : (facility.chargeMethod === 'per_hour' ? '/hour' : '')}
-                            </span>
+                      {hall.facilities.map((facility) => {
+                        const isSelected = selectedFacilities.some(f => f._id === facility._id);
+                        const selectedFacility = selectedFacilities.find(f => f._id === facility._id);
+                        return (
+                          <div key={facility._id} className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200">
+                            <label className="flex items-center space-x-3 text-sm cursor-pointer">
+                              <input
+                                type="checkbox"
+                                className="h-4 w-4 rounded border-gray-300 text-[#295FA7] focus:ring-[#295FA7]"
+                                checked={isSelected}
+                                onChange={() => handleFacilityChange(facility)}
+                              />
+                              <span className="text-gray-700">{facility.facility?.name || facility.name}</span>
+                              <span className="text-gray-500 font-medium">
+                                + ₦{facility.cost.toLocaleString()}{facility.chargeMethod === 'per_day' ? '/day' : (facility.chargeMethod === 'per_hour' ? '/hour' : '')}
+                              </span>
+                            </label>
+                            {isSelected && (
+                              <div className="w-24">
+                                <input
+                                  type="number"
+                                  min="1"
+                                  value={selectedFacility?.quantity || 1}
+                                  onChange={(e) => handleQuantityChange(facility._id, parseInt(e.target.value, 10))}
+                                  className="w-full px-2 py-1 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-[#295FA7]"
+                                />
+                              </div>
+                            )}
                           </div>
-                        </label>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                   <div className="mt-4 text-right">
