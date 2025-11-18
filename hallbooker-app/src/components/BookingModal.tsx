@@ -195,23 +195,25 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
               {hall && hall.facilities.length > 0 && (
                 <div className="mb-6">
                   <h4 className="text-md font-medium text-gray-800 mb-2">Add Facilities</h4>
-                  <div className="grid grid-cols-2 gap-x-6 gap-y-3">
-                    {hall.facilities.map((facility) => (
-                      <label key={facility._id} className="flex items-center space-x-3 text-sm">
-                        <input
-                          type="checkbox"
-                          className="h-4 w-4 rounded border-gray-300 text-[#295FA7] focus:ring-[#295FA7]"
-                          checked={selectedFacilities.some(f => f._id === facility._id)}
-                          onChange={() => handleFacilityChange(facility)}
-                        />
-                        <div className="flex justify-between w-full items-center">
-                          <span className="text-gray-700 flex-grow">{facility.facility?.name || facility.name}</span>
-                          <span className="text-gray-500 font-medium text-right">
-                            + ₦{facility.cost.toLocaleString()}{facility.chargeMethod === 'per_day' ? '/day' : (facility.chargeMethod === 'per_hour' ? '/hour' : '')}
-                          </span>
-                        </div>
-                      </label>
-                    ))}
+                  <div className="max-h-48 overflow-y-auto pr-2">
+                    <div className="grid grid-cols-1 gap-y-3">
+                      {hall.facilities.map((facility) => (
+                        <label key={facility._id} className="flex items-center space-x-3 text-sm p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            className="h-4 w-4 rounded border-gray-300 text-[#295FA7] focus:ring-[#295FA7]"
+                            checked={selectedFacilities.some(f => f._id === facility._id)}
+                            onChange={() => handleFacilityChange(facility)}
+                          />
+                          <div className="flex justify-between w-full items-center">
+                            <span className="text-gray-700 flex-grow">{facility.facility?.name || facility.name}</span>
+                            <span className="text-gray-500 font-medium text-right">
+                              + ₦{facility.cost.toLocaleString()}{facility.chargeMethod === 'per_day' ? '/day' : (facility.chargeMethod === 'per_hour' ? '/hour' : '')}
+                            </span>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
                   </div>
                    <div className="mt-4 text-right">
                     <p className="text-lg font-semibold text-gray-800">
