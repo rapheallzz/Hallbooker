@@ -11,6 +11,7 @@ import NotificationIcon from "./notifications/NotificationIcon";
 import NotificationDropdown from "./notifications/NotificationDropdown";
 import TermsOfServiceModal from "./TermsOfServiceModal";
 import Swal from "sweetalert2";
+import { getDashboardPath } from "@/utils/redirects";
 
 const Header = () => {
   const { user, logout, updateToken, updateUserApplicationStatus, redirectUser } = useAuth();
