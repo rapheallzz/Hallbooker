@@ -161,7 +161,7 @@ const HallDetailPage = () => {
                 {hall.facilities?.length > 0 ? (
                   hall.facilities.map((facility, index) => (
                     <div key={index} className="flex items-center">
-                      <span className="text-gray-700">{facility.name}</span>
+                      <span className="text-gray-700">{facility.facility ? facility.facility.name : facility.name}</span>
                     </div>
                   ))
                 ) : (
