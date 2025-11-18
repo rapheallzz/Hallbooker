@@ -14,6 +14,8 @@ interface Facility {
   chargeable: boolean;
   chargeMethod?: 'free' | 'flat' | 'per_hour';
   cost?: number;
+  quantity?: number;
+  chargePerUnit?: boolean;
 }
 interface APIFacility {
   _id: string;
@@ -125,6 +127,8 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
         chargeable: fac.chargeable,
         chargeMethod: fac.chargeMethod,
         cost: fac.cost,
+        quantity: fac.quantity || 1,
+        chargePerUnit: fac.chargePerUnit || false,
       })) : [];
 
       setFormData({
@@ -181,15 +185,17 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
       const selectedFacility = availableFacilities.find(f => f._id === value);
       facility.facility = selectedFacility?._id || '';
       facility.name = selectedFacility?.name || '';
-    } else if (field === 'available' || field === 'chargeable') {
+    } else if (field === 'available' || field === 'chargeable' || field === 'chargePerUnit') {
       facility[field] = value as boolean;
       if (field === 'chargeable' && !value) {
         // If chargeable is unchecked, reset charge method and cost
         delete facility.chargeMethod;
         delete facility.cost;
+        facility.quantity = 1; // Reset quantity
+        facility.chargePerUnit = false; // Reset charge per unit
       }
-    } else if (field === 'cost') {
-      facility.cost = Number(value);
+    } else if (field === 'cost' || field === 'quantity') {
+      facility[field] = Number(value);
     } else {
       facility[field] = value;
     }
@@ -203,7 +209,7 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
       facilities: [
         ...prev.facilities,
         // Initialize with empty values, user will select a facility
-        { facility: '', name: '', available: true, chargeable: false },
+        { facility: '', name: '', available: true, chargeable: false, quantity: 1, chargePerUnit: false },
       ],
     }));
   };
@@ -444,7 +450,7 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
                 <div className="space-y-3 max-h-48 overflow-y-auto border p-3 rounded-md border-gray-300">
                   {formData.facilities.map((facility, index) => (
                     <div key={index} className="p-2 border rounded-md border-gray-300 grid grid-cols-12 gap-2 items-center">
-                      <div className="col-span-4">
+                      <div className="col-span-3">
                         <select
                           value={facility.facility}
                           onChange={(e) => handleFacilityChange(index, 'facility', e.target.value)}
@@ -457,7 +463,7 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
                         </select>
                       </div>
 
-                      <div className="col-span-3 flex items-center space-x-2">
+                      <div className="col-span-2 flex items-center space-x-2">
                         <label className="flex items-center">
                           <input type="checkbox" checked={facility.available} onChange={(e) => handleFacilityChange(index, 'available', e.target.checked)} className="mr-1" />
                           <span className="text-sm">Available</span>
@@ -482,16 +488,38 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
                               ))}
                             </select>
                           </div>
-                          {(facility.chargeMethod === 'flat' || facility.chargeMethod === 'per_hour') && (
-                            <div className="col-span-2">
-                              <input
-                                type="number"
-                                placeholder="Cost"
-                                value={facility.cost || ''}
-                                onChange={(e) => handleFacilityChange(index, 'cost', e.target.value)}
-                                className="w-full px-2 py-1 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500"
-                              />
-                            </div>
+                          {facility.chargeMethod !== 'free' && (
+                            <>
+                              <div className="col-span-1">
+                                <input
+                                  type="number"
+                                  placeholder="Cost"
+                                  value={facility.cost || ''}
+                                  onChange={(e) => handleFacilityChange(index, 'cost', e.target.value)}
+                                  className="w-full px-2 py-1 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500"
+                                />
+                              </div>
+                              <div className="col-span-1">
+                                <input
+                                  type="number"
+                                  placeholder="Qty"
+                                  value={facility.quantity || ''}
+                                  onChange={(e) => handleFacilityChange(index, 'quantity', e.target.value)}
+                                  className="w-full px-2 py-1 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500"
+                                />
+                              </div>
+                              <div className="col-span-2">
+                                <label className="flex items-center text-sm">
+                                  <input
+                                    type="checkbox"
+                                    checked={!!facility.chargePerUnit}
+                                    onChange={(e) => handleFacilityChange(index, 'chargePerUnit', e.target.checked)}
+                                    className="mr-1"
+                                  />
+                                  Charge Per Unit
+                                </label>
+                              </div>
+                            </>
                           )}
                         </>
                       )}
@@ -608,7 +636,7 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
                     <div className="space-y-3 max-h-48 overflow-y-auto border p-3 rounded-md border-gray-300">
                       {formData.facilities.map((facility, index) => (
                         <div key={index} className="p-2 border rounded-md border-gray-300 grid grid-cols-12 gap-2 items-center">
-                          <div className="col-span-4">
+                          <div className="col-span-3">
                             <select
                               value={facility.facility}
                               onChange={(e) => handleFacilityChange(index, 'facility', e.target.value)}
@@ -621,7 +649,7 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
                             </select>
                           </div>
 
-                          <div className="col-span-3 flex items-center space-x-2">
+                          <div className="col-span-2 flex items-center space-x-2">
                             <label className="flex items-center">
                               <input type="checkbox" checked={facility.available} onChange={(e) => handleFacilityChange(index, 'available', e.target.checked)} className="mr-1" />
                               <span className="text-sm">Available</span>
@@ -646,16 +674,38 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
                                   ))}
                                 </select>
                               </div>
-                              {(facility.chargeMethod === 'flat' || facility.chargeMethod === 'per_hour') && (
-                                <div className="col-span-2">
-                                  <input
-                                    type="number"
-                                    placeholder="Cost"
-                                    value={facility.cost || ''}
-                                    onChange={(e) => handleFacilityChange(index, 'cost', e.target.value)}
-                                    className="w-full px-2 py-1 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500"
-                                  />
-                                </div>
+                              {facility.chargeMethod !== 'free' && (
+                                <>
+                                  <div className="col-span-1">
+                                    <input
+                                      type="number"
+                                      placeholder="Cost"
+                                      value={facility.cost || ''}
+                                      onChange={(e) => handleFacilityChange(index, 'cost', e.target.value)}
+                                      className="w-full px-2 py-1 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500"
+                                    />
+                                  </div>
+                                  <div className="col-span-1">
+                                    <input
+                                      type="number"
+                                      placeholder="Qty"
+                                      value={facility.quantity || ''}
+                                      onChange={(e) => handleFacilityChange(index, 'quantity', e.target.value)}
+                                      className="w-full px-2 py-1 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500"
+                                    />
+                                  </div>
+                                  <div className="col-span-2">
+                                    <label className="flex items-center text-sm">
+                                      <input
+                                        type="checkbox"
+                                        checked={!!facility.chargePerUnit}
+                                        onChange={(e) => handleFacilityChange(index, 'chargePerUnit', e.target.checked)}
+                                        className="mr-1"
+                                      />
+                                      Charge Per Unit
+                                    </label>
+                                  </div>
+                                </>
                               )}
                             </>
                           )}
