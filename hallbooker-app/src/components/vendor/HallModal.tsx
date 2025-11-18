@@ -449,8 +449,9 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
                 </div>
                 <div className="space-y-3 max-h-48 overflow-y-auto border p-3 rounded-md border-gray-300">
                   {formData.facilities.map((facility, index) => (
-                    <div key={index} className="p-2 border rounded-md border-gray-300 grid grid-cols-12 gap-2 items-center">
-                      <div className="col-span-3">
+                    <div key={index} className="p-3 border rounded-md border-gray-300 flex flex-wrap gap-4 items-center">
+                      {/* Facility Select */}
+                      <div className="flex-1 min-w-[200px]">
                         <select
                           value={facility.facility}
                           onChange={(e) => handleFacilityChange(index, 'facility', e.target.value)}
@@ -463,20 +464,27 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
                         </select>
                       </div>
 
-                      <div className="col-span-2 flex items-center space-x-2">
-                        <label className="flex items-center">
+                      {/* Checkboxes */}
+                      <div className="flex items-center gap-x-4">
+                        <label className="flex items-center whitespace-nowrap">
                           <input type="checkbox" checked={facility.available} onChange={(e) => handleFacilityChange(index, 'available', e.target.checked)} className="mr-1" />
                           <span className="text-sm">Available</span>
                         </label>
-                        <label className="flex items-center">
+                        <label className="flex items-center whitespace-nowrap">
                           <input type="checkbox" checked={facility.chargeable} onChange={(e) => handleFacilityChange(index, 'chargeable', e.target.checked)} className="mr-1" />
                           <span className="text-sm">Chargeable</span>
                         </label>
                       </div>
 
+                      {/* Remove Button */}
+                      <div className="ml-auto">
+                        <button type="button" onClick={() => removeFacility(index)} className="text-red-500 hover:text-red-700">X</button>
+                      </div>
+
+                      {/* Chargeable Fields */}
                       {facility.chargeable && (
-                        <>
-                          <div className="col-span-2">
+                        <div className="w-full flex flex-wrap gap-4 items-center pt-3 mt-3 border-t border-gray-200">
+                          <div className="flex-1 min-w-[150px]">
                             <select
                               value={facility.chargeMethod || ''}
                               onChange={(e) => handleFacilityChange(index, 'chargeMethod', e.target.value)}
@@ -488,9 +496,10 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
                               ))}
                             </select>
                           </div>
+
                           {facility.chargeMethod !== 'free' && (
                             <>
-                              <div className="col-span-1">
+                              <div className="flex-shrink-0 w-24">
                                 <input
                                   type="number"
                                   placeholder="Cost"
@@ -499,7 +508,7 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
                                   className="w-full px-2 py-1 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500"
                                 />
                               </div>
-                              <div className="col-span-1">
+                              <div className="flex-shrink-0 w-24">
                                 <input
                                   type="number"
                                   placeholder="Qty"
@@ -508,8 +517,8 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
                                   className="w-full px-2 py-1 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500"
                                 />
                               </div>
-                              <div className="col-span-2">
-                                <label className="flex items-center text-sm">
+                              <div className="flex items-center">
+                                <label className="flex items-center whitespace-nowrap text-sm">
                                   <input
                                     type="checkbox"
                                     checked={!!facility.chargePerUnit}
@@ -521,12 +530,8 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
                               </div>
                             </>
                           )}
-                        </>
+                        </div>
                       )}
-
-                      <div className="col-span-1 flex justify-end">
-                        <button type="button" onClick={() => removeFacility(index)} className="text-red-500 hover:text-red-700">X</button>
-                      </div>
                     </div>
                   ))}
                 </div>
@@ -635,8 +640,9 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
                     </div>
                     <div className="space-y-3 max-h-48 overflow-y-auto border p-3 rounded-md border-gray-300">
                       {formData.facilities.map((facility, index) => (
-                        <div key={index} className="p-2 border rounded-md border-gray-300 grid grid-cols-12 gap-2 items-center">
-                          <div className="col-span-3">
+                        <div key={index} className="p-3 border rounded-md border-gray-300 flex flex-wrap gap-4 items-center">
+                          {/* Facility Select */}
+                          <div className="flex-1 min-w-[200px]">
                             <select
                               value={facility.facility}
                               onChange={(e) => handleFacilityChange(index, 'facility', e.target.value)}
@@ -649,20 +655,27 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
                             </select>
                           </div>
 
-                          <div className="col-span-2 flex items-center space-x-2">
-                            <label className="flex items-center">
+                          {/* Checkboxes */}
+                          <div className="flex items-center gap-x-4">
+                            <label className="flex items-center whitespace-nowrap">
                               <input type="checkbox" checked={facility.available} onChange={(e) => handleFacilityChange(index, 'available', e.target.checked)} className="mr-1" />
                               <span className="text-sm">Available</span>
                             </label>
-                            <label className="flex items-center">
+                            <label className="flex items-center whitespace-nowrap">
                               <input type="checkbox" checked={facility.chargeable} onChange={(e) => handleFacilityChange(index, 'chargeable', e.target.checked)} className="mr-1" />
                               <span className="text-sm">Chargeable</span>
                             </label>
                           </div>
 
+                          {/* Remove Button */}
+                          <div className="ml-auto">
+                            <button type="button" onClick={() => removeFacility(index)} className="text-red-500 hover:text-red-700">X</button>
+                          </div>
+
+                          {/* Chargeable Fields */}
                           {facility.chargeable && (
-                            <>
-                              <div className="col-span-2">
+                            <div className="w-full flex flex-wrap gap-4 items-center pt-3 mt-3 border-t border-gray-200">
+                              <div className="flex-1 min-w-[150px]">
                                 <select
                                   value={facility.chargeMethod || ''}
                                   onChange={(e) => handleFacilityChange(index, 'chargeMethod', e.target.value)}
@@ -674,9 +687,10 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
                                   ))}
                                 </select>
                               </div>
+
                               {facility.chargeMethod !== 'free' && (
                                 <>
-                                  <div className="col-span-1">
+                                  <div className="flex-shrink-0 w-24">
                                     <input
                                       type="number"
                                       placeholder="Cost"
@@ -685,7 +699,7 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
                                       className="w-full px-2 py-1 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500"
                                     />
                                   </div>
-                                  <div className="col-span-1">
+                                  <div className="flex-shrink-0 w-24">
                                     <input
                                       type="number"
                                       placeholder="Qty"
@@ -694,8 +708,8 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
                                       className="w-full px-2 py-1 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500"
                                     />
                                   </div>
-                                  <div className="col-span-2">
-                                    <label className="flex items-center text-sm">
+                                  <div className="flex items-center">
+                                    <label className="flex items-center whitespace-nowrap text-sm">
                                       <input
                                         type="checkbox"
                                         checked={!!facility.chargePerUnit}
@@ -707,12 +721,8 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
                                   </div>
                                 </>
                               )}
-                            </>
+                            </div>
                           )}
-
-                          <div className="col-span-1 flex justify-end">
-                            <button type="button" onClick={() => removeFacility(index)} className="text-red-500 hover:text-red-700">X</button>
-                          </div>
                         </div>
                       ))}
                     </div>
