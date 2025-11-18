@@ -207,7 +207,7 @@ const Header = () => {
                                 onClick={() => setRoleSwitchOpen(!roleSwitchOpen)}
                                 className="block w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100"
                               >
-                                Switch Role
+                                Switch Account
                               </button>
                               {roleSwitchOpen && (
                                 <div className="absolute left-full top-0 w-48 mt-[-2.5rem] origin-top-right bg-white rounded-md shadow-lg">
