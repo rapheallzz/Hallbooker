@@ -77,13 +77,35 @@ const HallsPage = () => {
 
   const handleUpdate = async (formData: any) => {
     if (!editingHall) return;
+
+    Swal.fire({
+      title: 'Updating Hall...',
+      text: 'Please wait while we save the changes.',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+    });
+
     try {
       await api.patch(`/halls/${editingHall.id}`, formData);
+      Swal.fire({
+        icon: 'success',
+        title: 'Hall Updated!',
+        text: 'The hall details have been successfully updated.',
+        timer: 2000,
+        showConfirmButton: false,
+      });
       fetchHalls();
       closeHallModal();
       setEditingHall(undefined);
     } catch (error) {
       console.error('Failed to update hall:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Update Failed',
+        text: 'Something went wrong. Please try again.',
+      });
     }
   };
 
