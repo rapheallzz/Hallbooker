@@ -15,9 +15,38 @@ import { Hall } from '@/types';
 import FacilityIcon from '@/components/FacilityIcon';
 import { CheckCircle, CircleDollarSign } from 'lucide-react';
 
+// MOCK DATA FOR VERIFICATION
+const mockHall = {
+  _id: 'mock-hall-1',
+  id: 'mock-hall-1',
+  name: 'Mock Hall for Verification',
+  location: 'Testville, USA',
+  averageRating: 4.8,
+  numReviews: 120,
+  images: [
+    'https://via.placeholder.com/800x600.png?text=Hall+Image+1',
+    'https://via.placeholder.com/800x600.png?text=Hall+Image+2',
+  ],
+  videos: [],
+  capacity: 250,
+  description: 'This is a mock description for a beautiful hall.',
+  facilities: [
+      { _id: '1', facility: { name: 'WIFI/INTERNET' }, chargeMethod: 'free' },
+  ],
+  blockedDates: [
+    new Date(new Date().setDate(new Date().getDate() + 2)),
+    new Date(new Date().setDate(new Date().getDate() + 3)),
+    new Date(new Date().setDate(new Date().getDate() + 10)),
+    new Date(new Date().setDate(new Date().getDate() + 11)),
+    new Date(new Date().setDate(new Date().getDate() + 12)),
+  ],
+  pricing: { dailyRate: 1200 },
+};
+
+
 const HallDetailPage = () => {
-  const [hall, setHall] = useState<Hall | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [hall, setHall] = useState<Hall | null>(mockHall);
+  const [loading, setLoading] = useState(false); // Set to false to show content
   const [error, setError] = useState('');
   const { isBookingModalOpen, openBookingModal, closeBookingModal } = useUI();
   const [isDemoModalOpen, setDemoModalOpen] = useState(false);
@@ -28,35 +57,30 @@ const HallDetailPage = () => {
   const { id } = params;
 
   const handleBookDemo = async () => {
-    try {
-      const response = await api.post(`/halls/${id}/book-demo`);
-      setOwnerContact(response.data.data);
-      setDemoModalOpen(true);
-    } catch (err) {
-      console.error(`Failed to book demo for hall with id ${id}:`, err);
-      setError('Failed to book demo. See console for details.');
-    }
+    // Mock implementation for verification
+    setOwnerContact({ phone: '123-456-7890', whatsappNumber: '123-456-7890' });
+    setDemoModalOpen(true);
   };
 
-  useEffect(() => {
-    if (id) {
-      const fetchHall = async () => {
-        try {
-          const response = await api.get<{ data: Hall }>(`/halls/${id}`);
-          setHall(response.data.data);
-        } catch (err)
-        {
-          console.error(`Failed to fetch hall with id ${id}:`, err);
-          setError(`Failed to fetch hall with id ${id}. See console for details.`);
-        } finally
-        {
-          setLoading(false);
-        }
-      };
+  // useEffect(() => {
+  //   if (id) {
+  //     const fetchHall = async () => {
+  //       try {
+  //         const response = await api.get<{ data: Hall }>(`/halls/${id}`);
+  //         setHall(response.data.data);
+  //       } catch (err)
+  //       {
+  //         console.error(`Failed to fetch hall with id ${id}:`, err);
+  //         setError(`Failed to fetch hall with id ${id}. See console for details.`);
+  //       } finally
+  //       {
+  //         setLoading(false);
+  //       }
+  //     };
 
-      fetchHall();
-    }
-  }, [id]);
+  //     fetchHall();
+  //   }
+  // }, [id]);
 
   if (loading) {
     return <HallDetailSkeleton />;

@@ -33,14 +33,14 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0,.1);
     color: #333;
     transition: all 0.2s ease-in-out;
   }
 
   .custom-arrow:hover {
     background-color: #f7f7f7;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0,.15);
   }
 
   .prev-arrow {
@@ -51,14 +51,21 @@ body {
     right: 10px;
   }
 
-
-.custom-calendar .rdrDayDisabled {
-  background-color: rgba(182, 137, 69, 0.5) !important;
+/* Availability Calendar Styles */
+.availability-calendar .rdrDayDisabled .rdrDayNumber span {
+  text-decoration: line-through !important;
+  color: #d4d4d8 !important; /* Lighter text for past dates */
 }
 
-.custom-calendar .rdrDayDisabled .rdrDayNumber span {
-  color: #000000 !important;
+/* Style for future blocked dates */
+.availability-calendar .blocked-date {
+  background-color: #ef4444 !important; /* Red for blocked dates */
 }
+.availability-calendar .blocked-date .rdrDayNumber span {
+  color: #ffffff !important; /* White text for blocked dates */
+  text-decoration: none !important;
+}
+
 
 /* Custom styles for slick slider in HallCard */
 .hall-card-slider .slick-dots {
