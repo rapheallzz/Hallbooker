@@ -63,6 +63,14 @@ body {
 /* Custom styles for slick slider in HallCard */
 .hall-card-slider .slick-dots {
   bottom: 10px;
+  white-space: nowrap;
+  overflow-x: auto;
+  padding-bottom: 5px; /* Add some space for the scrollbar if visible */
+}
+
+/* Optional: Hide the scrollbar for a cleaner look */
+.hall-card-slider .slick-dots::-webkit-scrollbar {
+  display: none;
 }
 
 .hall-card-slider .slick-dots li button:before {
