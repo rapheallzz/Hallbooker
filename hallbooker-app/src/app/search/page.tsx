@@ -29,14 +29,37 @@ const SearchPage = () => {
   const [loading, setLoading] = useState(true);
   const [keyword, setKeyword] = useState('');
   const [minCapacity, setMinCapacity] = useState('');
+  const [price, setPrice] = useState('');
+
+  const prices = [
+    'Any',
+    '0-100',
+    '100-500',
+    '500-1000',
+    '1000-5000',
+    '5000+',
+  ];
 
   const fetchHalls = async () => {
     setLoading(true);
+    let minPrice;
+    let maxPrice;
+
+    if (price && price !== 'Any') {
+      if (price.includes('+')) {
+        minPrice = Number(price.replace('+', ''));
+      } else {
+        [minPrice, maxPrice] = price.split('-').map(Number);
+      }
+    }
+
     try {
       const response = await api.get('/halls', {
         params: {
           keyword: keyword || undefined,
           minCapacity: minCapacity || undefined,
+          minPrice: minPrice || undefined,
+          maxPrice: maxPrice || undefined,
         },
       });
       if (Array.isArray(response.data.data)) {
@@ -95,6 +118,23 @@ const SearchPage = () => {
                   className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
                   placeholder="e.g., 100"
                 />
+              </div>
+              <div className="mb-4">
+                <label htmlFor="price" className="block text-sm font-medium text-gray-700">
+                  Price
+                </label>
+                <select
+                  id="price"
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
+                >
+                  {prices.map((p) => (
+                    <option key={p} value={p}>
+                      {p}
+                    </option>
+                  ))}
+                </select>
               </div>
               <button
                 type="submit"

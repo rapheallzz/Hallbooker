@@ -39,8 +39,8 @@ const HomePage = () => {
     fetchHalls();
   }, []);
 
-  const handleSearch = (filters: { location: string; dateRange: any; capacity: string }) => {
-    const { location } = filters;
+  const handleSearch = (filters: { location: string; dateRange: any; capacity: string; price: string }) => {
+    const { location, price } = filters;
     setSearchPerformed(true);
 
     let filtered = allHalls;
@@ -50,6 +50,29 @@ const HomePage = () => {
         filtered = filtered.filter((hall) =>
             hall.location.toLowerCase().includes(location.toLowerCase().split(',')[0])
         );
+    }
+
+    // Price filtering
+    if (price && price !== 'Any') {
+      if (price.includes('+')) {
+        const minPrice = Number(price.replace('+', ''));
+        filtered = filtered.filter((hall) => {
+          const hallPrice = hall.pricing?.dailyRate;
+          return hallPrice && hallPrice >= minPrice;
+        });
+      } else {
+        const [minPrice, maxPrice] = price.split('-').map(Number);
+        filtered = filtered.filter((hall) => {
+          const hallPrice = hall.pricing?.dailyRate;
+          if (hallPrice) {
+            if (maxPrice) {
+              return hallPrice >= minPrice && hallPrice <= maxPrice;
+            }
+            return hallPrice >= minPrice;
+          }
+          return false;
+        });
+      }
     }
 
     setFilteredHalls(filtered);

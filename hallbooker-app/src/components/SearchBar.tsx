@@ -8,7 +8,7 @@ import { format } from 'date-fns';
 import useOnClickOutside from '@/hooks/useOnClickOutside';
 
 interface SearchBarProps {
-  onSearch: (filters: { location: string; dateRange: any; capacity: string }) => void;
+  onSearch: (filters: { location: string; dateRange: any; capacity: string; price: string }) => void;
 }
 
 const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
@@ -16,6 +16,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
   const [showLocations, setShowLocations] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
   const [showCapacity, setShowCapacity] = useState(false);
+  const [showPrice, setShowPrice] = useState(false);
   const [dateRange, setDateRange] = useState([
     {
       startDate: new Date(),
@@ -24,14 +25,17 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
     },
   ]);
   const [capacity, setCapacity] = useState('');
+  const [price, setPrice] = useState('');
 
   const locationRef = useRef<HTMLDivElement>(null);
   const calendarRef = useRef<HTMLDivElement>(null);
   const capacityRef = useRef<HTMLDivElement>(null);
+  const priceRef = useRef<HTMLDivElement>(null);
 
   useOnClickOutside(locationRef, () => setShowLocations(false));
   useOnClickOutside(calendarRef, () => setShowCalendar(false));
   useOnClickOutside(capacityRef, () => setShowCapacity(false));
+  useOnClickOutside(priceRef, () => setShowPrice(false));
 
   const locations = [
     'New York, NY',
@@ -50,6 +54,15 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
     '500+',
   ];
 
+  const prices = [
+    'Any',
+    '0-100',
+    '100-500',
+    '500-1000',
+    '1000-5000',
+    '5000+',
+  ];
+
   const handleDateChange = (ranges: any) => {
     setDateRange([ranges.selection]);
   };
@@ -59,6 +72,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
       location,
       dateRange,
       capacity,
+      price,
     });
   };
 
@@ -97,6 +111,44 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
                   }}
                 >
                   {loc}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+
+      <div className="flex-1 relative group" ref={priceRef}>
+        <div
+          className="p-4 rounded-full hover:bg-gray-100 cursor-pointer"
+          onClick={() => setShowPrice(!showPrice)}
+        >
+          <label
+            htmlFor="price"
+            className="block text-sm font-bold text-gray-800"
+          >
+            Price
+          </label>
+          <input
+            type="text"
+            readOnly
+            value={price || 'Price Range'}
+            className="w-full bg-transparent border-none focus:ring-0 text-gray-600"
+          />
+        </div>
+        {showPrice && (
+          <div className="absolute z-10 w-full mt-1 bg-white rounded-xl shadow-lg">
+            <ul className="py-2">
+              {prices.map((p) => (
+                <li
+                  key={p}
+                  className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
+                  onClick={() => {
+                    setPrice(p);
+                    setShowPrice(false);
+                  }}
+                >
+                  {p}
                 </li>
               ))}
             </ul>
