@@ -59,3 +59,19 @@ body {
 .custom-calendar .rdrDayDisabled .rdrDayNumber span {
   color: #000000 !important;
 }
+
+/* Custom styles for slick slider in HallCard */
+.hall-card-slider .slick-dots {
+  bottom: 10px;
+}
+
+.hall-card-slider .slick-dots li button:before {
+  font-size: 10px;
+  color: white;
+  opacity: 0.75;
+}
+
+.hall-card-slider .slick-dots li.slick-active button:before {
+  opacity: 1;
+  color: #B68945; /* secondary color */
+}
