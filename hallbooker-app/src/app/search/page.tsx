@@ -5,6 +5,8 @@ import HallCard from '@/components/HallCard';
 import api from '@/services/api';
 import { Hall } from '@/types/hall';
 import useIntersectionObserver from '@/hooks/useIntersectionObserver';
+import Slider from 'rc-slider';
+import 'rc-slider/assets/index.css';
 
 const AnimatedHallCard = ({ hall, index }: { hall: Hall; index: number }) => {
   const ref = useRef<HTMLDivElement>(null);
@@ -29,37 +31,19 @@ const SearchPage = () => {
   const [loading, setLoading] = useState(true);
   const [keyword, setKeyword] = useState('');
   const [minCapacity, setMinCapacity] = useState('');
-  const [price, setPrice] = useState('');
-
-  const prices = [
-    'Any',
-    '0-100',
-    '100-500',
-    '500-1000',
-    '1000-5000',
-    '5000+',
-  ];
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 5000]);
 
   const fetchHalls = async () => {
     setLoading(true);
-    let minPrice;
-    let maxPrice;
-
-    if (price && price !== 'Any') {
-      if (price.includes('+')) {
-        minPrice = Number(price.replace('+', ''));
-      } else {
-        [minPrice, maxPrice] = price.split('-').map(Number);
-      }
-    }
+    const [minPrice, maxPrice] = priceRange;
 
     try {
       const response = await api.get('/halls', {
         params: {
           keyword: keyword || undefined,
           minCapacity: minCapacity || undefined,
-          minPrice: minPrice || undefined,
-          maxPrice: maxPrice || undefined,
+          minPrice,
+          maxPrice,
         },
       });
       if (Array.isArray(response.data.data)) {
@@ -121,20 +105,20 @@ const SearchPage = () => {
               </div>
               <div className="mb-4">
                 <label htmlFor="price" className="block text-sm font-medium text-gray-700">
-                  Price
+                  Price Range
                 </label>
-                <select
-                  id="price"
-                  value={price}
-                  onChange={(e) => setPrice(e.target.value)}
-                  className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
-                >
-                  {prices.map((p) => (
-                    <option key={p} value={p}>
-                      {p}
-                    </option>
-                  ))}
-                </select>
+                <Slider
+                  range
+                  min={0}
+                  max={10000}
+                  value={priceRange}
+                  onChange={(value) => setPriceRange(value as [number, number])}
+                  step={100}
+                />
+                <div className="flex justify-between text-sm text-gray-600 mt-2">
+                  <span>${priceRange[0]}</span>
+                  <span>${priceRange[1]}</span>
+                </div>
               </div>
               <button
                 type="submit"

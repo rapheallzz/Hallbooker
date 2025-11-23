@@ -6,9 +6,11 @@ import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
 import { format } from 'date-fns';
 import useOnClickOutside from '@/hooks/useOnClickOutside';
+import Slider from 'rc-slider';
+import 'rc-slider/assets/index.css';
 
 interface SearchBarProps {
-  onSearch: (filters: { location: string; dateRange: any; capacity: string; price: string }) => void;
+  onSearch: (filters: { location: string; dateRange: any; capacity: string; priceRange: [number, number] }) => void;
 }
 
 const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
@@ -25,7 +27,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
     },
   ]);
   const [capacity, setCapacity] = useState('');
-  const [price, setPrice] = useState('');
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 5000]);
 
   const locationRef = useRef<HTMLDivElement>(null);
   const calendarRef = useRef<HTMLDivElement>(null);
@@ -54,15 +56,6 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
     '500+',
   ];
 
-  const prices = [
-    'Any',
-    '0-100',
-    '100-500',
-    '500-1000',
-    '1000-5000',
-    '5000+',
-  ];
-
   const handleDateChange = (ranges: any) => {
     setDateRange([ranges.selection]);
   };
@@ -72,7 +65,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
       location,
       dateRange,
       capacity,
-      price,
+      priceRange,
     });
   };
 
@@ -129,29 +122,20 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
           >
             Price
           </label>
-          <input
-            type="text"
-            readOnly
-            value={price || 'Price Range'}
-            className="w-full bg-transparent border-none focus:ring-0 text-gray-600"
-          />
+          <div className="text-gray-600">
+            ${priceRange[0]} - ${priceRange[1]}
+          </div>
         </div>
         {showPrice && (
-          <div className="absolute z-10 w-full mt-1 bg-white rounded-xl shadow-lg">
-            <ul className="py-2">
-              {prices.map((p) => (
-                <li
-                  key={p}
-                  className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
-                  onClick={() => {
-                    setPrice(p);
-                    setShowPrice(false);
-                  }}
-                >
-                  {p}
-                </li>
-              ))}
-            </ul>
+          <div className="absolute z-10 w-full mt-1 p-4 bg-white rounded-xl shadow-lg">
+            <Slider
+              range
+              min={0}
+              max={10000}
+              value={priceRange}
+              onChange={(value) => setPriceRange(value as [number, number])}
+              step={100}
+            />
           </div>
         )}
       </div>
