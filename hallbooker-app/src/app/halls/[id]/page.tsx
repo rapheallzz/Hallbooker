@@ -12,6 +12,8 @@ import HallDetailSkeleton from '@/components/HallDetailSkeleton';
 import { Range } from 'react-date-range';
 import MediaViewerModal from '@/components/MediaViewerModal';
 import { Hall } from '@/types';
+import FacilityIcon from '@/components/FacilityIcon';
+import { CheckCircle, CircleDollarSign } from 'lucide-react';
 
 const HallDetailPage = () => {
   const [hall, setHall] = useState<Hall | null>(null);
@@ -167,11 +169,27 @@ const HallDetailPage = () => {
 
             <div className="py-6">
               <h3 className="font-semibold text-xl text-gray-800 mb-4">What this place offers</h3>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                 {hall.facilities?.length > 0 ? (
                   hall.facilities.map((facility, index) => (
-                    <div key={index} className="flex items-center">
-                      <span className="text-gray-700">{facility.facility?.name || facility.name}</span>
+                    <div key={index} className="flex items-center space-x-4">
+                      <FacilityIcon name={facility.facility?.name || facility.name} />
+                      <div className="flex-grow">
+                        <p className="text-gray-800 font-medium">{facility.facility?.name || facility.name}</p>
+                        <div className="flex items-center text-sm text-gray-500">
+                          {facility.chargeMethod === 'free' ? (
+                            <>
+                              <CheckCircle className="h-4 w-4 text-green-500 mr-1.5" />
+                              <span>Free</span>
+                            </>
+                          ) : (
+                            <>
+                              <CircleDollarSign className="h-4 w-4 text-yellow-600 mr-1.5" />
+                              <span>Paid</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   ))
                 ) : (

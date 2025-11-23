@@ -15,13 +15,18 @@ import {
   Coffee,
   Heater,
   Box,
+  Armchair, // Added for Chairs
+  Square,   // Added for Tables
+  PartyPopper, // Added for Event Planning/Decoration
   type LucideIcon,
 } from 'lucide-react';
 
 const iconMap: { [key: string]: LucideIcon } = {
   wifi: Wifi,
+  internet: Wifi,
   parking: ParkingSquare,
   projector: Projector,
+  led: Projector,
   microphone: Mic,
   sofa: Sofa,
   utensils: Utensils,
@@ -34,6 +39,10 @@ const iconMap: { [key: string]: LucideIcon } = {
   bar: Wine,
   coffee: Coffee,
   heating: Heater,
+  chairs: Armchair,
+  tables: Square,
+  'event planning': PartyPopper,
+  decoration: PartyPopper,
 };
 
 const FacilityIcon = ({ name }: { name: string | undefined }) => {
