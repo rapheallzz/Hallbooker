@@ -52,12 +52,12 @@ body {
   }
 
 
-.custom-calendar .rdrDayDisabled {
-  background-color: rgba(182, 137, 69, 0.5) !important;
+.custom-calendar-wrapper .rdrDayDisabled {
+  background-color: #ef4444 !important; /* red-500 */
 }
 
-.custom-calendar .rdrDayDisabled .rdrDayNumber span {
-  color: #000000 !important;
+.custom-calendar-wrapper .rdrDayDisabled .rdrDayNumber span {
+  color: #ffffff !important; /* white */
 }
 
 /* Custom styles for slick slider in HallCard */

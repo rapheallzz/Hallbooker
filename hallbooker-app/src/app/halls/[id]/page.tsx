@@ -14,6 +14,7 @@ import MediaViewerModal from '@/components/MediaViewerModal';
 import { Hall } from '@/types';
 import FacilityIcon from '@/components/FacilityIcon';
 import { CheckCircle, CircleDollarSign } from 'lucide-react';
+import Swal from 'sweetalert2';
 
 const HallDetailPage = () => {
   const [hall, setHall] = useState<Hall | null>(null);
@@ -203,8 +204,13 @@ const HallDetailPage = () => {
               <h3 className="font-semibold text-xl text-gray-800 mb-4">Availability</h3>
               <Calendar
                 unavailableDates={hall.blockedDates?.map(date => new Date(date)) || []}
-                onChange={(range: Range) => {
-                  console.log(range);
+                onChange={(range: Range) => {}}
+                onDisabledDateClick={() => {
+                  Swal.fire({
+                    icon: 'error',
+                    title: 'Not Available',
+                    text: 'This date is not available for booking.',
+                  });
                 }}
               />
             </div>
