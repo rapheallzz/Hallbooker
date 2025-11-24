@@ -240,18 +240,19 @@ const HallDetailPage = () => {
             <div className="sticky top-28 border rounded-xl shadow-lg p-6">
               <div className="mb-4">
                 {hall.pricing?.dailyRate && hall.pricing?.hourlyRate ? (
-                  <div className="flex items-baseline justify-between">
-                    <div>
-                      <p className="text-2xl font-bold text-gray-900">
+                  <div className="flex items-center justify-around">
+                    <div className="text-center">
+                      <p className="text-xl font-bold text-gray-900">
                         ₦{hall.pricing.dailyRate.toLocaleString()}
                       </p>
-                      <span className="ml-1 text-gray-600">/ day</span>
+                      <span className="text-sm text-gray-600">/ day</span>
                     </div>
-                    <div>
-                      <p className="text-2xl font-bold text-gray-900">
+                    <div className="h-10 border-l border-gray-300"></div>
+                    <div className="text-center">
+                      <p className="text-xl font-bold text-gray-900">
                         ₦{hall.pricing.hourlyRate.toLocaleString()}
                       </p>
-                      <span className="ml-1 text-gray-600">/ hour</span>
+                      <span className="text-sm text-gray-600">/ hour</span>
                     </div>
                   </div>
                 ) : hall.pricing?.dailyRate ? (

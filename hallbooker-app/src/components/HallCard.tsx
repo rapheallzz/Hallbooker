@@ -57,7 +57,7 @@ const HallCard = ({ hall }: HallCardProps) => {
           <div className="mt-0.5 flex justify-between items-center">
             <div className="text-[11px] font-semibold text-gray-800">
               {dailyRate && hourlyRate ? (
-                <div className="flex space-x-2">
+                <div>
                   <p>
                     <span className="font-bold">₦{dailyRate.toLocaleString()}</span> / day
                   </p>
