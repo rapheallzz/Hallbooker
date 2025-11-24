@@ -9,7 +9,7 @@ import NotificationDropdown from "../notifications/NotificationDropdown";
 
 const VendorHeader = () => {
   const { user } = useAuth();
-  const { openHallModal, openStaffModal, openBookingModal } = useUI();
+  const { openHallModal, openStaffModal } = useUI();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [notificationDropdownOpen, setNotificationDropdownOpen] =
     useState(false);
@@ -72,17 +72,6 @@ const VendorHeader = () => {
                     className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   >
                     Add Staff
-                  </button>
-                </li>
-                <li>
-                  <button
-                    onClick={() => {
-                      openBookingModal();
-                      setIsDropdownOpen(false);
-                    }}
-                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  >
-                    Walk-In/Recurring Booking
                   </button>
                 </li>
               </ul>

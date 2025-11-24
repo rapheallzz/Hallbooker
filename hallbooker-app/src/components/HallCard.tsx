@@ -11,8 +11,7 @@ interface HallCardProps {
 }
 
 const HallCard = ({ hall }: HallCardProps) => {
-  const displayPrice = hall.pricing?.dailyRate || hall.pricing?.hourlyRate;
-  const priceUnit = hall.pricing?.dailyRate ? 'day' : 'hour';
+  const { dailyRate, hourlyRate } = hall.pricing || {};
 
   const settings = {
     dots: true,
@@ -56,15 +55,28 @@ const HallCard = ({ hall }: HallCardProps) => {
             <h3 className="text-[11px] font-bold text-gray-800 truncate">{hall.name}</h3>
           <p className="mt-0 text-[10px] text-gray-500 truncate">{hall.location}</p>
           <div className="mt-0.5 flex justify-between items-center">
-            <p className="text-[11px] font-semibold text-gray-800">
-              {displayPrice ? (
-                <>
-                  <span className="font-bold">₦{displayPrice.toLocaleString()}</span> / {priceUnit}
-                </>
+            <div className="text-[11px] font-semibold text-gray-800">
+              {dailyRate && hourlyRate ? (
+                <div className="flex space-x-2">
+                  <p>
+                    <span className="font-bold">₦{dailyRate.toLocaleString()}</span> / day
+                  </p>
+                  <p>
+                    <span className="font-bold">₦{hourlyRate.toLocaleString()}</span> / hour
+                  </p>
+                </div>
+              ) : dailyRate ? (
+                <p>
+                  <span className="font-bold">₦{dailyRate.toLocaleString()}</span> / day
+                </p>
+              ) : hourlyRate ? (
+                <p>
+                  <span className="font-bold">₦{hourlyRate.toLocaleString()}</span> / hour
+                </p>
               ) : (
                 <span className="text-gray-500">Price not available</span>
               )}
-            </p>
+            </div>
             <div className="flex items-center text-[10px]">
               <Star className="h-3 w-3 text-gray-400" />
               {hall.averageRating > 0 ? (
