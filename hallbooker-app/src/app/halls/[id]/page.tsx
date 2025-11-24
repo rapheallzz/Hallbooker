@@ -277,6 +277,7 @@ const HallDetailPage = () => {
             onClose={() => setDemoModalOpen(false)}
             phone={ownerContact.phone}
             whatsappNumber={ownerContact.whatsappNumber}
+            address={hall.geoLocation?.address}
           />
         </>
       )}

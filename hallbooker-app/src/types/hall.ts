@@ -17,4 +17,9 @@ export interface Hall {
     _id: string;
     fullName: string;
   };
+  geoLocation?: {
+    type: string;
+    coordinates: number[];
+    address: string;
+  };
 }
