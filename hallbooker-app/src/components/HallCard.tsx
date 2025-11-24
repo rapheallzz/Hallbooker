@@ -55,7 +55,7 @@ const HallCard = ({ hall }: HallCardProps) => {
             <h3 className="text-[11px] font-bold text-gray-800 truncate">{hall.name}</h3>
           <p className="mt-0 text-[10px] text-gray-500 truncate">{hall.location}</p>
           <div className="mt-0.5 flex justify-between items-center">
-            <div className="text-[11px] font-semibold text-gray-800">
+            <div className="text-[11px] font-semibold text-gray-800 min-h-[3em] flex items-center">
               {dailyRate && hourlyRate ? (
                 <div>
                   <p>
