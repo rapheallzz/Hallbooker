@@ -1,6 +1,8 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import api from "@/services/api";
+import BookingModal from "@/components/vendor/BookingModal";
+import { useUI } from "@/context/UIContext";
 
 interface AnalyticsData {
   totalRevenue?: number;
@@ -9,6 +11,7 @@ interface AnalyticsData {
 }
 
 const DashboardPage = () => {
+  const { isBookingModalOpen, closeBookingModal } = useUI();
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -49,6 +52,7 @@ const DashboardPage = () => {
           </div>
         )}
       </div>
+      <BookingModal isOpen={isBookingModalOpen} onClose={closeBookingModal} />
     </div>
   );
 };

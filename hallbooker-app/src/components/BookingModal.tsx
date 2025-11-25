@@ -7,18 +7,20 @@ import Calendar from './Calendar';
 import { Range } from 'react-date-range';
 import { Hall, Facility } from '@/types';
 
-import { DateObject } from 'react-multi-date-picker';
-
 interface BookingModalProps {
   hallId: string;
   isOpen: boolean;
   onClose: () => void;
-  selectedDates: DateObject[] | null;
 }
 
-const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose, selectedDates }) => {
+const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
   const [hall, setHall] = useState<Hall | null>(null);
   const [step, setStep] = useState(1);
+  const [dateRange, setDateRange] = useState<Range>({
+    startDate: new Date(),
+    endDate: new Date(),
+    key: 'selection',
+  });
   const [numberOfPeople, setNumberOfPeople] = useState(1);
   const [eventDetails, setEventDetails] = useState('');
   const [selectedFacilities, setSelectedFacilities] = useState<(Facility & { quantity: number })[]>([]);
@@ -54,9 +56,18 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose, selected
   }, [startTime, endTime]);
 
   useEffect(() => {
-    if (hall && selectedDates) {
+    if (hall && dateRange.startDate && dateRange.endDate) {
       const dailyRate = hall.pricing.dailyRate || 0;
-      const diffDays = selectedDates.length;
+
+      // Normalize dates to midnight to ensure accurate day difference calculation
+      const startDate = new Date(dateRange.startDate);
+      startDate.setHours(0, 0, 0, 0);
+      const endDate = new Date(dateRange.endDate);
+      endDate.setHours(0, 0, 0, 0);
+
+      const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
+      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 to include the start day
+
       const hallCost = dailyRate * diffDays;
 
       const facilitiesCost = selectedFacilities.reduce((total, facility) => {
@@ -73,7 +84,7 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose, selected
 
       setTotalPrice(hallCost + facilitiesCost);
     }
-  }, [hall, selectedDates, selectedFacilities, durationInHours]);
+  }, [hall, dateRange, selectedFacilities, durationInHours]);
 
   useEffect(() => {
     if (isOpen) {
@@ -122,38 +133,33 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose, selected
     setError('');
 
     try {
+      const { startDate, endDate } = dateRange;
+
       const [startHour, startMinute] = startTime.split(':').map(Number);
       const [endHour, endMinute] = endTime.split(':').map(Number);
+
+      const finalStartDate = new Date(startDate!);
+      finalStartDate.setHours(startHour, startMinute, 0, 0);
+
+      const finalEndDate = new Date(endDate || startDate!);
+      finalEndDate.setHours(endHour, endMinute, 0, 0);
 
       const facilitiesPayload = selectedFacilities.map(f => ({
         facilityId: f._id,
         quantity: f.quantity,
       }));
 
-      const bookingPromises = selectedDates!.map(date => {
-        const finalStartDate = new Date(date.toDate());
-        finalStartDate.setHours(startHour, startMinute, 0, 0);
-
-        const finalEndDate = new Date(date.toDate());
-        finalEndDate.setHours(endHour, endMinute, 0, 0);
-
-        return api.post('/bookings', {
-          hallId: hallId,
-          startTime: finalStartDate.toISOString(),
-          endTime: finalEndDate.toISOString(),
-          numberOfPeople,
-          eventDetails,
-          selectedFacilities: facilitiesPayload,
-        });
+      const bookingResponse = await api.post('/bookings', {
+        hallId: hallId,
+        startTime: finalStartDate.toISOString(),
+        endTime: finalEndDate.toISOString(),
+        numberOfPeople,
+        eventDetails,
+        selectedFacilities: facilitiesPayload,
       });
 
-      const bookingResponses = await Promise.all(bookingPromises);
-
-      const bookingIds = bookingResponses.map(res => res.data.data.bookingId);
-
-      // For simplicity, we'll initialize payment for the first booking.
-      // A more complex implementation might involve a cart or batch payment.
-      const paymentResponse = await api.post(`/payments/initialize/${bookingIds[0]}`);
+      const bookingId = bookingResponse.data.data.bookingId;
+      const paymentResponse = await api.post(`/payments/initialize/${bookingId}`);
       const { checkoutUrl } = paymentResponse.data.data;
 
       if (checkoutUrl) {
@@ -187,15 +193,11 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose, selected
           {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
 
           {step === 1 && (
-            <div>
-              <h3 className="text-lg font-medium text-center text-gray-800 mb-4">You are booking for the following dates:</h3>
-              <div className="flex flex-wrap justify-center gap-2">
-                {selectedDates?.map((date, index) => (
-                  <span key={index} className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium">
-                    {date.format("MMM DD, YYYY")}
-                  </span>
-                ))}
-              </div>
+            <div className="flex justify-center">
+              <Calendar
+                unavailableDates={[]}
+                onChange={(range) => setDateRange(range)}
+              />
             </div>
           )}
 
