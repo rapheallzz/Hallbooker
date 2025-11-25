@@ -230,8 +230,6 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose, selectio
 
   if (!isOpen) return null;
 
-  const isMultiDateSelection = selectionMode === 'multiple' && selectedMultiple.length > 1;
-
   const renderStepContent = () => {
     switch (step) {
       case 1:
