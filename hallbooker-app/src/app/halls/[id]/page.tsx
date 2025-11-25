@@ -7,10 +7,9 @@ import BookingModal from '@/components/BookingModal';
 import DemoModal from '@/components/DemoModal';
 import { useUI } from '@/context/UIContext';
 import ReviewCard from '@/components/ReviewCard';
-import Calendar, { CalendarMode } from '@/components/Calendar';
+import Calendar from '@/components/Calendar';
 import HallDetailSkeleton from '@/components/HallDetailSkeleton';
 import MediaViewerModal from '@/components/MediaViewerModal';
-import { DateRange } from 'react-day-picker';
 import { Hall } from '@/types';
 import FacilityIcon from '@/components/FacilityIcon';
 import { CheckCircle, CircleDollarSign } from 'lucide-react';
@@ -19,9 +18,6 @@ import Swal from 'sweetalert2';
 const HallDetailPage = () => {
   const [hall, setHall] = useState<Hall | null>(null);
   const [loading, setLoading] = useState(true);
-  const [calendarMode, setCalendarMode] = useState<CalendarMode>('range');
-  const [selectedRange, setSelectedRange] = useState<DateRange | undefined>();
-  const [selectedMultiple, setSelectedMultiple] = useState<Date[] | undefined>();
   const [error, setError] = useState('');
   const { isBookingModalOpen, openBookingModal, closeBookingModal } = useUI();
   const [isDemoModalOpen, setDemoModalOpen] = useState(false);
@@ -207,12 +203,12 @@ const HallDetailPage = () => {
               <h3 className="font-semibold text-xl text-gray-800 mb-4">Availability</h3>
               <Calendar
                 unavailableDates={hall.blockedDates?.map(date => new Date(date)) || []}
-                mode={calendarMode}
-                onModeChange={setCalendarMode}
-                selectedRange={selectedRange}
-                onRangeChange={setSelectedRange}
-                selectedMultiple={selectedMultiple}
-                onMultipleChange={setSelectedMultiple}
+                mode="range"
+                onModeChange={() => {}}
+                selectedRange={undefined}
+                onRangeChange={() => {}}
+                selectedMultiple={undefined}
+                onMultipleChange={() => {}}
                 onDisabledDateClick={() => {
                   Swal.fire({
                     icon: 'error',
@@ -308,9 +304,6 @@ const HallDetailPage = () => {
             hallId={hall.id}
             isOpen={isBookingModalOpen}
             onClose={closeBookingModal}
-            selectionMode={calendarMode}
-            selectedRange={selectedRange}
-            selectedMultiple={selectedMultiple}
           />
           <DemoModal
             isOpen={isDemoModalOpen}

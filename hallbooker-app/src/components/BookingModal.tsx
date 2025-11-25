@@ -5,19 +5,21 @@ import { X } from 'lucide-react';
 import api from '@/services/api';
 import { Hall, Facility } from '@/types';
 import { DateRange } from 'react-day-picker';
-import { CalendarMode } from './Calendar';
+import Calendar, { CalendarMode } from './Calendar';
+import Swal from 'sweetalert2';
 
 interface BookingModalProps {
   hallId: string;
   isOpen: boolean;
   onClose: () => void;
-  selectionMode: CalendarMode;
-  selectedRange?: DateRange;
-  selectedMultiple?: Date[];
 }
 
-const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose, selectionMode, selectedRange, selectedMultiple = [] }) => {
+const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
   const [hall, setHall] = useState<Hall | null>(null);
+  const [step, setStep] = useState(1);
+  const [calendarMode, setCalendarMode] = useState<CalendarMode>('range');
+  const [selectedRange, setSelectedRange] = useState<DateRange | undefined>();
+  const [selectedMultiple, setSelectedMultiple] = useState<Date[] | undefined>([]);
   const [singleSelectedDate, setSingleSelectedDate] = useState<Date | null>(null);
   const [numberOfPeople, setNumberOfPeople] = useState(1);
   const [eventDetails, setEventDetails] = useState('');
@@ -29,24 +31,23 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose, selectio
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const isMultiDateSelection = selectionMode === 'multiple' && selectedMultiple.length > 1;
-  const [step, setStep] = useState(isMultiDateSelection ? 1 : 2);
-
-  useEffect(() => {
-    // Reset step when the modal is opened or selection mode changes
-    setStep(isMultiDateSelection ? 1 : 2);
-  }, [isOpen, selectionMode, isMultiDateSelection]);
-
-  useEffect(() => {
-    if (selectionMode === 'multiple' && selectedMultiple.length === 1) {
-      setSingleSelectedDate(selectedMultiple[0]);
-    } else {
-      setSingleSelectedDate(null);
-    }
-  }, [selectionMode, selectedMultiple]);
-
   const nextStep = () => setStep(step + 1);
   const prevStep = () => setStep(step - 1);
+
+  useEffect(() => {
+    // Automatically advance if a valid single date or range is selected
+    if (step === 1) {
+      if (calendarMode === 'range' && selectedRange?.from && selectedRange.to) {
+        nextStep();
+      } else if (calendarMode === 'multiple' && selectedMultiple && selectedMultiple.length > 0) {
+        if (selectedMultiple.length === 1) {
+          setSingleSelectedDate(selectedMultiple[0]);
+          nextStep();
+        }
+        // If multiple dates are selected, wait for user to select one in the next step
+      }
+    }
+  }, [selectedRange, selectedMultiple, calendarMode, step]);
 
   const generateTimeOptions = (openingHour: number, closingHour: number) => {
     const options = [];
@@ -66,40 +67,28 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose, selectio
 
   useEffect(() => {
     if (!hall) return;
-
     const dailyRate = hall.pricing.dailyRate || 0;
     let numDays = 0;
 
-    if (selectionMode === 'range' && selectedRange?.from && selectedRange?.to) {
-      const diffTime = Math.abs(selectedRange.to.getTime() - selectedRange.from.getTime());
-      numDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-    } else if (selectionMode === 'multiple') {
-      if (singleSelectedDate) {
+    if (calendarMode === 'range' && selectedRange?.from && selectedRange?.to) {
+        const diffTime = Math.abs(selectedRange.to.getTime() - selectedRange.from.getTime());
+        numDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+    } else if (calendarMode === 'multiple' && singleSelectedDate) {
         numDays = 1;
-      } else {
-        // If no single date is chosen yet from multiple, we can show a placeholder price or 0
-        setTotalPrice(0);
-        return;
-      }
     }
 
     const hallCost = dailyRate * numDays;
     const facilitiesCost = selectedFacilities.reduce((total, facility) => {
-      const quantity = facility.quantity || 1;
-      let cost = 0;
-      if (facility.chargeMethod === 'per_day') {
-        cost = facility.cost * numDays;
-      } else if (facility.chargeMethod === 'per_hour') {
-        cost = facility.cost * durationInHours * numDays;
-      } else {
-        cost = facility.cost; // Flat
-      }
-      return total + (cost * quantity);
+        const quantity = facility.quantity || 1;
+        let cost = 0;
+        if (facility.chargeMethod === 'per_day') cost = facility.cost * numDays;
+        else if (facility.chargeMethod === 'per_hour') cost = facility.cost * durationInHours * numDays;
+        else cost = facility.cost; // Flat
+        return total + (cost * quantity);
     }, 0);
 
     setTotalPrice(hallCost + facilitiesCost);
-
-  }, [hall, selectionMode, selectedRange, singleSelectedDate, selectedFacilities, durationInHours]);
+  }, [hall, calendarMode, selectedRange, singleSelectedDate, selectedFacilities, durationInHours]);
 
 
   useEffect(() => {
@@ -130,56 +119,16 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose, selectio
     );
   };
 
-  const handleRangeSubmit = async () => {
-    if (!selectedRange?.from || !selectedRange?.to) {
-        setError('Please select a valid date range.');
-        return;
-    }
-    const [startHour, startMinute] = startTime.split(':').map(Number);
-    const [endHour, endMinute] = endTime.split(':').map(Number);
-
-    const finalStartDate = new Date(selectedRange.from);
-    finalStartDate.setHours(startHour, startMinute);
-
-    const finalEndDate = new Date(selectedRange.to);
-    finalEndDate.setHours(endHour, endMinute);
-
-    return {
-        startTime: finalStartDate.toISOString(),
-        endTime: finalEndDate.toISOString(),
-    };
-  };
-
-  const handleMultipleSubmit = async () => {
-    if (!singleSelectedDate) {
-        setError('Please select a date to book.');
-        return null;
-    }
-    const [startHour, startMinute] = startTime.split(':').map(Number);
-    const [endHour, endMinute] = endTime.split(':').map(Number);
-
-    const finalStartDate = new Date(singleSelectedDate);
-    finalStartDate.setHours(startHour, startMinute);
-
-    const finalEndDate = new Date(singleSelectedDate);
-    finalEndDate.setHours(endHour, endMinute);
-
-    return {
-        startTime: finalStartDate.toISOString(),
-        endTime: finalEndDate.toISOString(),
-    };
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    if (selectionMode === 'multiple' && step === 1 && selectedMultiple.length > 1 && !singleSelectedDate) {
-        setError('Please select a date to book from the list.');
-        return;
+    if (step === 1 && calendarMode === 'multiple' && selectedMultiple && selectedMultiple.length > 1 && !singleSelectedDate) {
+      nextStep(); // Move to selection step
+      return;
     }
 
-    if (step < 3) {
+    if (step < 4) { // We now have a summary step
       nextStep();
       return;
     }
@@ -188,30 +137,30 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose, selectio
 
     try {
         let bookingTimes;
-        if (selectionMode === 'range') {
-            bookingTimes = await handleRangeSubmit();
+        if (calendarMode === 'range' && selectedRange?.from && selectedRange.to) {
+            const [startHour, startMinute] = startTime.split(':').map(Number);
+            const finalStartDate = new Date(selectedRange.from);
+            finalStartDate.setHours(startHour, startMinute);
+            const finalEndDate = new Date(selectedRange.to);
+            finalEndDate.setHours(23, 59); // End of day
+            bookingTimes = { startTime: finalStartDate.toISOString(), endTime: finalEndDate.toISOString() };
+        } else if (calendarMode === 'multiple' && singleSelectedDate) {
+            const [startHour, startMinute] = startTime.split(':').map(Number);
+            const [endHour, endMinute] = endTime.split(':').map(Number);
+            const finalStartDate = new Date(singleSelectedDate);
+            finalStartDate.setHours(startHour, startMinute);
+            const finalEndDate = new Date(singleSelectedDate);
+            finalEndDate.setHours(endHour, endMinute);
+            bookingTimes = { startTime: finalStartDate.toISOString(), endTime: finalEndDate.toISOString() };
         } else {
-            bookingTimes = await handleMultipleSubmit();
-        }
-
-        if (!bookingTimes) {
+            setError('Please select your booking date(s).');
             setLoading(false);
             return;
         }
 
-        const facilitiesPayload = selectedFacilities.map(f => ({
-            facilityId: f._id,
-            quantity: f.quantity,
-        }));
+        const facilitiesPayload = selectedFacilities.map(f => ({ facilityId: f._id, quantity: f.quantity }));
 
-        const bookingResponse = await api.post('/bookings', {
-            hallId,
-            ...bookingTimes,
-            numberOfPeople,
-            eventDetails,
-            selectedFacilities: facilitiesPayload,
-        });
-
+        const bookingResponse = await api.post('/bookings', { hallId, ...bookingTimes, numberOfPeople, eventDetails, selectedFacilities: facilitiesPayload });
         const bookingId = bookingResponse.data.data.bookingId;
         const paymentResponse = await api.post(`/payments/initialize/${bookingId}`);
         const { checkoutUrl } = paymentResponse.data.data;
@@ -233,22 +182,38 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose, selectio
   const renderStepContent = () => {
     switch (step) {
       case 1:
-        if (!isMultiDateSelection) return null;
         return (
-          <div>
-            <h3 className="text-lg font-semibold mb-3">Select a Date to Book</h3>
-            <p className="text-sm text-gray-600 mb-4">You can only book one date at a time. Please choose one to proceed.</p>
-            <div className="space-y-2">
-              {selectedMultiple.map(date => (
-                <label key={date.toISOString()} className="flex items-center p-3 rounded-lg bg-gray-50 hover:bg-gray-100 cursor-pointer">
-                  <input type="radio" name="selectedDate" value={date.toISOString()} checked={singleSelectedDate?.toISOString() === date.toISOString()} onChange={() => setSingleSelectedDate(date)} className="h-4 w-4 text-[#295FA7] focus:ring-[#295FA7]"/>
-                  <span className="ml-3">{date.toLocaleDateString()}</span>
-                </label>
-              ))}
-            </div>
-          </div>
+            <Calendar
+                unavailableDates={hall?.blockedDates?.map(d => new Date(d)) || []}
+                mode={calendarMode}
+                onModeChange={setCalendarMode}
+                selectedRange={selectedRange}
+                onRangeChange={setSelectedRange}
+                selectedMultiple={selectedMultiple}
+                onMultipleChange={setSelectedMultiple}
+                onDisabledDateClick={() => Swal.fire({ icon: 'error', title: 'Not Available' })}
+            />
         );
       case 2:
+        if (calendarMode === 'multiple' && selectedMultiple && selectedMultiple.length > 1) {
+            return (
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Select a Date to Book</h3>
+                <p className="text-sm text-gray-600 mb-4">You can only book one date at a time. Please choose one to proceed.</p>
+                <div className="space-y-2">
+                  {selectedMultiple.map(date => (
+                    <label key={date.toISOString()} className="flex items-center p-3 rounded-lg bg-gray-50 hover:bg-gray-100 cursor-pointer">
+                      <input type="radio" name="selectedDate" value={date.toISOString()} checked={singleSelectedDate?.toISOString() === date.toISOString()} onChange={() => setSingleSelectedDate(date)} className="h-4 w-4 text-[#295FA7] focus:ring-[#295FA7]"/>
+                      <span className="ml-3">{date.toLocaleDateString()}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            );
+        }
+        // Fallthrough for details form
+      case 3:
+        // This is now the details form
         return (
           <>
             <div className="mb-4">
@@ -299,11 +264,11 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose, selectio
               )}
           </>
         );
-      case 3:
+      case 4: // Summary
         let datesDisplay = '';
-        if (selectionMode === 'range' && selectedRange?.from) {
+        if (calendarMode === 'range' && selectedRange?.from) {
             datesDisplay = `${selectedRange.from.toLocaleDateString()} - ${selectedRange.to?.toLocaleDateString()}`;
-        } else if (selectionMode === 'multiple' && singleSelectedDate) {
+        } else if (calendarMode === 'multiple' && singleSelectedDate) {
             datesDisplay = singleSelectedDate.toLocaleDateString();
         }
         return (
@@ -328,26 +293,26 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose, selectio
   };
 
   const getModalTitle = () => {
-    if (step === 1 && isMultiDateSelection) return "Choose Date";
-    if (step === 2) return "Booking Details";
-    if (step === 3) return "Confirm Booking";
-    return "Book Your Hall";
+    if (step === 1) return "Select Date(s)";
+    if (step === 2 && calendarMode === 'multiple' && selectedMultiple && selectedMultiple.length > 1) return "Choose Date";
+    if (step === 4) return "Confirm Booking";
+    return "Booking Details";
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded-xl p-6 w-full max-w-md">
-        <div className="flex justify-between items-center pb-4 mb-4 border-b">
-          <h2 className="text-2xl font-semibold">{getModalTitle()}</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center text-gray-800 transition-opacity duration-300">
+        <div className={`bg-white rounded-xl shadow-2xl p-6 w-full ${step === 1 ? 'max-w-2xl' : 'max-w-md'} transform transition-all duration-300`}>
+            <div className="flex justify-between items-center pb-4 mb-4 border-b">
+                <h2 className="text-2xl font-semibold">{getModalTitle()}</h2>
           <button onClick={onClose}><X size={24} /></button>
         </div>
         <form onSubmit={handleSubmit}>
           {error && <p className="text-red-500 mb-4">{error}</p>}
-          <div className="min-h-[250px]">{renderStepContent()}</div>
+          <div className="min-h-[350px]">{renderStepContent()}</div>
           <div className="flex justify-end mt-8">
             {step > 1 && <button type="button" onClick={prevStep} className="mr-3 p-2 bg-gray-200 rounded">Back</button>}
             <button type="submit" disabled={loading} className="p-2 bg-[#295FA7] text-white rounded disabled:opacity-50">
-              {step === 3 ? (loading ? 'Processing...' : 'Proceed to Payment') : 'Next'}
+              {step === 4 ? (loading ? 'Processing...' : 'Proceed to Payment') : 'Next'}
             </button>
           </div>
         </form>
