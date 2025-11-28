@@ -21,7 +21,6 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
     endDate: new Date(),
     key: 'selection',
   });
-  const [numberOfPeople, setNumberOfPeople] = useState(1);
   const [eventDetails, setEventDetails] = useState('');
   const [selectedFacilities, setSelectedFacilities] = useState<(Facility & { quantity: number })[]>([]);
   const [totalPrice, setTotalPrice] = useState(0);
@@ -153,7 +152,6 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
         hallId: hallId,
         startTime: finalStartDate.toISOString(),
         endTime: finalEndDate.toISOString(),
-        numberOfPeople,
         eventDetails,
         selectedFacilities: facilitiesPayload,
       });
@@ -203,20 +201,6 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
 
           {step === 2 && (
             <>
-              <div className="mb-4">
-                <label htmlFor="numberOfPeople" className="block text-sm font-medium text-gray-700 mb-1">
-                  Number of People
-                </label>
-                <input
-                  type="number"
-                  id="numberOfPeople"
-                  value={numberOfPeople}
-                  onChange={(e) => setNumberOfPeople(Number(e.target.value))}
-                  className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#295FA7] focus:border-transparent sm:text-sm"
-                  required
-                  min="1"
-                />
-              </div>
               <div className="mb-6">
                 <label htmlFor="eventDetails" className="block text-sm font-medium text-gray-700 mb-1">
                   Event Details
@@ -316,10 +300,6 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
                 <div className="flex justify-between">
                   <span className="text-gray-600">Dates:</span>
                   <span className="font-medium text-gray-900">{dateRange.startDate?.toLocaleDateString()} - {dateRange.endDate?.toLocaleDateString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Number of Guests:</span>
-                  <span className="font-medium text-gray-900">{numberOfPeople}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Event Details:</span>
