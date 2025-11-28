@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import api from '@/services/api';
 
 interface Hall {
   _id: string;
@@ -16,9 +15,12 @@ const AuthLayout = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const fetchHalls = async () => {
       try {
-        const response = await api.get('/halls');
-        const hallsWithImages = response.data.data.filter((hall: Hall) => hall.images && hall.images.length > 0);
-        setHalls(hallsWithImages);
+        const response = await fetch('https://hallbooker.onrender.com/api/v1/halls');
+        const data = await response.json();
+        if (data && data.data) {
+          const hallsWithImages = data.data.filter((hall: Hall) => hall.images && hall.images.length > 0);
+          setHalls(hallsWithImages);
+        }
       } catch (error) {
         console.error('Failed to fetch halls:', error);
       }
@@ -44,7 +46,7 @@ const AuthLayout = ({ children }: { children: React.ReactNode }) => {
         className="hidden lg:block w-1/2 bg-cover bg-center relative"
         style={{ backgroundImage: `url(${backgroundImage})` }}
       >
-        <div className="absolute inset-0 bg-black bg-opacity-60"></div>
+        <div className="absolute inset-0 bg-black bg-opacity-50"></div>
         <div className="relative flex items-center justify-center h-full">
           <span className="text-white text-5xl font-bold">Hall Booker</span>
         </div>
