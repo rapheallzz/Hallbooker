@@ -19,7 +19,8 @@ interface Hall {
 }
 
 const AuthLayout = ({ children }: { children: React.ReactNode }) => {
-  const [bgImage, setBgImage] = useState('/hall_default.jpg');
+  const [images, setImages] = useState<string[]>(['/hall_default.jpg']);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
     const fetchHallImages = async () => {
@@ -27,11 +28,12 @@ const AuthLayout = ({ children }: { children: React.ReactNode }) => {
         const response = await axios.get('https://hallbooker.onrender.com/api/v1/halls');
         const halls = response.data.data;
         if (halls && halls.length > 0) {
-          const allImages = halls.flatMap((hall: Hall) => hall.images);
+          const allImages = halls
+            .flatMap((hall: Hall) => hall.images)
+            .filter((image: string) => image); // Filter out any empty strings
           if (allImages.length > 0) {
-            const randomImage = allImages[Math.floor(Math.random() * allImages.length)];
-            const secureImageUrl = randomImage.replace(/^http:/, 'https:');
-            setBgImage(secureImageUrl);
+            const secureImages = allImages.map((img: string) => img.replace(/^http:/, 'https:'));
+            setImages(secureImages);
           }
         }
       } catch (error) {
@@ -42,18 +44,31 @@ const AuthLayout = ({ children }: { children: React.ReactNode }) => {
     fetchHallImages();
   }, []);
 
+  useEffect(() => {
+    if (images.length > 1) {
+      const timer = setInterval(() => {
+        setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
+      }, 5000); // Change image every 5 seconds
+
+      return () => clearInterval(timer); // Cleanup on component unmount
+    }
+  }, [images.length]);
+
   return (
     <div className="flex h-screen">
       <div className="relative w-1/2 h-full">
-        {bgImage && (
+        {images.map((image, index) => (
           <Image
-            src={bgImage}
+            key={image}
+            src={image}
             alt="Hall"
             fill
             style={{ objectFit: 'cover' }}
-            className="opacity-50"
+            className={`transition-opacity duration-1000 ease-in-out ${
+              index === currentIndex ? 'opacity-50' : 'opacity-0'
+            }`}
           />
-        )}
+        ))}
         <div className="absolute inset-0 bg-black opacity-50"></div>
         <div className="relative z-10 flex flex-col items-center justify-center h-full text-white">
           <Logo />
