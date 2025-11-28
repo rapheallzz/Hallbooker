@@ -12,14 +12,13 @@ interface BookingModalProps {
 }
 
 const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSubmit }) => {
-  const [activeTab, setActiveTab] = useState('standard');
+  const [activeTab, setActiveTab] = useState('walk-in');
   const [halls, setHalls] = useState([]);
   const [facilities, setFacilities] = useState([]);
   const [formData, setFormData] = useState({
     hall: '',
     startTime: '',
     endTime: '',
-    numberOfPeople: 0,
     eventType: '',
     startDate: '',
     endDate: '',
@@ -60,16 +59,10 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSubmit }
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleStandardSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const { hall, startTime, endTime, numberOfPeople, eventType } = formData;
-    onSubmit({ hall, startTime, endTime, numberOfPeople, eventType }, 'standard');
-  };
-
   const handleRecurringSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { hall, startDate, endDate, dayOfWeek, time, numberOfPeople, eventType } = formData;
-    onSubmit({ hall, startDate, endDate, dayOfWeek, time, numberOfPeople, eventType }, 'recurring');
+    const { hall, startDate, endDate, dayOfWeek, time, eventType } = formData;
+    onSubmit({ hall, startDate, endDate, dayOfWeek, time, eventType }, 'recurring');
   };
 
   const handleFacilityChange = (facilityName: string) => {
@@ -91,9 +84,9 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSubmit }
 
   const handleWalkInSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { hall, startTime, endTime, numberOfPeople, eventType, fullName, email, phone, paymentMethod, selectedFacilityNames } = formData;
+    const { hall, startTime, endTime, eventType, fullName, email, phone, paymentMethod, selectedFacilityNames } = formData;
     const walkInUserDetails = { fullName, email, phone };
-    onSubmit({ hall, startTime, endTime, numberOfPeople, eventType, walkInUserDetails, paymentMethod, selectedFacilityNames }, 'walk-in');
+    onSubmit({ hall, startTime, endTime, eventType, walkInUserDetails, paymentMethod, selectedFacilityNames }, 'walk-in');
   };
 
   if (!isOpen) return null;
@@ -106,12 +99,6 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSubmit }
         </button>
         <h2 className="text-2xl font-bold text-gray-800 mb-6">Create Booking</h2>
         <div className="flex border-b mb-4">
-          <button
-            className={`px-4 py-2 ${activeTab === 'standard' ? 'border-b-2 border-primary text-primary' : 'text-gray-500'}`}
-            onClick={() => setActiveTab('standard')}
-          >
-            Standard
-          </button>
           <button
             className={`px-4 py-2 ${activeTab === 'recurring' ? 'border-b-2 border-primary text-primary' : 'text-gray-500'}`}
             onClick={() => setActiveTab('recurring')}
@@ -126,44 +113,6 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSubmit }
           </button>
         </div>
         <div>
-          {activeTab === 'standard' && (
-            <form onSubmit={handleStandardSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-800">Hall</label>
-                <select name="hall" value={formData.hall} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900">
-                  <option value="">Select a hall</option>
-                  {halls.map((hall: any) => (
-                    <option key={hall._id} value={hall._id}>
-                      {hall.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-800">Start Time</label>
-                  <input type="datetime-local" name="startTime" value={formData.startTime} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-800">End Time</label>
-                  <input type="datetime-local" name="endTime" value={formData.endTime} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900" />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-800">Number of People</label>
-                <input type="number" name="numberOfPeople" value={formData.numberOfPeople} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-800">Event Type</label>
-                <input type="text" name="eventType" value={formData.eventType} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900" />
-              </div>
-              <div className="flex justify-end mt-8">
-                <button type="submit" className="px-4 py-2 rounded-md text-white bg-primary hover:bg-primary-dark">
-                  Create Booking
-                </button>
-              </div>
-            </form>
-          )}
           {activeTab === 'recurring' && (
             <form onSubmit={handleRecurringSubmit} className="space-y-4">
                <div>
@@ -204,10 +153,6 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSubmit }
                 <input type="time" name="time" value={formData.time} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-800">Number of People</label>
-                <input type="number" name="numberOfPeople" value={formData.numberOfPeople} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900" />
-              </div>
-              <div>
                 <label className="block text-sm font-medium text-gray-800">Event Type</label>
                 <input type="text" name="eventType" value={formData.eventType} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900" />
               </div>
@@ -240,10 +185,6 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSubmit }
                   <label className="block text-sm font-medium text-gray-800">End Time</label>
                   <input type="datetime-local" name="endTime" value={formData.endTime} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900" />
                 </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-800">Number of People</label>
-                <input type="number" name="numberOfPeople" value={formData.numberOfPeople} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-800">Event Type</label>
