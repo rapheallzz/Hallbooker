@@ -41,9 +41,13 @@ const AuthLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="flex min-h-screen">
       <div
-        className="hidden lg:block w-1/2 bg-cover bg-center"
+        className="hidden lg:block w-1/2 bg-cover bg-center relative"
         style={{ backgroundImage: `url(${backgroundImage})` }}
       >
+        <div className="absolute inset-0 bg-black bg-opacity-60"></div>
+        <div className="relative flex items-center justify-center h-full">
+          <span className="text-white text-5xl font-bold">Hall Booker</span>
+        </div>
       </div>
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-white">
         {children}
