@@ -4,7 +4,6 @@ import { FC, useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import api from '@/services/api';
 import Calendar from './Calendar';
-import { Range } from 'react-date-range';
 import { Hall, Facility } from '@/types';
 
 interface BookingModalProps {
@@ -16,11 +15,7 @@ interface BookingModalProps {
 const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
   const [hall, setHall] = useState<Hall | null>(null);
   const [step, setStep] = useState(1);
-  const [dateRange, setDateRange] = useState<Range>({
-    startDate: new Date(),
-    endDate: new Date(),
-    key: 'selection',
-  });
+  const [selectedDates, setSelectedDates] = useState<Date[] | undefined>(undefined);
   const [eventDetails, setEventDetails] = useState('');
   const [selectedFacilities, setSelectedFacilities] = useState<(Facility & { quantity: number })[]>([]);
   const [totalPrice, setTotalPrice] = useState(0);
@@ -55,35 +50,28 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
   }, [startTime, endTime]);
 
   useEffect(() => {
-    if (hall && dateRange.startDate && dateRange.endDate) {
+    if (hall && selectedDates && selectedDates.length > 0) {
       const dailyRate = hall.pricing.dailyRate || 0;
+      const numberOfDays = selectedDates.length;
 
-      // Normalize dates to midnight to ensure accurate day difference calculation
-      const startDate = new Date(dateRange.startDate);
-      startDate.setHours(0, 0, 0, 0);
-      const endDate = new Date(dateRange.endDate);
-      endDate.setHours(0, 0, 0, 0);
-
-      const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
-      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 to include the start day
-
-      const hallCost = dailyRate * diffDays;
+      const hallCost = dailyRate * numberOfDays;
 
       const facilitiesCost = selectedFacilities.reduce((total, facility) => {
         const quantity = facility.quantity || 1;
         if (facility.chargeMethod === 'per_day') {
-          return total + (facility.cost * diffDays * quantity);
+          return total + (facility.cost * numberOfDays * quantity);
         }
         if (facility.chargeMethod === 'per_hour') {
-          return total + (facility.cost * durationInHours * diffDays * quantity);
+          return total + (facility.cost * durationInHours * numberOfDays * quantity);
         }
-        // Defaults to a flat charge
         return total + (facility.cost * quantity);
       }, 0);
 
       setTotalPrice(hallCost + facilitiesCost);
+    } else {
+      setTotalPrice(0);
     }
-  }, [hall, dateRange, selectedFacilities, durationInHours]);
+  }, [hall, selectedDates, selectedFacilities, durationInHours]);
 
   useEffect(() => {
     if (isOpen) {
@@ -106,14 +94,12 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
       if (isSelected) {
         return prevSelected.filter((f) => f._id !== facility._id);
       } else {
-        // Add the facility with a default quantity of 1
         return [...prevSelected, { ...facility, quantity: 1 }];
       }
     });
   };
 
   const handleQuantityChange = (facilityId: string, quantity: number) => {
-    // Ensure quantity is at least 1
     const newQuantity = Math.max(1, quantity);
     setSelectedFacilities((prevSelected) =>
       prevSelected.map((f) =>
@@ -132,16 +118,19 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
     setError('');
 
     try {
-      const { startDate, endDate } = dateRange;
+      if (!selectedDates || selectedDates.length === 0) {
+        setError("Please select at least one date.");
+        setLoading(false);
+        return;
+      }
 
       const [startHour, startMinute] = startTime.split(':').map(Number);
-      const [endHour, endMinute] = endTime.split(':').map(Number);
 
-      const finalStartDate = new Date(startDate!);
-      finalStartDate.setHours(startHour, startMinute, 0, 0);
-
-      const finalEndDate = new Date(endDate || startDate!);
-      finalEndDate.setHours(endHour, endMinute, 0, 0);
+      const dateTimestamps = selectedDates.map(date => {
+          const newDate = new Date(date);
+          newDate.setHours(startHour, startMinute, 0, 0);
+          return newDate.toISOString();
+      });
 
       const facilitiesPayload = selectedFacilities.map(f => ({
         facilityId: f._id,
@@ -150,8 +139,7 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
 
       const bookingResponse = await api.post('/bookings', {
         hallId: hallId,
-        startTime: finalStartDate.toISOString(),
-        endTime: finalEndDate.toISOString(),
+        dates: dateTimestamps,
         eventDetails,
         selectedFacilities: facilitiesPayload,
       });
@@ -194,7 +182,8 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
             <div className="flex justify-center">
               <Calendar
                 unavailableDates={[]}
-                onChange={(range) => setDateRange(range)}
+                selectedDates={selectedDates}
+                onChange={(dates) => setSelectedDates(dates)}
               />
             </div>
           )}
@@ -299,7 +288,7 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Dates:</span>
-                  <span className="font-medium text-gray-900">{dateRange.startDate?.toLocaleDateString()} - {dateRange.endDate?.toLocaleDateString()}</span>
+                  <span className="font-medium text-gray-900">{selectedDates?.map(date => date.toLocaleDateString()).join(', ')}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Event Details:</span>
