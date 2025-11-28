@@ -28,7 +28,7 @@ const AdminBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSub
     email: '',
     phone: '',
     paymentMethod: 'cash',
-    paymentStatus: 'Pending',
+    paymentStatus: 'pending',
     selectedFacilities: [],
   });
 
@@ -62,8 +62,10 @@ const AdminBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSub
 
   const handleRecurringSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { hall, startDate, endDate, dayOfWeek, time, eventDetails } = formData;
-    onSubmit({ hall, startDate, endDate, dayOfWeek, time, eventDetails }, 'recurring');
+    const { hall, startDate, endDate, dayOfWeek, time, eventDetails, fullName, email, phone, paymentMethod, paymentStatus, selectedFacilities } = formData;
+    const walkInUserDetails = { fullName, email, phone };
+    const recurrenceRule = { startDate, endDate, dayOfWeek, time };
+    onSubmit({ hallId: hall, recurrenceRule, eventDetails, walkInUserDetails, paymentMethod, paymentStatus, selectedFacilities }, 'recurring');
   };
 
   const handleFacilityChange = (facility: any) => {
@@ -98,7 +100,7 @@ const AdminBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSub
     e.preventDefault();
     const { hall, startTime, endTime, eventDetails, fullName, email, phone, paymentMethod, paymentStatus, selectedFacilities } = formData;
     const walkInUserDetails = { fullName, email, phone };
-    onSubmit({ hall, startTime, endTime, eventDetails, walkInUserDetails, paymentMethod, paymentStatus, selectedFacilities }, 'walk-in');
+    onSubmit({ hallId: hall, startTime, endTime, eventDetails, walkInUserDetails, paymentMethod, paymentStatus, selectedFacilities }, 'walk-in');
   };
 
   if (!isOpen) return null;
@@ -168,6 +170,84 @@ const AdminBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSub
                 <label className="block text-sm font-medium text-gray-800">Event Details</label>
                 <input type="text" name="eventDetails" value={formData.eventDetails} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900" />
               </div>
+
+              <fieldset className="border p-4 rounded-md">
+                <legend className="text-lg font-medium text-gray-800">User Details</legend>
+                <div>
+                  <label className="block text-sm font-medium text-gray-800">Full Name</label>
+                  <input type="text" name="fullName" value={formData.fullName} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-800">Email</label>
+                  <input type="email" name="email" value={formData.email} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-800">Phone</label>
+                  <input type="tel" name="phone" value={formData.phone} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900" />
+                </div>
+              </fieldset>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-800">Facilities</label>
+                <div className="max-h-48 overflow-y-auto pr-2">
+                  <div className="grid grid-cols-1 gap-y-3">
+                    {(facilities as any[]).map((facility) => {
+                      const isSelected = (formData.selectedFacilities as { facilityId: string }[]).some(f => f.facilityId === facility._id);
+                      const selectedFacility = (formData.selectedFacilities as { facilityId: string, quantity: number }[]).find(f => f.facilityId === facility._id);
+                      return (
+                        <div key={facility._id} className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200">
+                          <label className="flex items-center space-x-3 text-sm cursor-pointer">
+                            <input
+                              type="checkbox"
+                              className="h-4 w-4 rounded border-gray-300 text-[#295FA7] focus:ring-[#295FA7]"
+                              checked={isSelected}
+                              onChange={() => handleFacilityChange(facility)}
+                            />
+                            <span className="text-gray-700">{facility.facility?.name || facility.name}</span>
+                            <span className="text-gray-500 font-medium">
+                              + ₦{facility.cost.toLocaleString()}{facility.chargeMethod === 'per_day' ? '/day' : (facility.chargeMethod === 'per_hour' ? '/hour' : '')}
+                            </span>
+                          </label>
+                          {isSelected && (
+                            <div className="w-24">
+                              <input
+                                type="number"
+                                min="1"
+                                value={selectedFacility?.quantity || 1}
+                                onChange={(e) => handleQuantityChange(facility._id, parseInt(e.target.value, 10))}
+                                className="w-full px-2 py-1 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-[#295FA7]"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-800">Payment Method</label>
+                <select name="paymentMethod" value={formData.paymentMethod} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900">
+                  <option value="cash">Cash</option>
+                  <option value="bank_transfer">Bank Transfer</option>
+                  <option value="pos">POS</option>
+                  <option value="online">Online</option>
+                  <option value="cheque">Cheque</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-800">Payment Status</label>
+                <select name="paymentStatus" value={formData.paymentStatus} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900">
+                  <option value="pending">Pending</option>
+                  <option value="paid">Paid</option>
+                  <option value="cancelled">Cancelled</option>
+                  <option value="refunded">Refunded</option>
+                  <option value="failed">Failed</option>
+                </select>
+              </div>
+
               <div className="flex justify-end mt-8">
                 <button type="submit" className="px-4 py-2 rounded-md text-white bg-primary hover:bg-primary-dark">
                   Create Recurring Booking
@@ -259,15 +339,19 @@ const AdminBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSub
                 <label className="block text-sm font-medium text-gray-800">Payment Method</label>
                 <select name="paymentMethod" value={formData.paymentMethod} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900">
                   <option value="cash">Cash</option>
-                  <option value="card">Card</option>
-                  <option value="transfer">Transfer</option>
+                  <option value="bank_transfer">Bank Transfer</option>
+                  <option value="pos">POS</option>
+                  <option value="online">Online</option>
+                  <option value="cheque">Cheque</option>
                 </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-800">Payment Status</label>
                 <select name="paymentStatus" value={formData.paymentStatus} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900">
-                  <option value="paid">Paid</option>
                   <option value="pending">Pending</option>
+                  <option value="paid">Paid</option>
+                  <option value="cancelled">Cancelled</option>
+                  <option value="refunded">Refunded</option>
                   <option value="failed">Failed</option>
                 </select>
               </div>
