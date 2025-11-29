@@ -15,6 +15,7 @@ interface Hall {
   capacity: number;
   isOnline: boolean;
   price: number;
+  demoBookings: number;
 }
 
 const HallsPage = () => {
@@ -225,7 +226,7 @@ const HallsPage = () => {
                 <th className="px-6 py-3 border-b-2 border-gray-300 text-left leading-4 text-primary tracking-wider">Name</th>
                 <th className="px-6 py-3 border-b-2 border-gray-300 text-left leading-4 text-primary tracking-wider">Location</th>
                 <th className="px-6 py-3 border-b-2 border-gray-300 text-left leading-4 text-primary tracking-wider">Capacity</th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-left leading-4 text-primary tracking-wider">Status</th>
+                <th className="px-6 py-3 border-b-2 border-gray-300 text-left leading-4 text-primary tracking-wider">Demo Bookings</th>
                 <th className="px-6 py-3 border-b-2 border-gray-300"></th>
               </tr>
             </thead>
@@ -236,11 +237,7 @@ const HallsPage = () => {
                     <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">{hall.name}</td>
                     <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">{hall.location}</td>
                     <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">{hall.capacity}</td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${hall.isOnline ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
-                        {hall.isOnline ? "Online" : "Offline"}
-                      </span>
-                    </td>
+                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">{hall.demoBookings}</td>
                     <td className="px-6 py-4 whitespace-no-wrap text-right border-b border-gray-500 text-gray-900">
                       <button onClick={() => openEditModal(hall)} className="px-5 py-2 border-primary border text-primary rounded transition duration-300 hover:bg-primary hover:text-white focus:outline-none">Edit</button>
                       <button
