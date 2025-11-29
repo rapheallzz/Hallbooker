@@ -52,34 +52,7 @@ body {
   }
 
 
-.custom-calendar-wrapper .rdrDayDisabled {
-  background-color: #ef4444 !important; /* red-500 */
-}
-
-.custom-calendar-wrapper .rdrDayDisabled .rdrDayNumber span {
-  color: #ffffff !important; /* white */
-}
-
-/* Custom styles for slick slider in HallCard */
-.hall-card-slider .slick-dots {
-  bottom: 10px;
-  white-space: nowrap;
-  overflow-x: auto;
-  padding-bottom: 5px; /* Add some space for the scrollbar if visible */
-}
-
-/* Optional: Hide the scrollbar for a cleaner look */
-.hall-card-slider .slick-dots::-webkit-scrollbar {
-  display: none;
-}
-
-.hall-card-slider .slick-dots li button:before {
-  font-size: 10px;
-  color: white;
-  opacity: 0.75;
-}
-
-.hall-card-slider .slick-dots li.slick-active button:before {
-  opacity: 1;
-  color: #B68945; /* secondary color */
+.custom-calendar .rdrDayDisabled .rdrDayNumber span {
+  color: red !important;
+  text-decoration: line-through;
 }
