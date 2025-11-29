@@ -4,18 +4,25 @@ import { FC, useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import api from '@/services/api';
 import Calendar from './Calendar';
+import { Range } from 'react-date-range';
 import { Hall, Facility } from '@/types';
 
 interface BookingModalProps {
   hallId: string;
   isOpen: boolean;
   onClose: () => void;
+  blockedDates: Date[];
 }
 
-const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
+const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose, blockedDates }) => {
   const [hall, setHall] = useState<Hall | null>(null);
   const [step, setStep] = useState(1);
-  const [selectedDates, setSelectedDates] = useState<Date[] | undefined>(undefined);
+  const [dateRange, setDateRange] = useState<Range>({
+    startDate: new Date(),
+    endDate: new Date(),
+    key: 'selection',
+  });
+  const [numberOfPeople, setNumberOfPeople] = useState(1);
   const [eventDetails, setEventDetails] = useState('');
   const [selectedFacilities, setSelectedFacilities] = useState<(Facility & { quantity: number })[]>([]);
   const [totalPrice, setTotalPrice] = useState(0);
@@ -50,28 +57,35 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
   }, [startTime, endTime]);
 
   useEffect(() => {
-    if (hall && selectedDates && selectedDates.length > 0) {
+    if (hall && dateRange.startDate && dateRange.endDate) {
       const dailyRate = hall.pricing.dailyRate || 0;
-      const numberOfDays = selectedDates.length;
 
-      const hallCost = dailyRate * numberOfDays;
+      // Normalize dates to midnight to ensure accurate day difference calculation
+      const startDate = new Date(dateRange.startDate);
+      startDate.setHours(0, 0, 0, 0);
+      const endDate = new Date(dateRange.endDate);
+      endDate.setHours(0, 0, 0, 0);
+
+      const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
+      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 to include the start day
+
+      const hallCost = dailyRate * diffDays;
 
       const facilitiesCost = selectedFacilities.reduce((total, facility) => {
         const quantity = facility.quantity || 1;
         if (facility.chargeMethod === 'per_day') {
-          return total + (facility.cost * numberOfDays * quantity);
+          return total + (facility.cost * diffDays * quantity);
         }
         if (facility.chargeMethod === 'per_hour') {
-          return total + (facility.cost * durationInHours * numberOfDays * quantity);
+          return total + (facility.cost * durationInHours * diffDays * quantity);
         }
+        // Defaults to a flat charge
         return total + (facility.cost * quantity);
       }, 0);
 
       setTotalPrice(hallCost + facilitiesCost);
-    } else {
-      setTotalPrice(0);
     }
-  }, [hall, selectedDates, selectedFacilities, durationInHours]);
+  }, [hall, dateRange, selectedFacilities, durationInHours]);
 
   useEffect(() => {
     if (isOpen) {
@@ -94,12 +108,14 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
       if (isSelected) {
         return prevSelected.filter((f) => f._id !== facility._id);
       } else {
+        // Add the facility with a default quantity of 1
         return [...prevSelected, { ...facility, quantity: 1 }];
       }
     });
   };
 
   const handleQuantityChange = (facilityId: string, quantity: number) => {
+    // Ensure quantity is at least 1
     const newQuantity = Math.max(1, quantity);
     setSelectedFacilities((prevSelected) =>
       prevSelected.map((f) =>
@@ -118,19 +134,16 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
     setError('');
 
     try {
-      if (!selectedDates || selectedDates.length === 0) {
-        setError("Please select at least one date.");
-        setLoading(false);
-        return;
-      }
+      const { startDate, endDate } = dateRange;
 
       const [startHour, startMinute] = startTime.split(':').map(Number);
+      const [endHour, endMinute] = endTime.split(':').map(Number);
 
-      const dateTimestamps = selectedDates.map(date => {
-          const newDate = new Date(date);
-          newDate.setHours(startHour, startMinute, 0, 0);
-          return newDate.toISOString();
-      });
+      const finalStartDate = new Date(startDate!);
+      finalStartDate.setHours(startHour, startMinute, 0, 0);
+
+      const finalEndDate = new Date(endDate || startDate!);
+      finalEndDate.setHours(endHour, endMinute, 0, 0);
 
       const facilitiesPayload = selectedFacilities.map(f => ({
         facilityId: f._id,
@@ -139,7 +152,9 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
 
       const bookingResponse = await api.post('/bookings', {
         hallId: hallId,
-        dates: dateTimestamps,
+        startTime: finalStartDate.toISOString(),
+        endTime: finalEndDate.toISOString(),
+        numberOfPeople,
         eventDetails,
         selectedFacilities: facilitiesPayload,
       });
@@ -181,15 +196,28 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
           {step === 1 && (
             <div className="flex justify-center">
               <Calendar
-                unavailableDates={[]}
-                selectedDates={selectedDates}
-                onChange={(dates) => setSelectedDates(dates)}
+                unavailableDates={blockedDates}
+                onChange={(range) => setDateRange(range)}
               />
             </div>
           )}
 
           {step === 2 && (
             <>
+              <div className="mb-4">
+                <label htmlFor="numberOfPeople" className="block text-sm font-medium text-gray-700 mb-1">
+                  Number of People
+                </label>
+                <input
+                  type="number"
+                  id="numberOfPeople"
+                  value={numberOfPeople}
+                  onChange={(e) => setNumberOfPeople(Number(e.target.value))}
+                  className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#295FA7] focus:border-transparent sm:text-sm"
+                  required
+                  min="1"
+                />
+              </div>
               <div className="mb-6">
                 <label htmlFor="eventDetails" className="block text-sm font-medium text-gray-700 mb-1">
                   Event Details
@@ -288,7 +316,11 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Dates:</span>
-                  <span className="font-medium text-gray-900">{selectedDates?.map(date => date.toLocaleDateString()).join(', ')}</span>
+                  <span className="font-medium text-gray-900">{dateRange.startDate?.toLocaleDateString()} - {dateRange.endDate?.toLocaleDateString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Number of Guests:</span>
+                  <span className="font-medium text-gray-900">{numberOfPeople}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Event Details:</span>
