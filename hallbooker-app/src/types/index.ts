@@ -30,6 +30,7 @@ export interface Hall {
     _id: string;
     fullName: string;
   };
+  blockedDates?: string[];
   openingHour?: number;
   closingHour?: number;
 }

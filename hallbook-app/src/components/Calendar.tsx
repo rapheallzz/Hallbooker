@@ -2,7 +2,7 @@
 'use client';
 
 import React from 'react';
-import { Calendar as CalendarComponent, Range } from 'react-date-range';
+import { DateRange, Range } from 'react-date-range';
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
 
@@ -12,23 +12,27 @@ interface CalendarProps {
 }
 
 const Calendar: React.FC<CalendarProps> = ({ unavailableDates, onChange }) => {
-  const [date, setDate] = React.useState(new Date());
-
-  const handleOnChange = (date: Date) => {
-    const range = {
-      startDate: date,
-      endDate: date,
+  const [state, setState] = React.useState<Range[]>([
+    {
+      startDate: new Date(),
+      endDate: new Date(),
       key: 'selection',
-    };
-    onChange(range);
-    setDate(date);
+    },
+  ]);
+
+  const handleOnChange = (ranges: any) => {
+    const { selection } = ranges;
+    onChange(selection);
+    setState([selection]);
   };
 
   return (
     <div className="calendar-wrapper">
-      <CalendarComponent
-        date={date}
+      <DateRange
+        editableDateInputs={true}
         onChange={handleOnChange}
+        moveRangeOnFirstSelection={false}
+        ranges={state}
         disabledDates={unavailableDates}
         className="w-full"
       />
