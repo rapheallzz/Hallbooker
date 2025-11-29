@@ -278,7 +278,7 @@ const HallDetailPage = () => {
                   onClick={openBookingModal}
                   className="w-full bg-[#295FA7] hover:bg-[#204a8a] text-white font-bold py-3 px-4 rounded-lg transition duration-300"
                 >
-                  Booking
+                  Book Now
                 </button>
               </div>
               <div className="mt-2">
