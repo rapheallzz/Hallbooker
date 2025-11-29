@@ -9,6 +9,7 @@ import { useUI } from '@/context/UIContext';
 import ReviewCard from '@/components/ReviewCard';
 import Calendar from '@/components/Calendar';
 import HallDetailSkeleton from '@/components/HallDetailSkeleton';
+import Carousel from '@/components/Carousel';
 import { Range } from 'react-date-range';
 import MediaViewerModal from '@/components/MediaViewerModal';
 import { Hall } from '@/types';
@@ -18,6 +19,7 @@ import Swal from 'sweetalert2';
 
 const HallDetailPage = () => {
   const [hall, setHall] = useState<Hall | null>(null);
+  const [recommendations, setRecommendations] = useState<Hall[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const { isBookingModalOpen, openBookingModal, closeBookingModal } = useUI();
@@ -40,23 +42,43 @@ const HallDetailPage = () => {
   };
 
   useEffect(() => {
-    if (id) {
-      const fetchHall = async () => {
-        try {
-          const response = await api.get<{ data: Hall }>(`/halls/${id}`);
-          setHall(response.data.data);
-        } catch (err)
-        {
-          console.error(`Failed to fetch hall with id ${id}:`, err);
-          setError(`Failed to fetch hall with id ${id}. See console for details.`);
-        } finally
-        {
-          setLoading(false);
-        }
-      };
+    const fetchHallAndRecommendations = async () => {
+      if (!id) return;
 
-      fetchHall();
-    }
+      setLoading(true);
+      setError('');
+      setRecommendations([]);
+
+      try {
+        const hallResponse = await api.get<{ data: Hall }>(`/halls/${id}`);
+        const currentHall = hallResponse.data.data;
+        setHall(currentHall);
+
+        // Fetch recommendations only if geoLocation data is available
+        if (currentHall.geoLocation?.latitude && currentHall.geoLocation?.longitude) {
+          try {
+            const { latitude, longitude } = currentHall.geoLocation;
+            const recommendationsResponse = await api.get<{ data: Hall[] }>(
+              `/halls/recommendations`,
+              {
+                params: { latitude, longitude },
+              }
+            );
+            setRecommendations(recommendationsResponse.data.data || []);
+          } catch (recErr) {
+            console.error('Failed to fetch recommendations:', recErr);
+            setRecommendations([]);
+          }
+        }
+      } catch (err) {
+        console.error(`Failed to fetch hall with id ${id}:`, err);
+        setError(`Failed to fetch hall with id ${id}. See console for details.`);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchHallAndRecommendations();
   }, [id]);
 
   if (loading) {
@@ -232,6 +254,15 @@ const HallDetailPage = () => {
                   comment="Great location and amenities. The host was very responsive and helpful."
                 />
               </div>
+            </div>
+             {/* Recommendation Section */}
+            <div className="py-6">
+              <h3 className="font-semibold text-xl text-gray-800 mb-4">You might also like</h3>
+              {recommendations.length > 0 ? (
+                <Carousel halls={recommendations} />
+              ) : (
+                <p className="text-gray-500">No recommendation found</p>
+              )}
             </div>
           </div>
 
