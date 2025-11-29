@@ -42,34 +42,44 @@ const HallDetailPage = () => {
   };
 
   useEffect(() => {
-    if (id) {
-      const fetchHallAndRecommendations = async () => {
-        setLoading(true);
-        try {
-          // Fetch main hall details
-          const hallResponse = await api.get<{ data: Hall }>(`/halls/${id}`);
-          setHall(hallResponse.data.data);
+    const fetchHallAndRecommendations = async () => {
+      if (!id) return;
 
-          // Fetch recommendations
+      setLoading(true);
+      setError('');
+      setRecommendations([]);
+
+      try {
+        const hallResponse = await api.get<{ data: Hall }>(`/halls/${id}`);
+        const currentHall = hallResponse.data.data;
+        setHall(currentHall);
+
+        // Fetch recommendations only if geoLocation data is available
+        if (currentHall.geoLocation?.coordinates && currentHall.geoLocation.coordinates.length === 2) {
           try {
-            const recommendationsResponse = await api.get<{ data: Hall[] }>(`/halls/recommendations`);
+            const longitude = currentHall.geoLocation.coordinates[0];
+            const latitude = currentHall.geoLocation.coordinates[1];
+            const recommendationsResponse = await api.get<{ data: Hall[] }>(
+              `/halls/recommendations`,
+              {
+                params: { latitude, longitude },
+              }
+            );
             setRecommendations(recommendationsResponse.data.data || []);
           } catch (recErr) {
             console.error('Failed to fetch recommendations:', recErr);
-            // Do not block the page from rendering if recommendations fail
             setRecommendations([]);
           }
-
-        } catch (err) {
-          console.error(`Failed to fetch hall with id ${id}:`, err);
-          setError(`Failed to fetch hall with id ${id}. See console for details.`);
-        } finally {
-          setLoading(false);
         }
-      };
+      } catch (err) {
+        console.error(`Failed to fetch hall with id ${id}:`, err);
+        setError(`Failed to fetch hall with id ${id}. See console for details.`);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      fetchHallAndRecommendations();
-    }
+    fetchHallAndRecommendations();
   }, [id]);
 
   if (loading) {
