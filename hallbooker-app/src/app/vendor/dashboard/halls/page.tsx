@@ -5,7 +5,7 @@ import api from "@/services/api";
 import HallModal from "@/components/vendor/HallModal";
 import ReservationModal from "@/components/vendor/ReservationModal";
 import { useUI } from "@/context/UIContext";
-import { Calendar as CalendarIcon } from "lucide-react";
+import { Calendar as CalendarIcon, ChevronDown } from "lucide-react";
 import Swal from "sweetalert2";
 
 interface Hall {
@@ -15,6 +15,16 @@ interface Hall {
   capacity: number;
   isOnline: boolean;
   price: number;
+  demoBookings: number;
+  pricing: {
+    dailyRate?: number;
+    hourlyRate?: number;
+  };
+  geoLocation: {
+    address: string;
+  };
+  hallSize: string;
+  carParkCapacity: number;
 }
 
 const HallsPage = () => {
@@ -25,6 +35,7 @@ const HallsPage = () => {
   const [editingHall, setEditingHall] = useState<Hall | undefined>(undefined);
   const [subscription, setSubscription] = useState<any>(null);
   const { isHallModalOpen, openHallModal, closeHallModal } = useUI();
+  const [expandedHallId, setExpandedHallId] = useState<string | null>(null);
 
   const [isReservationModalOpen, setIsReservationModalOpen] = useState(false);
   const [selectedHallId, setSelectedHallId] = useState<string | null>(null);
@@ -181,6 +192,10 @@ const HallsPage = () => {
     setIsReservationModalOpen(true);
   };
 
+  const handleToggle = (hallId: string) => {
+    setExpandedHallId(expandedHallId === hallId ? null : hallId);
+  };
+
   const handleOpenCreateModal = () => {
     if (subscription && halls.length >= subscription.tier.maxHalls) {
       Swal.fire({
@@ -225,38 +240,72 @@ const HallsPage = () => {
                 <th className="px-6 py-3 border-b-2 border-gray-300 text-left leading-4 text-primary tracking-wider">Name</th>
                 <th className="px-6 py-3 border-b-2 border-gray-300 text-left leading-4 text-primary tracking-wider">Location</th>
                 <th className="px-6 py-3 border-b-2 border-gray-300 text-left leading-4 text-primary tracking-wider">Capacity</th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-left leading-4 text-primary tracking-wider">Status</th>
+                <th className="px-6 py-3 border-b-2 border-gray-300 text-left leading-4 text-primary tracking-wider">Demo Bookings</th>
+                <th className="px-6 py-3 border-b-2 border-gray-300 text-left leading-4 text-primary tracking-wider">Actions</th>
                 <th className="px-6 py-3 border-b-2 border-gray-300"></th>
               </tr>
             </thead>
             <tbody>
               {halls.length > 0 ? (
                 halls.map((hall) => (
-                  <tr key={hall.id}>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">{hall.name}</td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">{hall.location}</td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">{hall.capacity}</td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${hall.isOnline ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
-                        {hall.isOnline ? "Online" : "Offline"}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-no-wrap text-right border-b border-gray-500 text-gray-900">
-                      <button onClick={() => openEditModal(hall)} className="px-5 py-2 border-primary border text-primary rounded transition duration-300 hover:bg-primary hover:text-white focus:outline-none">Edit</button>
-                      <button
-                        onClick={() => openReservationModal(hall.id)}
-                        className="ml-2 px-3 py-2 border-yellow-500 border text-yellow-500 rounded transition duration-300 hover:bg-yellow-500 hover:text-white focus:outline-none"
-                        title="Block Dates"
-                      >
-                        <CalendarIcon size={18} />
-                      </button>
-                      <button onClick={() => handleDelete(hall.id)} className="ml-2 px-5 py-2 border-red-500 border text-red-500 rounded transition duration-300 hover:bg-red-500 hover:text-white focus:outline-none">Delete</button>
-                    </td>
-                  </tr>
+                  <React.Fragment key={hall.id}>
+                    <tr>
+                      <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">{hall.name}</td>
+                      <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">{hall.location}</td>
+                      <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">{hall.capacity}</td>
+                      <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">{hall.demoBookings}</td>
+                      <td className="px-6 py-4 whitespace-no-wrap text-right border-b border-gray-500 text-gray-900">
+                        <button onClick={() => openEditModal(hall)} className="px-5 py-2 border-primary border text-primary rounded transition duration-300 hover:bg-primary hover:text-white focus:outline-none">Edit</button>
+                        <button
+                          onClick={() => openReservationModal(hall.id)}
+                          className="ml-2 px-3 py-2 border-yellow-500 border text-yellow-500 rounded transition duration-300 hover:bg-yellow-500 hover:text-white focus:outline-none"
+                          title="Block Dates"
+                        >
+                          <CalendarIcon size={18} />
+                        </button>
+                        <button onClick={() => handleDelete(hall.id)} className="ml-2 px-5 py-2 border-red-500 border text-red-500 rounded transition duration-300 hover:bg-red-500 hover:text-white focus:outline-none">Delete</button>
+                      </td>
+                      <td className="px-6 py-4 whitespace-no-wrap text-center border-b border-gray-500">
+                        <button onClick={() => handleToggle(hall.id)} className="focus:outline-none">
+                          <ChevronDown
+                            className={`transform transition-transform duration-200 ${
+                              expandedHallId === hall.id ? "rotate-180" : ""
+                            }`}
+                          />
+                        </button>
+                      </td>
+                    </tr>
+                    {expandedHallId === hall.id && (
+                      <tr>
+                        <td colSpan={6} className="px-6 py-4 bg-gray-50">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <p className="font-semibold text-gray-800">Pricing:</p>
+                              <p className="text-gray-600">
+                                Daily: ₦{hall.pricing?.dailyRate?.toLocaleString() || 'N/A'} | Hourly: ₦{hall.pricing?.hourlyRate?.toLocaleString() || 'N/A'}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="font-semibold text-gray-800">Hall Size:</p>
+                              <p className="text-gray-600">{hall.hallSize || 'N/A'}</p>
+                            </div>
+                            <div>
+                              <p className="font-semibold text-gray-800">Parking Capacity:</p>
+                              <p className="text-gray-600">{hall.carParkCapacity ? `${hall.carParkCapacity} cars` : 'N/A'}</p>
+                            </div>
+                            <div>
+                              <p className="font-semibold text-gray-800">Full Address:</p>
+                              <p className="text-gray-600">{hall.geoLocation?.address || 'N/A'}</p>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={5} className="text-center py-10">
+                  <td colSpan={6} className="text-center py-10">
                     { !error && "No halls found. Create one to get started."}
                   </td>
                 </tr>
