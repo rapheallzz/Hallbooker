@@ -11,9 +11,10 @@ interface BookingModalProps {
   hallId: string;
   isOpen: boolean;
   onClose: () => void;
+  blockedDates: Date[];
 }
 
-const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
+const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose, blockedDates }) => {
   const [hall, setHall] = useState<Hall | null>(null);
   const [step, setStep] = useState(1);
   const [dateRange, setDateRange] = useState<Range>({
@@ -195,7 +196,7 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
           {step === 1 && (
             <div className="flex justify-center">
               <Calendar
-                unavailableDates={[]}
+                unavailableDates={blockedDates}
                 onChange={(range) => setDateRange(range)}
               />
             </div>

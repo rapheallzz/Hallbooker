@@ -247,6 +247,7 @@ const HallDetailPage = () => {
             hallId={hall.id}
             isOpen={isBookingModalOpen}
             onClose={closeBookingModal}
+            blockedDates={hall.blockedDates?.map(date => new Date(date)) || []}
           />
           <DemoModal
             isOpen={isDemoModalOpen}
