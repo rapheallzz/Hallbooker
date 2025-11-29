@@ -28,8 +28,12 @@ const Calendar: React.FC<CalendarProps> = ({
     <div className="custom-calendar-wrapper">
       <style>{`
         .rdp-day_disabled {
-          color: #d1d5db;
+          background-color: #FECACA !important;
+          color: #374151 !important;
           cursor: not-allowed;
+        }
+        .rdp-day_disabled:hover {
+          background-color: #FCA5A5 !important;
         }
         .rdp-day_selected {
             background-color: #295FA7 !important;
