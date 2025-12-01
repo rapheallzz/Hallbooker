@@ -17,6 +17,7 @@ interface Booking {
   totalPrice: number;
   eventDetails?: string;
   createdAt: string;
+  bookingId: string;
 }
 
 interface Hall {
@@ -38,27 +39,28 @@ const BookingsPage = () => {
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  useEffect(() => {
-    const fetchAllData = async () => {
-      setLoading(true);
-      try {
-        const [bookingsRes, hallsRes] = await Promise.all([
-          api.get('/admin/bookings?limit=10000'), // Fetch all bookings
-          api.get('/halls')
-        ]);
+  const fetchAllData = async () => {
+    setLoading(true);
+    try {
+      const [bookingsRes, hallsRes] = await Promise.all([
+        api.get('/admin/bookings?limit=10000'), // Fetch all bookings
+        api.get('/halls')
+      ]);
 
-        if (bookingsRes.data && bookingsRes.data.data) {
-          setAllBookings(bookingsRes.data.data.bookings || []);
-        }
-        if (hallsRes.data && Array.isArray(hallsRes.data.data)) {
-          setHalls(hallsRes.data.data);
-        }
-      } catch (error) {
-        console.error("Failed to fetch data", error);
-      } finally {
-        setLoading(false);
+      if (bookingsRes.data && bookingsRes.data.data) {
+        setAllBookings(bookingsRes.data.data.bookings || []);
       }
-    };
+      if (hallsRes.data && Array.isArray(hallsRes.data.data)) {
+        setHalls(hallsRes.data.data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch data", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchAllData();
   }, []);
 
@@ -88,9 +90,12 @@ const BookingsPage = () => {
     setIsModalOpen(true);
   };
 
-  const handleCloseModal = () => {
+  const handleCloseModal = (refresh = false) => {
     setIsModalOpen(false);
     setSelectedBooking(null);
+    if (refresh) {
+      fetchAllData();
+    }
   };
 
   const getHallName = (hallId: string) => {
@@ -148,7 +153,7 @@ const BookingsPage = () => {
                   {paginatedBookings.length > 0 ? (
                     paginatedBookings.map((booking) => (
                       <tr key={booking._id} className="hover:bg-gray-50">
-                        <td className="py-3 px-4 text-sm text-gray-900 font-mono text-xs">{booking._id.slice(-8)}...</td>
+                        <td className="py-3 px-4 text-sm text-gray-900 font-mono text-xs">{booking.bookingId}</td>
                         <td className="py-3 px-4 text-sm text-gray-900">{getHallName(booking.hall)}</td>
                         <td className="py-3 px-4 text-sm text-gray-900">{booking.eventDetails || 'N/A'}</td>
                         <td className="py-3 px-4 text-sm text-gray-900">
@@ -191,7 +196,12 @@ const BookingsPage = () => {
       </div>
 
       {isModalOpen && selectedBooking && (
-        <AdminBookingDetailsModal booking={selectedBooking} onClose={handleCloseModal} />
+        <AdminBookingDetailsModal
+            isOpen={isModalOpen}
+            onClose={handleCloseModal}
+            booking={selectedBooking}
+            halls={halls}
+        />
       )}
     </div>
   );
