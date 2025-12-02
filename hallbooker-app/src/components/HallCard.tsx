@@ -27,9 +27,9 @@ const HallCard = ({ hall }: HallCardProps) => {
   return (
     <div className="h-full">
       <div data-testid="hall-card" className="h-full block bg-white rounded-lg shadow-lg overflow-hidden transform hover:scale-105 transition-transform duration-300">
-        <div className="hall-card-slider">
+        <div className="relative hall-card-slider">
           {hall.images && hall.images.length > 1 ? (
-            <Slider {...settings}>
+            <Slider {...settings} className="hall-card-slick">
               {hall.images.map((image, index) => (
                 <Link href={`/halls/${hall._id}`} key={index}>
                   <img
