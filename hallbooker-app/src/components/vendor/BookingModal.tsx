@@ -71,16 +71,19 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSubmit }
   const handleFacilityChange = (facility: any) => {
     setFormData((prev) => {
       const selectedFacilities = prev.selectedFacilities as { facilityId: string, quantity: number }[];
-      const isSelected = selectedFacilities.some((f) => f.facilityId === facility._id);
+      const facilityIdToUse = facility.facility?._id;
+      if (!facilityIdToUse) return prev;
+
+      const isSelected = selectedFacilities.some((f) => f.facilityId === facilityIdToUse);
       if (isSelected) {
         return {
           ...prev,
-          selectedFacilities: selectedFacilities.filter((f) => f.facilityId !== facility._id),
+          selectedFacilities: selectedFacilities.filter((f) => f.facilityId !== facilityIdToUse),
         };
       } else {
         return {
           ...prev,
-          selectedFacilities: [...selectedFacilities, { facilityId: facility._id, quantity: 1 }],
+          selectedFacilities: [...selectedFacilities, { facilityId: facilityIdToUse, quantity: 1 }],
         };
       }
     });
@@ -192,8 +195,10 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSubmit }
                 <div className="max-h-48 overflow-y-auto pr-2">
                   <div className="grid grid-cols-1 gap-y-3">
                     {(facilities as any[]).map((facility) => {
-                      const isSelected = (formData.selectedFacilities as { facilityId: string }[]).some(f => f.facilityId === facility._id);
-                      const selectedFacility = (formData.selectedFacilities as { facilityId: string, quantity: number }[]).find(f => f.facilityId === facility._id);
+                      const facilityIdToUse = facility.facility?._id;
+                      if (!facilityIdToUse) return null;
+                      const isSelected = (formData.selectedFacilities as { facilityId: string }[]).some(f => f.facilityId === facilityIdToUse);
+                      const selectedFacility = (formData.selectedFacilities as { facilityId: string, quantity: number }[]).find(f => f.facilityId === facilityIdToUse);
                       return (
                         <div key={facility._id} className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200">
                           <label className="flex items-center space-x-3 text-sm cursor-pointer">
@@ -214,7 +219,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSubmit }
                                 type="number"
                                 min="1"
                                 value={selectedFacility?.quantity || 1}
-                                onChange={(e) => handleQuantityChange(facility._id, parseInt(e.target.value, 10))}
+                                onChange={(e) => handleQuantityChange(facilityIdToUse, parseInt(e.target.value, 10))}
                                 className="w-full px-2 py-1 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-[#295FA7]"
                               />
                             </div>
@@ -300,40 +305,42 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSubmit }
               <div>
                 <label className="block text-sm font-medium text-gray-800">Facilities</label>
                 <div className="max-h-48 overflow-y-auto pr-2">
-                    <div className="grid grid-cols-1 gap-y-3">
-                      {(facilities as any[]).map((facility) => {
-                        const isSelected = (formData.selectedFacilities as { facilityId: string }[]).some(f => f.facilityId === facility._id);
-                        const selectedFacility = (formData.selectedFacilities as { facilityId: string, quantity: number }[]).find(f => f.facilityId === facility._id);
-                        return (
-                          <div key={facility._id} className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200">
-                            <label className="flex items-center space-x-3 text-sm cursor-pointer">
+                  <div className="grid grid-cols-1 gap-y-3">
+                    {(facilities as any[]).map((facility) => {
+                      const facilityIdToUse = facility.facility?._id;
+                      if (!facilityIdToUse) return null;
+                      const isSelected = (formData.selectedFacilities as { facilityId: string }[]).some(f => f.facilityId === facilityIdToUse);
+                      const selectedFacility = (formData.selectedFacilities as { facilityId: string, quantity: number }[]).find(f => f.facilityId === facilityIdToUse);
+                      return (
+                        <div key={facility._id} className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200">
+                          <label className="flex items-center space-x-3 text-sm cursor-pointer">
+                            <input
+                              type="checkbox"
+                              className="h-4 w-4 rounded border-gray-300 text-[#295FA7] focus:ring-[#295FA7]"
+                              checked={isSelected}
+                              onChange={() => handleFacilityChange(facility)}
+                            />
+                            <span className="text-gray-700">{facility.facility?.name || facility.name}</span>
+                            <span className="text-gray-500 font-medium">
+                              + ₦{facility.cost.toLocaleString()}{facility.chargeMethod === 'per_day' ? '/day' : (facility.chargeMethod === 'per_hour' ? '/hour' : '')}
+                            </span>
+                          </label>
+                          {isSelected && (
+                            <div className="w-24">
                               <input
-                                type="checkbox"
-                                className="h-4 w-4 rounded border-gray-300 text-[#295FA7] focus:ring-[#295FA7]"
-                                checked={isSelected}
-                                onChange={() => handleFacilityChange(facility)}
+                                type="number"
+                                min="1"
+                                value={selectedFacility?.quantity || 1}
+                                onChange={(e) => handleQuantityChange(facilityIdToUse, parseInt(e.target.value, 10))}
+                                className="w-full px-2 py-1 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-[#295FA7]"
                               />
-                              <span className="text-gray-700">{facility.facility?.name || facility.name}</span>
-                              <span className="text-gray-500 font-medium">
-                                + ₦{facility.cost.toLocaleString()}{facility.chargeMethod === 'per_day' ? '/day' : (facility.chargeMethod === 'per_hour' ? '/hour' : '')}
-                              </span>
-                            </label>
-                            {isSelected && (
-                              <div className="w-24">
-                                <input
-                                  type="number"
-                                  min="1"
-                                  value={selectedFacility?.quantity || 1}
-                                  onChange={(e) => handleQuantityChange(facility._id, parseInt(e.target.value, 10))}
-                                  className="w-full px-2 py-1 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-[#295FA7]"
-                                />
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
+                </div>
               </div>
                <div>
                 <label className="block text-sm font-medium text-gray-800">Payment Method</label>
