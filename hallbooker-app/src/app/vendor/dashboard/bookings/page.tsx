@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import api from "@/services/api";
 import BookingModal from "@/components/vendor/BookingModal";
+import Swal from 'sweetalert2';
 
 interface Booking {
   id: string;
@@ -54,6 +55,15 @@ const BookingsPage = () => {
   if (error) return <p className="text-red-600">{error}</p>;
 
   const handleCreateBooking = async (formData: any, type: string) => {
+    Swal.fire({
+      title: 'Creating Booking...',
+      text: 'Please wait while we create the booking.',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+    });
+
     try {
       let endpoint = '';
       if (type === 'standard') {
@@ -64,11 +74,20 @@ const BookingsPage = () => {
         endpoint = '/bookings/walk-in';
       }
       await api.post(endpoint, formData);
+      Swal.fire({
+        icon: 'success',
+        title: 'Booking Created!',
+        text: 'The booking has been successfully created.',
+      });
       fetchBookings();
       setIsModalOpen(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to create booking:', error);
-      setError('Failed to create the booking.');
+      Swal.fire({
+        icon: 'error',
+        title: 'Booking Failed',
+        text: error.response?.data?.message || 'An unexpected error occurred.',
+      });
     }
   };
 
