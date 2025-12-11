@@ -1,3 +1,4 @@
+
 "use client";
 import React, { useState, useEffect } from "react";
 import api from "@/services/api";
@@ -52,25 +53,6 @@ const BookingsPage = () => {
   }
 
   if (error) return <p className="text-red-600">{error}</p>;
-
-  const handleCreateBooking = async (formData: any, type: string) => {
-    try {
-      let endpoint = '';
-      if (type === 'standard') {
-        endpoint = '/bookings';
-      } else if (type === 'recurring') {
-        endpoint = '/bookings/recurring';
-      } else if (type === 'walk-in') {
-        endpoint = '/bookings/walk-in';
-      }
-      await api.post(endpoint, formData);
-      fetchBookings();
-      setIsModalOpen(false);
-    } catch (error) {
-      console.error('Failed to create booking:', error);
-      setError('Failed to create the booking.');
-    }
-  };
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -149,7 +131,7 @@ const BookingsPage = () => {
       <BookingModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSubmit={handleCreateBooking}
+        onSuccess={fetchBookings}
       />
     </div>
   );
