@@ -4,6 +4,7 @@
 import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import api from '@/services/api';
+import Calendar from '../Calendar';
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -15,15 +16,18 @@ const AdminBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSub
   const [activeTab, setActiveTab] = useState('walk-in');
   const [halls, setHalls] = useState([]);
   const [facilities, setFacilities] = useState([]);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     hall: '',
     startTime: '',
     endTime: '',
     eventDetails: '',
     startDate: '',
-    endDate: '',
-    dayOfWeek: 0,
-    time: '',
+    recurrenceType: 'weekly', // 'weekly', 'monthly', 'specific-dates'
+    daysOfWeek: [] as number[],
+    dayOfMonth: null as number | null,
+    dates: [] as string[],
+    recurringEndDate: '',
     fullName: '',
     email: '',
     phone: '',
@@ -60,12 +64,76 @@ const AdminBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSub
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleDayOfWeekChange = (dayIndex: number) => {
+    setFormData(prev => {
+      const daysOfWeek = prev.daysOfWeek.includes(dayIndex)
+        ? prev.daysOfWeek.filter(d => d !== dayIndex)
+        : [...prev.daysOfWeek, dayIndex];
+      return { ...prev, daysOfWeek };
+    });
+  };
+
   const handleRecurringSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { hall, startDate, endDate, dayOfWeek, time, eventDetails, fullName, email, phone, paymentMethod, paymentStatus, selectedFacilities } = formData;
+    const {
+      hall,
+      startDate,
+      startTime,
+      endTime,
+      eventDetails,
+      recurrenceType,
+      daysOfWeek,
+      dayOfMonth,
+      dates,
+      recurringEndDate,
+      fullName,
+      email,
+      phone,
+      paymentMethod,
+      paymentStatus,
+      selectedFacilities,
+    } = formData;
+
     const walkInUserDetails = { fullName, email, phone };
-    const recurrenceRule = { startDate, endDate, dayOfWeek, time };
-    onSubmit({ hallId: hall, recurrenceRule, eventDetails, walkInUserDetails, paymentMethod, paymentStatus, selectedFacilities }, 'recurring');
+    let bookingPayload: any = {
+      hallId: hall,
+      eventDetails,
+      walkInUserDetails,
+      paymentMethod,
+      paymentStatus,
+      selectedFacilities,
+    };
+
+    if (recurrenceType === 'weekly' || recurrenceType === 'monthly') {
+      bookingPayload.startTime = `${startDate}T${startTime}:00.000Z`;
+      bookingPayload.endTime = `${startDate}T${endTime}:00.000Z`;
+
+      if (recurrenceType === 'weekly') {
+        bookingPayload.recurrenceRule = {
+          frequency: 'weekly',
+          daysOfWeek,
+          endDate: recurringEndDate,
+        };
+      } else { // monthly
+        bookingPayload.recurrenceRule = {
+          frequency: 'monthly',
+          dayOfMonth,
+          endDate: recurringEndDate,
+        };
+      }
+    } else if (recurrenceType === 'specific-dates') {
+      if (dates.length === 0) {
+        setError('Please select at least one date for specific dates booking.');
+        return;
+      }
+      const referenceDate = dates[0];
+      bookingPayload.startTime = `${referenceDate}T${startTime}:00.000Z`;
+      bookingPayload.endTime = `${referenceDate}T${endTime}:00.000Z`;
+      bookingPayload.dates = dates;
+    }
+
+    setError('');
+    onSubmit(bookingPayload, 'recurring');
   };
 
   const handleFacilityChange = (facility: any) => {
@@ -116,6 +184,7 @@ const AdminBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSub
         </button>
         <h2 className="text-2xl font-bold text-gray-800 mb-6">Create Booking</h2>
         <div className="flex border-b mb-4">
+          {error && <p className="text-red-500 text-xs italic">{error}</p>}
           <button
             className={`px-4 py-2 ${activeTab === 'recurring' ? 'border-b-2 border-primary text-primary' : 'text-gray-500'}`}
             onClick={() => setActiveTab('recurring')}
@@ -143,35 +212,94 @@ const AdminBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSub
                   ))}
                 </select>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-800">Start Date</label>
-                  <input type="date" name="startDate" value={formData.startDate} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-800">End Date</label>
-                  <input type="date" name="endDate" value={formData.endDate} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900" />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-800">Day of the Week</label>
-                <select name="dayOfWeek" value={formData.dayOfWeek} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900">
-                  <option value="0">Sunday</option>
-                  <option value="1">Monday</option>
-                  <option value="2">Tuesday</option>
-                  <option value="3">Wednesday</option>
-                  <option value="4">Thursday</option>
-                  <option value="5">Friday</option>
-                  <option value="6">Saturday</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-800">Time</label>
-                <input type="time" name="time" value={formData.time} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900" />
-              </div>
               <div>
                 <label className="block text-sm font-medium text-gray-800">Event Details</label>
                 <input type="text" name="eventDetails" value={formData.eventDetails} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900" />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-800">Recurrence Type</label>
+                <select
+                  name="recurrenceType"
+                  value={formData.recurrenceType}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900"
+                >
+                  <option value="weekly">Weekly</option>
+                  <option value="monthly">Monthly</option>
+                  <option value="specific-dates">Specific Dates</option>
+                </select>
+              </div>
+
+              {formData.recurrenceType === 'weekly' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-800">Days of the Week</label>
+                  <div className="flex space-x-2">
+                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, index) => (
+                      <label key={day} className="flex items-center space-x-1">
+                        <input
+                          type="checkbox"
+                          checked={formData.daysOfWeek.includes(index)}
+                          onChange={() => handleDayOfWeekChange(index)}
+                          className="rounded border-gray-300 text-primary focus:ring-primary"
+                        />
+                        <span>{day}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {formData.recurrenceType === 'monthly' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-800">Day of the Month</label>
+                  <Calendar
+                    selectedDates={formData.dayOfMonth ? [new Date(new Date().getFullYear(), new Date().getMonth(), formData.dayOfMonth)] : []}
+                    onChange={(dates) => {
+                      if (dates && dates.length > 0) {
+                        setFormData(prev => ({ ...prev, dayOfMonth: dates[0].getDate() }));
+                      }
+                    }}
+                  />
+                </div>
+              )}
+
+              {formData.recurrenceType === 'specific-dates' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-800">Select Dates</label>
+                  <Calendar
+                    selectedDates={formData.dates.map(date => new Date(date))}
+                    onChange={(dates) => {
+                      if (dates) {
+                        setFormData(prev => ({ ...prev, dates: dates.map(d => d.toISOString().split('T')[0]) }));
+                      }
+                    }}
+                  />
+                </div>
+              )}
+
+              {(formData.recurrenceType === 'weekly' || formData.recurrenceType === 'monthly') && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-800">Start Date</label>
+                    <input type="date" name="startDate" value={formData.startDate} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900" />
+                  </div>
+                  <div>
+                      <label className="block text-sm font-medium text-gray-800">End Date</label>
+                      <input type="date" name="recurringEndDate" value={formData.recurringEndDate} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900" />
+                  </div>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-4">
+                  <div>
+                      <label className="block text-sm font-medium text-gray-800">Start Time</label>
+                      <input type="time" name="startTime" value={formData.startTime} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900" />
+                  </div>
+                  <div>
+                      <label className="block text-sm font-medium text-gray-800">End Time</label>
+                      <input type="time" name="endTime" value={formData.endTime} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900" />
+                  </div>
               </div>
 
               <fieldset className="border p-4 rounded-md">
