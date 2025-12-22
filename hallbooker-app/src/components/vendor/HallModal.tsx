@@ -54,6 +54,11 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
     carParkCapacity: 0,
     hallSize: '',
     rules: '',
+    allowRecurringBookings: false,
+    recurringBookingDiscount: {
+      percentage: 0,
+      minBookings: 0,
+    },
   });
 
   useEffect(() => {
@@ -147,6 +152,11 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
         country: hall.country || '',
         state: hall.state || '',
         localGovernment: hall.localGovernment || '',
+        allowRecurringBookings: hall.allowRecurringBookings || false,
+        recurringBookingDiscount: {
+          percentage: hall.recurringBookingDiscount?.percentage || 0,
+          minBookings: hall.recurringBookingDiscount?.minBookings || 0,
+        },
       });
       setHallId(hall._id);
     } else {
@@ -166,6 +176,11 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
         country: '',
         state: '',
         localGovernment: '',
+        allowRecurringBookings: false,
+        recurringBookingDiscount: {
+          percentage: 0,
+          minBookings: 0,
+        },
       });
       setCurrentStep(1);
       setHallId(null);
@@ -173,8 +188,23 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
   }, [hall, isOpen]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type } = e.target;
+
+    if (name.startsWith('recurringBookingDiscount.')) {
+      const field = name.split('.')[1];
+      setFormData(prev => ({
+        ...prev,
+        recurringBookingDiscount: {
+          ...prev.recurringBookingDiscount,
+          [field]: value,
+        }
+      }));
+    } else if (type === 'checkbox') {
+      const { checked } = e.target as HTMLInputElement;
+      setFormData(prev => ({ ...prev, [name]: checked }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleFacilityChange = (index: number, field: keyof Facility, value: any) => {
@@ -242,6 +272,15 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
 
     if (hall) {
       // If we are editing, just submit the whole form at once
+      if (formData.allowRecurringBookings && !formData.recurringBookingDiscount.percentage) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Validation Error',
+          text: 'Discount percentage is required when recurring bookings are allowed.',
+        });
+        return;
+      }
+
       const { hourlyRate, dailyRate, facilities, openingHour, closingHour, country, state, localGovernment, ...rest } = formData;
       const pricing = {
         hourlyRate: Number(hourlyRate),
@@ -249,7 +288,7 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
       };
       const rulesArray = formData.rules.split('\n').filter(rule => rule.trim() !== '');
 
-      const payload: any = {
+      let payload: any = {
         ...rest,
         pricing,
         facilities: facilitiesPayload,
@@ -257,6 +296,11 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
         capacity: Number(formData.capacity),
         carParkCapacity: Number(formData.carParkCapacity),
       };
+
+      if (!formData.allowRecurringBookings) {
+        const { recurringBookingDiscount, ...restPayload } = payload;
+        payload = restPayload;
+      }
 
       // Convert time strings to just the hour number
       if (typeof openingHour === 'string' && openingHour.includes(':')) {
@@ -284,8 +328,17 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
     if (currentStep === 1) {
       handleNext();
     } else if (currentStep === 2) {
+      if (formData.allowRecurringBookings && !formData.recurringBookingDiscount.percentage) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Validation Error',
+          text: 'Discount percentage is required when recurring bookings are allowed.',
+        });
+        return;
+      }
+
       const rulesArray = formData.rules.split('\n').filter(rule => rule.trim() !== '');
-      const payload = {
+      let payload: any = {
         name: formData.name,
         country: formData.country,
         state: formData.state,
@@ -303,7 +356,14 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
         carParkCapacity: Number(formData.carParkCapacity),
         hallSize: formData.hallSize,
         rules: rulesArray,
+        allowRecurringBookings: formData.allowRecurringBookings,
+        recurringBookingDiscount: formData.recurringBookingDiscount,
       };
+
+      if (!formData.allowRecurringBookings) {
+        delete payload.recurringBookingDiscount;
+      }
+
       setIsSubmitting(true);
       Swal.fire({
         title: 'Creating Hall...',
@@ -441,6 +501,47 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
                 <label className="block text-sm font-medium text-gray-800">Rules (one rule per line)</label>
                 <textarea name="rules" placeholder="Enter hall rules" value={formData.rules} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" rows={3} />
               </div>
+
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  name="allowRecurringBookings"
+                  id="allowRecurringBookings"
+                  checked={formData.allowRecurringBookings}
+                  onChange={handleChange}
+                  className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                />
+                <label htmlFor="allowRecurringBookings" className="ml-2 block text-sm font-medium text-gray-800">
+                  Allow Recurring Bookings
+                </label>
+              </div>
+
+              {formData.allowRecurringBookings && (
+                <div className="grid grid-cols-2 gap-4 p-4 border border-gray-200 rounded-md">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-800">Discount Percentage</label>
+                    <input
+                      type="number"
+                      name="recurringBookingDiscount.percentage"
+                      placeholder="e.g., 10"
+                      value={formData.recurringBookingDiscount.percentage}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-800">Minimum Bookings for Discount</label>
+                    <input
+                      type="number"
+                      name="recurringBookingDiscount.minBookings"
+                      placeholder="e.g., 5"
+                      value={formData.recurringBookingDiscount.minBookings}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500"
+                    />
+                  </div>
+                </div>
+              )}
 
               <div>
                 <div className="flex justify-between items-center mb-2">
@@ -632,6 +733,47 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
                     <label className="block text-sm font-medium text-gray-800">Rules (one rule per line)</label>
                     <textarea name="rules" placeholder="Enter hall rules" value={formData.rules} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" rows={3} />
                   </div>
+
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      name="allowRecurringBookings"
+                      id="allowRecurringBookings"
+                      checked={formData.allowRecurringBookings}
+                      onChange={handleChange}
+                      className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                    />
+                    <label htmlFor="allowRecurringBookings" className="ml-2 block text-sm font-medium text-gray-800">
+                      Allow Recurring Bookings
+                    </label>
+                  </div>
+
+                  {formData.allowRecurringBookings && (
+                    <div className="grid grid-cols-2 gap-4 p-4 border border-gray-200 rounded-md">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-800">Discount Percentage</label>
+                        <input
+                          type="number"
+                          name="recurringBookingDiscount.percentage"
+                          placeholder="e.g., 10"
+                          value={formData.recurringBookingDiscount.percentage}
+                          onChange={handleChange}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-800">Minimum Bookings for Discount</label>
+                        <input
+                          type="number"
+                          name="recurringBookingDiscount.minBookings"
+                          placeholder="e.g., 5"
+                          value={formData.recurringBookingDiscount.minBookings}
+                          onChange={handleChange}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500"
+                        />
+                      </div>
+                    </div>
+                  )}
 
                   <div>
                     <div className="flex justify-between items-center mb-2">
