@@ -196,7 +196,7 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
         ...prev,
         recurringBookingDiscount: {
           ...prev.recurringBookingDiscount,
-          [field]: value === '' ? '' : Number(value),
+          [field]: value,
         }
       }));
     } else if (type === 'checkbox') {
@@ -297,9 +297,13 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
         carParkCapacity: Number(formData.carParkCapacity),
       };
 
-      if (!formData.allowRecurringBookings) {
-        const { recurringBookingDiscount, ...restPayload } = payload;
-        payload = restPayload;
+      if (formData.allowRecurringBookings) {
+        payload.recurringBookingDiscount = {
+          percentage: Number(formData.recurringBookingDiscount.percentage),
+          minBookings: Number(formData.recurringBookingDiscount.minBookings),
+        };
+      } else {
+        delete payload.recurringBookingDiscount;
       }
 
       // Convert time strings to just the hour number
@@ -357,11 +361,13 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
         hallSize: formData.hallSize,
         rules: rulesArray,
         allowRecurringBookings: formData.allowRecurringBookings,
-        recurringBookingDiscount: formData.recurringBookingDiscount,
       };
 
-      if (!formData.allowRecurringBookings) {
-        delete payload.recurringBookingDiscount;
+      if (formData.allowRecurringBookings) {
+        payload.recurringBookingDiscount = {
+          percentage: Number(formData.recurringBookingDiscount.percentage),
+          minBookings: Number(formData.recurringBookingDiscount.minBookings),
+        };
       }
 
       setIsSubmitting(true);
