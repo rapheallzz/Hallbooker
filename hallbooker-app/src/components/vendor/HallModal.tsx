@@ -196,7 +196,7 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
         ...prev,
         recurringBookingDiscount: {
           ...prev.recurringBookingDiscount,
-          [field]: value,
+          [field]: value === '' ? '' : Number(value),
         }
       }));
     } else if (type === 'checkbox') {
@@ -272,11 +272,11 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
 
     if (hall) {
       // If we are editing, just submit the whole form at once
-      if (formData.allowRecurringBookings && !formData.recurringBookingDiscount.percentage) {
+      if (formData.allowRecurringBookings && (formData.recurringBookingDiscount.percentage === '' || formData.recurringBookingDiscount.minBookings === '')) {
         Swal.fire({
           icon: 'error',
           title: 'Validation Error',
-          text: 'Discount percentage is required when recurring bookings are allowed.',
+          text: 'Discount percentage and minimum bookings are required when recurring bookings are allowed.',
         });
         return;
       }
@@ -328,11 +328,11 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
     if (currentStep === 1) {
       handleNext();
     } else if (currentStep === 2) {
-      if (formData.allowRecurringBookings && !formData.recurringBookingDiscount.percentage) {
+      if (formData.allowRecurringBookings && (formData.recurringBookingDiscount.percentage === '' || formData.recurringBookingDiscount.minBookings === '')) {
         Swal.fire({
           icon: 'error',
           title: 'Validation Error',
-          text: 'Discount percentage is required when recurring bookings are allowed.',
+          text: 'Discount percentage and minimum bookings are required when recurring bookings are allowed.',
         });
         return;
       }
