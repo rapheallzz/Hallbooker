@@ -66,14 +66,18 @@ const BookingsPage = () => {
 
     try {
       let endpoint = '';
-      if (type === 'standard') {
-        endpoint = '/bookings';
-      } else if (type === 'recurring') {
+      if (type === 'recurring') {
         endpoint = '/bookings/recurring';
       } else if (type === 'walk-in') {
         endpoint = '/bookings/walk-in';
       }
-      await api.post(endpoint, formData);
+      const response = await api.post(endpoint, formData);
+
+      if (formData.paymentMethod === 'online' && type === 'recurring') {
+        const recurringBookingId = response.data.data.recurringBookingId;
+        await api.post(`/payments/initialize/recurring/${recurringBookingId}`);
+      }
+
       Swal.fire({
         icon: 'success',
         title: 'Booking Created!',

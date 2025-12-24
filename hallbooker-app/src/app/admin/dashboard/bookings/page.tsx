@@ -4,8 +4,10 @@
 import { useState, useEffect, useMemo } from 'react';
 import api from '@/services/api';
 import AdminBookingDetailsModal from '@/components/admin/AdminBookingDetailsModal';
+import AdminBookingModal from '@/components/admin/AdminBookingModal';
 import { Search } from 'lucide-react';
 import LoadingSpinner from '@/components/admin/LoadingSpinner';
+import Swal from 'sweetalert2';
 
 interface Booking {
   _id: string;
@@ -38,6 +40,7 @@ const BookingsPage = () => {
 
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const fetchAllData = async () => {
     setLoading(true);
@@ -102,9 +105,58 @@ const BookingsPage = () => {
     return halls.find(h => h._id === hallId)?.name || 'N/A';
   };
 
+  const handleCreateBooking = async (formData: any, type: string) => {
+    Swal.fire({
+      title: 'Creating Booking...',
+      text: 'Please wait while we create the booking.',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+    });
+
+    try {
+      let endpoint = '';
+      if (type === 'recurring') {
+        endpoint = '/bookings/recurring';
+      } else if (type === 'walk-in') {
+        endpoint = '/bookings/walk-in';
+      }
+      const response = await api.post(endpoint, formData);
+
+      if (formData.paymentMethod === 'online' && type === 'recurring') {
+        const recurringBookingId = response.data.data.recurringBookingId;
+        await api.post(`/payments/initialize/recurring/${recurringBookingId}`);
+      }
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Booking Created!',
+        text: 'The booking has been successfully created.',
+      });
+      fetchAllData();
+      setIsCreateModalOpen(false);
+    } catch (error: any) {
+      console.error('Failed to create booking:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Booking Failed',
+        text: error.response?.data?.message || 'An unexpected error occurred.',
+      });
+    }
+  };
+
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4 text-gray-800">Bookings</h1>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold text-gray-800">Bookings</h1>
+        <button
+          onClick={() => setIsCreateModalOpen(true)}
+          className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark"
+        >
+          Create Booking
+        </button>
+      </div>
 
       <div className="bg-white p-6 shadow-lg rounded-lg">
         {loading ? (
@@ -203,6 +255,11 @@ const BookingsPage = () => {
             halls={halls}
         />
       )}
+      <AdminBookingModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSubmit={handleCreateBooking}
+      />
     </div>
   );
 };
