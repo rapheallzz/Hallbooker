@@ -171,7 +171,8 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSubmit }
     e.preventDefault();
     const { hall, startTime, endTime, eventDetails, fullName, email, phone, paymentMethod, paymentStatus, selectedFacilities } = formData;
     const walkInUserDetails = { fullName, email, phone };
-    onSubmit({ hallId: hall, startTime, endTime, eventDetails, walkInUserDetails, paymentMethod, paymentStatus, selectedFacilities }, 'walk-in');
+    const bookingDates = [{ startTime, endTime }];
+    onSubmit({ hallId: hall, bookingDates, eventDetails, walkInUserDetails, paymentMethod, paymentStatus, selectedFacilities }, 'walk-in');
   };
 
   if (!isOpen) return null;
