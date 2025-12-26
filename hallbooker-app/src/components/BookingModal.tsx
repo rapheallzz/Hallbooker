@@ -125,11 +125,19 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
       }
 
       const [startHour, startMinute] = startTime.split(':').map(Number);
+      const [endHour, endMinute] = endTime.split(':').map(Number);
 
-      const dateTimestamps = selectedDates.map(date => {
-          const newDate = new Date(date);
-          newDate.setHours(startHour, startMinute, 0, 0);
-          return newDate.toISOString();
+      const bookingDates = selectedDates.map(date => {
+          const startDate = new Date(date);
+          startDate.setHours(startHour, startMinute, 0, 0);
+
+          const endDate = new Date(date);
+          endDate.setHours(endHour, endMinute, 0, 0);
+
+          return {
+              startTime: startDate.toISOString(),
+              endTime: endDate.toISOString()
+          };
       });
 
       const facilitiesPayload = selectedFacilities.map(f => ({
@@ -139,7 +147,7 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
 
       const bookingResponse = await api.post('/bookings', {
         hallId: hallId,
-        dates: dateTimestamps,
+        bookingDates,
         eventDetails,
         selectedFacilities: facilitiesPayload,
       });
