@@ -135,8 +135,8 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
           endDate.setHours(endHour, endMinute, 0, 0);
 
           return {
-              startTime: startDate.getTime(),
-              endTime: endDate.getTime()
+              startTime: startDate.toISOString(),
+              endTime: endDate.toISOString()
           };
       });
 
