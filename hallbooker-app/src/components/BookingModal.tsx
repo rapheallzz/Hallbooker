@@ -141,7 +141,7 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
       });
 
       const facilitiesPayload = selectedFacilities.map(f => ({
-        facilityId: f._id,
+        facilityId: f.facility?._id,
         quantity: f.quantity,
       }));
 
