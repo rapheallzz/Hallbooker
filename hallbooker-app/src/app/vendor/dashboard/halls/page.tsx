@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import api from "@/services/api";
 import HallModal from "@/components/vendor/HallModal";
 import ReservationModal from "@/components/vendor/ReservationModal";
@@ -264,6 +265,11 @@ const HallsPage = () => {
                           <CalendarIcon size={18} />
                         </button>
                         <button onClick={() => handleDelete(hall.id)} className="ml-2 px-5 py-2 border-red-500 border text-red-500 rounded transition duration-300 hover:bg-red-500 hover:text-white focus:outline-none">Delete</button>
+                        <Link href={`/vendor/dashboard/bookings?hallId=${hall.id}`} passHref>
+                          <button className="ml-2 px-5 py-2 border-blue-500 border text-blue-500 rounded transition duration-300 hover:bg-blue-500 hover:text-white focus:outline-none">
+                            View Bookings
+                          </button>
+                        </Link>
                       </td>
                       <td className="px-6 py-4 whitespace-no-wrap text-center border-b border-gray-500">
                         <button onClick={() => handleToggle(hall.id)} className="focus:outline-none">

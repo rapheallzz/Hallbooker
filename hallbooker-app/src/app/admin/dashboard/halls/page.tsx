@@ -382,6 +382,9 @@ const HallManagementPage = () => {
                             <button onClick={() => handleDeleteHall(hall._id)} title="Delete Hall" className="text-red-600 hover:text-red-900">
                                 <Trash size={18} />
                             </button>
+                            <Link href={`/admin/dashboard/bookings?hallId=${hall._id}`} passHref>
+                                <button title="View Bookings" className="text-purple-600 hover:text-purple-900 ml-3"><Eye size={18} /></button>
+                            </Link>
                         </td>
                         </tr>
                     ))}

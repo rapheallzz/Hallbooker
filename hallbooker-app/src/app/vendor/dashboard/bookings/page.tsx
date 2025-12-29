@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import api from "@/services/api";
 import BookingModal from "@/components/vendor/BookingModal";
 import Swal from 'sweetalert2';
@@ -13,16 +14,40 @@ interface Booking {
   status: string;
 }
 
+interface Hall {
+  id: string;
+  name: string;
+}
+
 const BookingsPage = () => {
+  const searchParams = useSearchParams();
+  const hallIdFromUrl = searchParams.get('hallId');
+
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [halls, setHalls] = useState<Hall[]>([]);
+  const [selectedHall, setSelectedHall] = useState<string>(hallIdFromUrl || '');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const fetchHalls = async () => {
+    try {
+      const response = await api.get("/halls/by-owner");
+      setHalls(response.data.data);
+    } catch (error) {
+      console.error("Error fetching halls:", error);
+    }
+  };
+
   const fetchBookings = async () => {
     try {
       setLoading(true);
-      const response = await api.get("/bookings/my-bookings");
+      let response;
+      if (selectedHall) {
+        response = await api.get(`/halls/${selectedHall}/bookings`);
+      } else {
+        response = await api.get("/bookings/my-bookings");
+      }
       setBookings(response.data.data);
     } catch (error) {
       console.error("Error fetching bookings:", error);
@@ -33,8 +58,12 @@ const BookingsPage = () => {
   };
 
   useEffect(() => {
-    fetchBookings();
+    fetchHalls();
   }, []);
+
+  useEffect(() => {
+    fetchBookings();
+  }, [selectedHall]);
 
   const handleCancel = async (bookingId: string) => {
     if (window.confirm('Are you sure you want to cancel this booking?')) {
@@ -106,6 +135,22 @@ const BookingsPage = () => {
           Create Booking
         </button>
       </div>
+
+      <div className="mb-4">
+        <label htmlFor="hallFilter" className="block text-sm font-medium text-gray-700">Filter by Hall</label>
+        <select
+          id="hallFilter"
+          value={selectedHall}
+          onChange={(e) => setSelectedHall(e.target.value)}
+          className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md text-gray-900"
+        >
+          <option value="">All Halls</option>
+          {halls.map((hall) => (
+            <option key={hall.id} value={hall.id}>{hall.name}</option>
+          ))}
+        </select>
+      </div>
+
       <div className="bg-white p-4 shadow-lg rounded-lg">
         <table className="min-w-full">
           <thead>
