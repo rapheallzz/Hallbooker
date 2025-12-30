@@ -8,7 +8,10 @@ import Swal from 'sweetalert2';
 interface Booking {
   _id: string;
   bookingId: string;
-  user: {
+  user?: {
+    fullName: string;
+  };
+  walkInUserDetails?: {
     fullName: string;
   };
   startTime: string;
@@ -188,7 +191,7 @@ const BookingsPage = () => {
                     {booking.bookingId}
                   </td>
                   <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">
-                    {booking.user.fullName}
+                    {booking.user?.fullName || booking.walkInUserDetails?.fullName}
                   </td>
                   <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">
                     {new Date(booking.startTime).toLocaleDateString()}
