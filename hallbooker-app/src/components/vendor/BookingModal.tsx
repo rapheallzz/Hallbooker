@@ -17,6 +17,9 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSubmit }
   const [halls, setHalls] = useState([]);
   const [facilities, setFacilities] = useState([]);
   const [error, setError] = useState('');
+  const [hallPrice, setHallPrice] = useState(0);
+  const [facilitiesPrice, setFacilitiesPrice] = useState(0);
+  const [totalPrice, setTotalPrice] = useState(0);
   const [formData, setFormData] = useState({
     hall: '',
     startTime: '',
@@ -58,6 +61,54 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSubmit }
       }
     }
   }, [formData.hall, halls]);
+
+  useEffect(() => {
+    const calculateTotalPrice = () => {
+      const selectedHall = halls.find((h: any) => h._id === formData.hall);
+      if (!selectedHall || !formData.startTime || !formData.endTime) {
+        setHallPrice(0);
+        setFacilitiesPrice(0);
+        setTotalPrice(0);
+        return;
+      }
+
+      const startTime = new Date(formData.startTime);
+      const endTime = new Date(formData.endTime);
+      const durationInHours = (endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60);
+      const durationInDays = Math.ceil(durationInHours / 24);
+
+      // Calculate hall price
+      const hallPrice = (selectedHall as any).pricing.hourlyRate * durationInHours;
+      setHallPrice(hallPrice);
+
+      // Calculate facilities price
+      let facilitiesPrice = 0;
+      (formData.selectedFacilities as { facilityId: string, quantity: number }[]).forEach(sf => {
+        const facility = (facilities as any[]).find(f => (f.facility?._id || f._id) === sf.facilityId);
+        if (facility) {
+          switch (facility.chargeMethod) {
+            case 'flat':
+              facilitiesPrice += facility.cost * sf.quantity;
+              break;
+            case 'per_hour':
+              facilitiesPrice += facility.cost * sf.quantity * durationInHours;
+              break;
+            case 'per_day':
+              facilitiesPrice += facility.cost * sf.quantity * durationInDays;
+              break;
+            default:
+              break;
+          }
+        }
+      });
+      setFacilitiesPrice(facilitiesPrice);
+
+      // Calculate total price
+      setTotalPrice(hallPrice + facilitiesPrice);
+    };
+
+    calculateTotalPrice();
+  }, [formData.hall, formData.startTime, formData.endTime, formData.selectedFacilities, halls, facilities]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -491,7 +542,12 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSubmit }
                   <option value="failed">Failed</option>
                 </select>
               </div>
-              <div className="flex justify-end mt-8">
+              <div className="flex justify-between items-center mt-8">
+                <div>
+                  <div>Hall Price: ₦{hallPrice.toLocaleString()}</div>
+                  <div>Facilities Price: ₦{facilitiesPrice.toLocaleString()}</div>
+                  <div>Total Price: ₦{totalPrice.toLocaleString()}</div>
+                </div>
                 <button type="submit" className="px-4 py-2 rounded-md text-white bg-primary hover:bg-primary-dark">
                   Create Walk-in Booking
                 </button>
