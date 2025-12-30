@@ -14,8 +14,10 @@ interface Booking {
   walkInUserDetails?: {
     fullName: string;
   };
-  startTime: string;
-  endTime: string;
+  bookingDates: {
+    startTime: string;
+    endTime: string;
+  }[];
   status: string;
 }
 
@@ -194,7 +196,7 @@ const BookingsPage = () => {
                     {booking.user?.fullName || booking.walkInUserDetails?.fullName}
                   </td>
                   <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">
-                    {new Date(booking.startTime).toLocaleDateString()}
+                    {new Date(booking.bookingDates[0].startTime).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">
                     <span

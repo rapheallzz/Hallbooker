@@ -14,8 +14,10 @@ interface Booking {
   _id: string;
   hall: string | { _id: string; name: string };
   user: string | { fullName: string };
-  startTime: string;
-  endTime: string;
+  bookingDates: {
+    startTime: string;
+    endTime: string;
+  }[];
   status: 'pending' | 'confirmed' | 'cancelled';
   totalPrice: number;
   eventDetails?: string;
@@ -219,8 +221,8 @@ const BookingsPage = () => {
                         <td className="py-3 px-4 text-sm text-gray-900">{getHallName(booking.hall)}</td>
                         <td className="py-3 px-4 text-sm text-gray-900">{booking.eventDetails || 'N/A'}</td>
                         <td className="py-3 px-4 text-sm text-gray-900">
-                          <div><span className="font-semibold">From:</span> {new Date(booking.startTime).toLocaleString()}</div>
-                          <div><span className="font-semibold">To:</span> {new Date(booking.endTime).toLocaleString()}</div>
+                          <div><span className="font-semibold">From:</span> {new Date(booking.bookingDates[0].startTime).toLocaleString()}</div>
+                          <div><span className="font-semibold">To:</span> {new Date(booking.bookingDates[0].endTime).toLocaleString()}</div>
                         </td>
                         <td className="py-3 px-4 text-sm text-gray-900">
                           <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
