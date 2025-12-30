@@ -1,29 +1,66 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from 'next/navigation';
 import api from "@/services/api";
 import BookingModal from "@/components/vendor/BookingModal";
 import Swal from 'sweetalert2';
 
 interface Booking {
-  id: string;
+  _id: string;
   bookingId: string;
-  hallName: string;
-  customerName: string;
-  bookingDate: string;
+  user?: {
+    fullName: string;
+  };
+  walkInUserDetails?: {
+    fullName: string;
+  };
+  bookingDates: {
+    startTime: string;
+    endTime: string;
+  }[];
   status: string;
 }
 
+interface Hall {
+  _id: string;
+  name: string;
+}
+
 const BookingsPage = () => {
+  const searchParams = useSearchParams();
+  const hallIdFromQuery = searchParams.get('hallId');
   const [bookings, setBookings] = useState<Booking[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [halls, setHalls] = useState<Hall[]>([]);
+  const [selectedHall, setSelectedHall] = useState<string>(hallIdFromQuery || '');
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const fetchBookings = async () => {
+  const fetchHalls = async () => {
+    try {
+      const response = await api.get("/halls/by-owner");
+      if (response.data && Array.isArray(response.data.data)) {
+        setHalls(response.data.data);
+        // If hallId from query is present, ensure it's selected
+        if (hallIdFromQuery && response.data.data.some((hall: Hall) => hall._id === hallIdFromQuery)) {
+          setSelectedHall(hallIdFromQuery);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching halls:", error);
+      setError('Failed to fetch halls.');
+    }
+  };
+
+  const fetchBookings = async (hallId: string) => {
+    if (!hallId) {
+      setBookings([]);
+      return;
+    }
     try {
       setLoading(true);
-      const response = await api.get("/bookings/my-bookings");
-      setBookings(response.data.data);
+      const response = await api.get(`/halls/${hallId}/bookings`);
+      setBookings(response.data.data.bookings);
     } catch (error) {
       console.error("Error fetching bookings:", error);
       setError('Failed to fetch bookings.');
@@ -33,26 +70,28 @@ const BookingsPage = () => {
   };
 
   useEffect(() => {
-    fetchBookings();
+    fetchHalls();
   }, []);
+
+  useEffect(() => {
+    if (selectedHall) {
+      fetchBookings(selectedHall);
+    }
+  }, [selectedHall]);
 
   const handleCancel = async (bookingId: string) => {
     if (window.confirm('Are you sure you want to cancel this booking?')) {
       try {
         await api.put(`/bookings/${bookingId}`);
-        fetchBookings(); // Refresh the list
+        if (selectedHall) {
+          fetchBookings(selectedHall); // Refresh the list
+        }
       } catch (error) {
         console.error('Failed to cancel booking:', error);
         setError('Failed to cancel the booking.');
       }
     }
   };
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
-  if (error) return <p className="text-red-600">{error}</p>;
 
   const handleCreateBooking = async (formData: any, type: string) => {
     Swal.fire({
@@ -83,7 +122,9 @@ const BookingsPage = () => {
         title: 'Booking Created!',
         text: 'The booking has been successfully created.',
       });
-      fetchBookings();
+      if (selectedHall) {
+        fetchBookings(selectedHall);
+      }
       setIsModalOpen(false);
     } catch (error: any) {
       console.error('Failed to create booking:', error);
@@ -106,68 +147,89 @@ const BookingsPage = () => {
           Create Booking
         </button>
       </div>
+      <div className="mb-4">
+        <label htmlFor="hall-select" className="block text-sm font-medium text-gray-700">Select a Hall</label>
+        <select
+          id="hall-select"
+          value={selectedHall}
+          onChange={(e) => setSelectedHall(e.target.value)}
+          className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+        >
+          <option value="">--Please choose a hall--</option>
+          {halls.map((hall) => (
+            <option key={hall._id} value={hall._id}>
+              {hall.name}
+            </option>
+          ))}
+        </select>
+      </div>
+      {error && <p className="text-red-600">{error}</p>}
       <div className="bg-white p-4 shadow-lg rounded-lg">
-        <table className="min-w-full">
-          <thead>
-            <tr>
-              <th className="px-6 py-3 border-b-2 border-gray-300 text-left leading-4 text-primary tracking-wider">
-                Booking ID
-              </th>
-              <th className="px-6 py-3 border-b-2 border-gray-300 text-left leading-4 text-primary tracking-wider">
-                Hall
-              </th>
-              <th className="px-6 py-3 border-b-2 border-gray-300 text-left leading-4 text-primary tracking-wider">
-                Customer
-              </th>
-              <th className="px-6 py-3 border-b-2 border-gray-300 text-left leading-4 text-primary tracking-wider">
-                Date
-              </th>
-              <th className="px-6 py-3 border-b-2 border-gray-300 text-left leading-4 text-primary tracking-wider">
-                Status
-              </th>
-              <th className="px-6 py-3 border-b-2 border-gray-300"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {bookings.map((booking) => (
-              <tr key={booking.id}>
-                <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">
-                  {booking.bookingId}
-                </td>
-                <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">
-                  {booking.hallName}
-                </td>
-                <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">
-                  {booking.customerName}
-                </td>
-                <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">
-                  {booking.bookingDate}
-                </td>
-                <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">
-                  <span
-                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      booking.status === "confirmed"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-yellow-100 text-yellow-800"
-                    }`}
-                  >
-                    {booking.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-no-wrap text-right border-b border-gray-500 text-gray-900">
-                   {booking.status.toLowerCase() !== 'cancelled' && (
-                    <button
-                      onClick={() => handleCancel(booking.id)}
-                      className="px-5 py-2 border-red-500 border text-red-500 rounded transition duration-300 hover:bg-red-500 hover:text-white focus:outline-none"
-                    >
-                      Cancel
-                    </button>
-                  )}
-                </td>
+        {loading ? (
+          <div>Loading bookings...</div>
+        ) : (
+          <table className="min-w-full">
+            <thead>
+              <tr>
+                <th className="px-6 py-3 border-b-2 border-gray-300 text-left leading-4 text-primary tracking-wider">
+                  Booking ID
+                </th>
+                <th className="px-6 py-3 border-b-2 border-gray-300 text-left leading-4 text-primary tracking-wider">
+                  Customer
+                </th>
+                <th className="px-6 py-3 border-b-2 border-gray-300 text-left leading-4 text-primary tracking-wider">
+                  Date
+                </th>
+                <th className="px-6 py-3 border-b-2 border-gray-300 text-left leading-4 text-primary tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-3 border-b-2 border-gray-300"></th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {bookings.length > 0 ? bookings.map((booking) => (
+                <tr key={booking._id}>
+                  <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">
+                    {booking.bookingId}
+                  </td>
+                  <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">
+                    {booking.user?.fullName || booking.walkInUserDetails?.fullName}
+                  </td>
+                  <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">
+                    {new Date(booking.bookingDates[0].startTime).toLocaleDateString()}
+                  </td>
+                  <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">
+                    <span
+                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                        booking.status === "confirmed"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-yellow-100 text-yellow-800"
+                      }`}
+                    >
+                      {booking.status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-no-wrap text-right border-b border-gray-500 text-gray-900">
+                    {booking.status.toLowerCase() !== 'cancelled' && (
+                      <button
+                        onClick={() => handleCancel(booking._id)}
+                        className="px-5 py-2 border-red-500 border text-red-500 rounded transition duration-300 hover:bg-red-500 hover:text-white focus:outline-none"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              )) : (
+                <tr>
+                  <td colSpan={5} className="text-center py-4">
+                    {selectedHall ? 'No bookings found for this hall.' : 'Please select a hall to view bookings.'}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        )}
       </div>
       <BookingModal
         isOpen={isModalOpen}
@@ -178,4 +240,10 @@ const BookingsPage = () => {
   );
 };
 
-export default BookingsPage;
+const BookingsPageWithSuspense = () => (
+  <Suspense fallback={<div>Loading...</div>}>
+    <BookingsPage />
+  </Suspense>
+);
+
+export default BookingsPageWithSuspense;
