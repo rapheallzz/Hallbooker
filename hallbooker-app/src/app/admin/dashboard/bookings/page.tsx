@@ -23,6 +23,13 @@ interface Booking {
   eventDetails?: string;
   createdAt: string;
   bookingId: string;
+  paymentMethod?: string;
+  paymentStatus?: string;
+  bookingType?: string;
+  walkInUserDetails?: {
+    email: string;
+    phone: string;
+  };
 }
 
 interface Hall {
@@ -46,6 +53,7 @@ const BookingsPage = () => {
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [expandedBookingId, setExpandedBookingId] = useState<string | null>(null);
 
   const fetchAllData = async () => {
     setLoading(true);
@@ -216,26 +224,43 @@ const BookingsPage = () => {
                 <tbody className="divide-y divide-gray-200">
                   {paginatedBookings.length > 0 ? (
                     paginatedBookings.map((booking) => (
-                      <tr key={booking._id} className="hover:bg-gray-50">
-                        <td className="py-3 px-4 text-sm text-gray-900 font-mono text-xs">{booking.bookingId}</td>
-                        <td className="py-3 px-4 text-sm text-gray-900">{getHallName(booking.hall)}</td>
-                        <td className="py-3 px-4 text-sm text-gray-900">{booking.eventDetails || 'N/A'}</td>
-                        <td className="py-3 px-4 text-sm text-gray-900">
-                          <div><span className="font-semibold">From:</span> {new Date(booking.bookingDates[0].startTime).toLocaleString()}</div>
-                          <div><span className="font-semibold">To:</span> {new Date(booking.bookingDates[0].endTime).toLocaleString()}</div>
-                        </td>
-                        <td className="py-3 px-4 text-sm text-gray-900">
-                          <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                            booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                            booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-red-100 text-red-800'
-                          }`}>{booking.status}</span>
-                        </td>
-                        <td className="py-3 px-4 text-sm text-gray-900">₦{booking.totalPrice.toFixed(2)}</td>
-                        <td className="py-3 px-4 text-sm">
-                          <button onClick={() => handleViewDetails(booking)} className="text-indigo-600 hover:text-indigo-900 font-medium">View</button>
-                        </td>
-                      </tr>
+                      <React.Fragment key={booking._id}>
+                        <tr onClick={() => setExpandedBookingId(expandedBookingId === booking._id ? null : booking._id)} className="cursor-pointer hover:bg-gray-50">
+                          <td className="py-3 px-4 text-sm text-gray-900 font-mono text-xs">{booking.bookingId}</td>
+                          <td className="py-3 px-4 text-sm text-gray-900">{getHallName(booking.hall)}</td>
+                          <td className="py-3 px-4 text-sm text-gray-900">{booking.eventDetails || 'N/A'}</td>
+                          <td className="py-3 px-4 text-sm text-gray-900">
+                            <div><span className="font-semibold">From:</span> {new Date(booking.bookingDates[0].startTime).toLocaleString()}</div>
+                            <div><span className="font-semibold">To:</span> {new Date(booking.bookingDates[0].endTime).toLocaleString()}</div>
+                          </td>
+                          <td className="py-3 px-4 text-sm text-gray-900">
+                            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                              booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
+                              booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-red-100 text-red-800'
+                            }`}>{booking.status}</span>
+                          </td>
+                          <td className="py-3 px-4 text-sm text-gray-900">₦{booking.totalPrice.toFixed(2)}</td>
+                          <td className="py-3 px-4 text-sm">
+                            <button onClick={() => handleViewDetails(booking)} className="text-indigo-600 hover:text-indigo-900 font-medium">View</button>
+                          </td>
+                        </tr>
+                        {expandedBookingId === booking._id && (
+                          <tr>
+                            <td colSpan={7} className="p-4 bg-gray-100">
+                              <div>Payment Method: {booking.paymentMethod}</div>
+                              <div>Payment Status: {booking.paymentStatus}</div>
+                              <div>Booking Type: {booking.bookingType}</div>
+                              {booking.walkInUserDetails && (
+                                <div>
+                                  <div>Customer Email: {booking.walkInUserDetails.email}</div>
+                                  <div>Customer Phone: {booking.walkInUserDetails.phone}</div>
+                                </div>
+                              )}
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
                     ))
                   ) : (
                     <tr>
