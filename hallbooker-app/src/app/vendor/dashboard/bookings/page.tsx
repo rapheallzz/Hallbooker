@@ -13,12 +13,19 @@ interface Booking {
   };
   walkInUserDetails?: {
     fullName: string;
+    email: string;
+    phone: string;
   };
   bookingDates: {
     startTime: string;
     endTime: string;
   }[];
   status: string;
+  eventDetails?: string;
+  totalPrice?: number;
+  paymentMethod?: string;
+  paymentStatus?: string;
+  bookingType?: string;
 }
 
 interface Hall {
@@ -35,6 +42,7 @@ const BookingsPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [expandedBookingId, setExpandedBookingId] = useState<string | null>(null);
 
   const fetchHalls = async () => {
     try {
@@ -188,38 +196,58 @@ const BookingsPage = () => {
             </thead>
             <tbody>
               {bookings.length > 0 ? bookings.map((booking) => (
-                <tr key={booking._id}>
-                  <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">
-                    {booking.bookingId}
-                  </td>
-                  <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">
-                    {booking.user?.fullName || booking.walkInUserDetails?.fullName}
-                  </td>
-                  <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">
-                    {new Date(booking.bookingDates[0].startTime).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">
-                    <span
-                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        booking.status === "confirmed"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-yellow-100 text-yellow-800"
-                      }`}
-                    >
-                      {booking.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-no-wrap text-right border-b border-gray-500 text-gray-900">
-                    {booking.status.toLowerCase() !== 'cancelled' && (
-                      <button
-                        onClick={() => handleCancel(booking._id)}
-                        className="px-5 py-2 border-red-500 border text-red-500 rounded transition duration-300 hover:bg-red-500 hover:text-white focus:outline-none"
+                <React.Fragment key={booking._id}>
+                  <tr onClick={() => setExpandedBookingId(expandedBookingId === booking._id ? null : booking._id)} className="cursor-pointer">
+                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">
+                      {booking.bookingId}
+                    </td>
+                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">
+                      {booking.user?.fullName || booking.walkInUserDetails?.fullName}
+                    </td>
+                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">
+                      <div><span className="font-semibold">From:</span> {new Date(booking.bookingDates[0].startTime).toLocaleString()}</div>
+                      <div><span className="font-semibold">To:</span> {new Date(booking.bookingDates[0].endTime).toLocaleString()}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">
+                      <span
+                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          booking.status === "confirmed"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-yellow-100 text-yellow-800"
+                        }`}
                       >
-                        Cancel
-                      </button>
-                    )}
-                  </td>
-                </tr>
+                        {booking.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-no-wrap text-right border-b border-gray-500 text-gray-900">
+                      {booking.status.toLowerCase() !== 'cancelled' && (
+                        <button
+                          onClick={() => handleCancel(booking._id)}
+                          className="px-5 py-2 border-red-500 border text-red-500 rounded transition duration-300 hover:bg-red-500 hover:text-white focus:outline-none"
+                        >
+                          Cancel
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                  {expandedBookingId === booking._id && (
+                    <tr>
+                      <td colSpan={5} className="p-4 bg-gray-100">
+                        <div>Event Details: {booking.eventDetails}</div>
+                        <div>Total Price: {booking.totalPrice}</div>
+                        <div>Payment Method: {booking.paymentMethod}</div>
+                        <div>Payment Status: {booking.paymentStatus}</div>
+                        <div>Booking Type: {booking.bookingType}</div>
+                        {booking.walkInUserDetails && (
+                          <div>
+                            <div>Customer Email: {booking.walkInUserDetails.email}</div>
+                            <div>Customer Phone: {booking.walkInUserDetails.phone}</div>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
               )) : (
                 <tr>
                   <td colSpan={5} className="text-center py-4">
