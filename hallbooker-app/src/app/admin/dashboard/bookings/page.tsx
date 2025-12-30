@@ -1,7 +1,8 @@
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import api from '@/services/api';
 import AdminBookingDetailsModal from '@/components/admin/AdminBookingDetailsModal';
 import AdminBookingModal from '@/components/admin/AdminBookingModal';
@@ -11,8 +12,8 @@ import Swal from 'sweetalert2';
 
 interface Booking {
   _id: string;
-  hall: string;
-  user: string;
+  hall: string | { _id: string; name: string };
+  user: string | { fullName: string };
   startTime: string;
   endTime: string;
   status: 'pending' | 'confirmed' | 'cancelled';
@@ -30,11 +31,13 @@ interface Hall {
 const BOOKINGS_PER_PAGE = 10;
 
 const BookingsPage = () => {
+  const searchParams = useSearchParams();
+  const hallIdFromQuery = searchParams.get('hallId');
   const [allBookings, setAllBookings] = useState<Booking[]>([]);
   const [halls, setHalls] = useState<Hall[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [selectedHall, setSelectedHall] = useState('');
+  const [selectedHall, setSelectedHall] = useState(hallIdFromQuery || '');
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -45,16 +48,24 @@ const BookingsPage = () => {
   const fetchAllData = async () => {
     setLoading(true);
     try {
-      const [bookingsRes, hallsRes] = await Promise.all([
-        api.get('/admin/bookings?limit=10000'), // Fetch all bookings
-        api.get('/halls')
-      ]);
-
-      if (bookingsRes.data && bookingsRes.data.data) {
+      let bookingsRes;
+      if (selectedHall) {
+        bookingsRes = await api.get(`/halls/${selectedHall}/bookings`);
+        const normalizedBookings = bookingsRes.data.data.map((booking: any) => ({
+          ...booking,
+          hall: booking.hall._id,
+        }));
+        setAllBookings(normalizedBookings || []);
+      } else {
+        bookingsRes = await api.get('/admin/bookings?limit=10000');
         setAllBookings(bookingsRes.data.data.bookings || []);
       }
-      if (hallsRes.data && Array.isArray(hallsRes.data.data)) {
-        setHalls(hallsRes.data.data);
+
+      if (!halls.length) {
+        const hallsRes = await api.get('/halls');
+        if (hallsRes.data && Array.isArray(hallsRes.data.data)) {
+          setHalls(hallsRes.data.data);
+        }
       }
     } catch (error) {
       console.error("Failed to fetch data", error);
@@ -65,11 +76,10 @@ const BookingsPage = () => {
 
   useEffect(() => {
     fetchAllData();
-  }, []);
+  }, [selectedHall]);
 
   const filteredBookings = useMemo(() => {
     return allBookings
-      .filter(booking => selectedHall ? booking.hall === selectedHall : true)
       .filter(booking =>
         searchTerm ? (booking.eventDetails || '').toLowerCase().includes(searchTerm.toLowerCase()) : true
       );
@@ -264,4 +274,10 @@ const BookingsPage = () => {
   );
 };
 
-export default BookingsPage;
+const BookingsPageWithSuspense = () => (
+  <Suspense fallback={<div>Loading...</div>}>
+    <BookingsPage />
+  </Suspense>
+);
+
+export default BookingsPageWithSuspense;
