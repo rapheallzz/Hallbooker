@@ -51,9 +51,9 @@ const BookingsPage = () => {
       let bookingsRes;
       if (selectedHall) {
         bookingsRes = await api.get(`/halls/${selectedHall}/bookings`);
-        const normalizedBookings = bookingsRes.data.data.map((booking: any) => ({
+        const normalizedBookings = bookingsRes.data.data.bookings.map((booking: any) => ({
           ...booking,
-          hall: booking.hall._id,
+          hall: booking.hall,
         }));
         setAllBookings(normalizedBookings || []);
       } else {

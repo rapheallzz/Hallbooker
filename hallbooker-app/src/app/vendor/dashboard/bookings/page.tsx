@@ -55,7 +55,7 @@ const BookingsPage = () => {
     try {
       setLoading(true);
       const response = await api.get(`/halls/${hallId}/bookings`);
-      setBookings(response.data.data);
+      setBookings(response.data.data.bookings);
     } catch (error) {
       console.error("Error fetching bookings:", error);
       setError('Failed to fetch bookings.');
