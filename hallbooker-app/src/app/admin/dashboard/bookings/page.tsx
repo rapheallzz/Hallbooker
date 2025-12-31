@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo, Suspense } from 'react';
+import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import api from '@/services/api';
 import AdminBookingDetailsModal from '@/components/admin/AdminBookingDetailsModal';
