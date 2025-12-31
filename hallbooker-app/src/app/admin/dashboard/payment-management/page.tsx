@@ -23,8 +23,14 @@ interface User {
 
 interface Subaccount {
   _id: string;
-  userId: string;
-  percentageCharge: number;
+  user: {
+      _id: string;
+      email: string;
+  };
+  subAccountCode: string;
+  bankName: string;
+  accountNumber: string;
+  accountName: string;
 }
 
 const PaymentSettingsTab = () => {
@@ -361,15 +367,19 @@ const SubaccountsTab = () => {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hall Owner</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Percentage Charge</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Account Name</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Account Number</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bank Name</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subaccount Code</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {subaccounts.map((subaccount) => (
                       <tr key={subaccount._id}>
-                        <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{subaccount.userId}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{subaccount.percentageCharge}%</td>
+                        <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{subaccount.accountName}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{subaccount.accountNumber}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{subaccount.bankName}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{subaccount.subAccountCode}</td>
                       </tr>
                     ))}
                   </tbody>
