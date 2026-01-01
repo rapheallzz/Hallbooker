@@ -1,11 +1,17 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import api from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
 import AuthLayout from '@/components/auth/AuthLayout';
+import api from '@/services/api';
+import { jwtDecode } from 'jwt-decode';
+
+// Define the shape of the decoded token
+interface DecodedToken {
+  activeRole: string;
+  // ... other properties from the token
+}
 
 const LoginPage = () => {
   const [role, setRole] = useState('user');
@@ -15,8 +21,7 @@ const LoginPage = () => {
   });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login, updateToken } = useAuth();
-  const router = useRouter();
+  const { login } = useAuth();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -31,32 +36,23 @@ const LoginPage = () => {
       const response = await api.post('/auth/login', { ...formData, role });
       const { accessToken, user } = response.data.data || response.data;
 
-      // Ensure the user object has a fullName property
-      if (user && !user.fullName && user.firstName && user.lastName) {
-        user.fullName = `${user.firstName} ${user.lastName}`;
+      // Decode the token to get the activeRole
+      const decodedToken = jwtDecode<DecodedToken>(accessToken);
+
+      // Add the activeRole to the user object before passing it to the context
+      const userWithActiveRole = {
+        ...user,
+        activeRole: decodedToken.activeRole,
+      };
+
+      // Ensure the user object has a fullName property for consistency
+      if (userWithActiveRole && !userWithActiveRole.fullName && userWithActiveRole.firstName && userWithActiveRole.lastName) {
+        userWithActiveRole.fullName = `${userWithActiveRole.firstName} ${userWithActiveRole.lastName}`;
       }
 
-      login(accessToken, user);
+      // The login function in AuthContext will now handle the redirect
+      login(accessToken, userWithActiveRole);
 
-      // If the user is a super-admin, automatically switch to the super-admin role
-      if (user.role.includes('super-admin')) {
-        try {
-          const switchResponse = await api.post('/auth/switch-role', { role: 'super-admin' });
-          const newAccessToken = switchResponse.data.data.accessToken;
-
-          updateToken(newAccessToken);
-
-          router.push('/admin/dashboard');
-        } catch (switchErr) {
-          console.error("Failed to switch to super-admin role:", switchErr);
-          setError('Logged in, but failed to switch to super-admin role.');
-          return; // Stop execution if role switch fails
-        }
-      } else if (user.role.includes('hall-owner') || user.role.includes('staff')) {
-        router.push('/vendor/dashboard');
-      } else {
-        router.push('/');
-      }
     } catch (err: any) {
       setError(err.response?.data?.message || 'An error occurred during login.');
     } finally {
