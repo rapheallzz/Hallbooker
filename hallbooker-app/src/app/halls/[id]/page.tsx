@@ -22,6 +22,7 @@ const HallDetailPage = () => {
   const [recommendations, setRecommendations] = useState<Hall[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [recommendationsUnavailable, setRecommendationsUnavailable] = useState(false);
   const { isBookingModalOpen, openBookingModal, closeBookingModal } = useUI();
   const [isDemoModalOpen, setDemoModalOpen] = useState(false);
   const [ownerContact, setOwnerContact] = useState({ phone: '', whatsappNumber: '' });
@@ -66,7 +67,10 @@ const HallDetailPage = () => {
               }
             );
             setRecommendations(recommendationsResponse.data.data || []);
-          } catch (recErr) {
+          } catch (recErr: any) {
+            if (recErr.response?.data?.message?.includes('unable to find index for $geoNear query')) {
+              setRecommendationsUnavailable(true);
+            }
             console.error('Failed to fetch recommendations:', recErr);
             setRecommendations([]);
           }
@@ -259,7 +263,9 @@ const HallDetailPage = () => {
              {/* Recommendation Section */}
             <div className="py-6">
               <h3 className="font-semibold text-xl text-gray-800 mb-4">You might also like</h3>
-              {recommendations.length > 0 ? (
+              {recommendationsUnavailable ? (
+                <p className="text-gray-500">Recommendations are temporarily unavailable</p>
+              ) : recommendations.length > 0 ? (
                 <Carousel halls={recommendations} />
               ) : (
                 <p className="text-gray-500">No recommendation found</p>
