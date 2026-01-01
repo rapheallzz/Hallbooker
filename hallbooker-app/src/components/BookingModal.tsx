@@ -1,10 +1,11 @@
 'use client';
 
-import { FC, useState, useEffect, useMemo } from 'react';
+import { FC, useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import api from '@/services/api';
 import Calendar from './Calendar';
-import { Hall, Facility, Booking } from '@/types';
+import { Hall, Facility } from '@/types';
+import { useBookingAvailability } from '@/hooks/useBookingAvailability';
 
 interface BookingModalProps {
   hallId: string;
@@ -14,7 +15,6 @@ interface BookingModalProps {
 
 const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
   const [hall, setHall] = useState<Hall | null>(null);
-  const [bookings, setBookings] = useState<Booking[]>([]);
   const [step, setStep] = useState(1);
   const [selectedDates, setSelectedDates] = useState<Date[] | undefined>(undefined);
   const [eventDetails, setEventDetails] = useState('');
@@ -26,62 +26,7 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const disabledHours = useMemo(() => {
-    if (!hall || !selectedDates || selectedDates.length === 0 || !Array.isArray(bookings)) {
-        return [];
-    }
-
-    const buffer = hall.bookingBufferInHours || 0;
-    const openingHour = hall.openingHour || 0;
-    const closingHour = hall.closingHour || 24;
-    const disabled: number[] = [];
-
-    const selectedDays = selectedDates.map(d => new Date(d).setHours(0, 0, 0, 0));
-
-    bookings.forEach(booking => {
-        booking.bookingDates.forEach(dateRange => {
-            const bookingStartTime = new Date(dateRange.startTime);
-            const bookingDay = new Date(bookingStartTime).setHours(0, 0, 0, 0);
-
-            if (selectedDays.includes(bookingDay)) {
-                const bookingEndTime = new Date(dateRange.endTime);
-
-                const startHour = bookingStartTime.getHours();
-                const endHour = bookingEndTime.getMinutes() > 0 ? bookingEndTime.getHours() + 1 : bookingEndTime.getHours();
-
-                const blockStart = Math.floor(startHour - buffer);
-                const blockEnd = Math.ceil(endHour + buffer);
-
-                const finalBlockStart = Math.max(openingHour, blockStart);
-                const finalBlockEnd = Math.min(closingHour, blockEnd);
-
-                for (let i = finalBlockStart; i < finalBlockEnd; i++) {
-                    if (!disabled.includes(i)) {
-                        disabled.push(i);
-                    }
-                }
-            }
-        });
-    });
-
-    return disabled.sort((a, b) => a - b);
-  }, [bookings, hall, selectedDates]);
-
-  useEffect(() => {
-    const fetchBookings = async () => {
-      if (!isOpen) {
-        setBookings([]);
-        return;
-      }
-      try {
-        const response = await api.get(`/halls/${hallId}/bookings`);
-        setBookings(response.data.data.bookings);
-      } catch (error) {
-        console.error('Failed to fetch bookings:', error);
-      }
-    };
-    fetchBookings();
-  }, [hallId, isOpen]);
+  const { disabledHours } = useBookingAvailability(hall, selectedDates);
 
   const nextStep = () => setStep(step + 1);
   const prevStep = () => setStep(step - 1);
