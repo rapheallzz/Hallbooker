@@ -36,13 +36,11 @@ const LoginPage = () => {
       const response = await api.post('/auth/login', { ...formData, role });
       const { accessToken, user } = response.data.data || response.data;
 
-      // Decode the token to get the activeRole
-      const decodedToken = jwtDecode<DecodedToken>(accessToken);
-
-      // Add the activeRole to the user object before passing it to the context
+      // The user's selected role on the login page should be the source of truth for the initial activeRole.
+      // This overrides the potentially incorrect activeRole sent from the backend.
       const userWithActiveRole = {
         ...user,
-        activeRole: decodedToken.activeRole,
+        activeRole: role,
       };
 
       // Ensure the user object has a fullName property for consistency
