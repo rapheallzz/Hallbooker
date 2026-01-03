@@ -34,7 +34,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSubmit }
     fullName: '',
     email: '',
     phone: '',
-    paymentMethod: 'cash',
+    paymentMethod: 'CASH',
     paymentStatus: 'pending',
     selectedFacilities: [],
   });
@@ -414,11 +414,11 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSubmit }
               <div>
                 <label className="block text-sm font-medium text-gray-800">Payment Method</label>
                 <select name="paymentMethod" value={formData.paymentMethod} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900">
-                  <option value="cash">Cash</option>
-                  <option value="bank_transfer">Bank Transfer</option>
-                  <option value="pos">POS</option>
+                  <option value="CASH">Cash</option>
+                  <option value="BANK_TRANSFER">Bank Transfer</option>
+                  <option value="POS">POS</option>
                   <option value="online">Online</option>
-                  <option value="cheque">Cheque</option>
+                  <option value="CHEQUE">Cheque</option>
                 </select>
               </div>
 
@@ -525,11 +525,11 @@ const BookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSubmit }
                <div>
                 <label className="block text-sm font-medium text-gray-800">Payment Method</label>
                 <select name="paymentMethod" value={formData.paymentMethod} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900">
-                  <option value="cash">Cash</option>
-                  <option value="bank_transfer">Bank Transfer</option>
-                  <option value="pos">POS</option>
+                  <option value="CASH">Cash</option>
+                  <option value="BANK_TRANSFER">Bank Transfer</option>
+                  <option value="POS">POS</option>
                   <option value="online">Online</option>
-                  <option value="cheque">Cheque</option>
+                  <option value="CHEQUE">Cheque</option>
                 </select>
               </div>
               <div>
