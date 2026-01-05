@@ -201,13 +201,30 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
           {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
 
           {step === 1 && (
-            <div className="flex justify-center">
+            <div className="flex justify-center items-start gap-4">
               <Calendar
                 unavailableDates={[]}
                 selectedDates={selectedDates}
                 onChange={(dates) => setSelectedDates(dates)}
                 getDateAvailability={getDateAvailability}
               />
+              <div className="mt-4 p-4 border rounded-lg bg-gray-50">
+                <h3 className="font-semibold text-lg mb-3">Legend</h3>
+                <ul className="space-y-2">
+                  <li className="flex items-center">
+                    <span className="w-5 h-5 rounded-full bg-red-300 mr-2"></span>
+                    <span>Completely Booked</span>
+                  </li>
+                  <li className="flex items-center">
+                    <span className="w-5 h-5 rounded-full bg-yellow-300 mr-2"></span>
+                    <span>Partially Available</span>
+                  </li>
+                  <li className="flex items-center">
+                    <span className="w-5 h-5 rounded-full bg-green-300 mr-2"></span>
+                    <span>Completely Available</span>
+                  </li>
+                </ul>
+              </div>
             </div>
           )}
 
