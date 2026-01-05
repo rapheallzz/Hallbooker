@@ -57,23 +57,22 @@ const HallDetailPage = () => {
 
         // Fetch recommendations only if geoLocation data is available
         if (currentHall.geoLocation?.coordinates && currentHall.geoLocation.coordinates.length === 2) {
-          try {
-            const longitude = currentHall.geoLocation.coordinates[0];
-            const latitude = currentHall.geoLocation.coordinates[1];
-            const recommendationsResponse = await api.get<{ data: Hall[] }>(
-              `/halls/recommendations`,
-              {
-                params: { latitude, longitude },
-              }
-            );
+          const longitude = currentHall.geoLocation.coordinates[0];
+          const latitude = currentHall.geoLocation.coordinates[1];
+          api.get<{ data: Hall[] }>(
+            `/halls/recommendations`,
+            {
+              params: { latitude, longitude },
+            }
+          ).then(recommendationsResponse => {
             setRecommendations(recommendationsResponse.data.data || []);
-          } catch (recErr: any) {
+          }).catch(recErr => {
             if (recErr.response?.status === 500) {
               setRecommendationsUnavailable(true);
             }
             console.error('Failed to fetch recommendations:', recErr);
             setRecommendations([]);
-          }
+          });
         }
       } catch (err) {
         console.error(`Failed to fetch hall with id ${id}:`, err);
