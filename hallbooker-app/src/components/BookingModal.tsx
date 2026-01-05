@@ -303,13 +303,15 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
                             </label>
                             {isSelected && (
                               <div className="w-24">
-                                <input
-                                  type="number"
-                                  min="1"
+                                <select
                                   value={selectedFacility?.quantity || 1}
                                   onChange={(e) => handleQuantityChange(facility._id, parseInt(e.target.value, 10))}
                                   className="w-full px-2 py-1 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-[#295FA7]"
-                                />
+                                >
+                                  {Array.from({ length: facility.quantity }, (_, i) => i + 1).map(n =>
+                                    <option key={n} value={n}>{n}</option>
+                                  )}
+                                </select>
                               </div>
                             )}
                           </div>
