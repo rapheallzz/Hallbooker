@@ -74,9 +74,11 @@ export const useBookingAvailability = (hall: Hall | null, selectedDates: Date[] 
     const buffer = hall.bookingBufferInHours || 0;
     const openingHour = hall.openingHour || 0;
     const closingHour = hall.closingHour || 24;
-    let availableHours = closingHour - openingHour;
+    const totalHours = closingHour - openingHour;
 
     const dateToCheck = new Date(date).setHours(0, 0, 0, 0);
+
+    const blockedIntervals: { start: number; end: number }[] = [];
 
     bookings.forEach(booking => {
       booking.bookingDates.forEach(dateRange => {
@@ -94,14 +96,41 @@ export const useBookingAvailability = (hall: Hall | null, selectedDates: Date[] 
           const finalBlockStart = Math.max(openingHour, blockStart);
           const finalBlockEnd = Math.min(closingHour, blockEnd);
 
-          availableHours -= (finalBlockEnd - finalBlockStart);
+          if (finalBlockStart < finalBlockEnd) {
+            blockedIntervals.push({ start: finalBlockStart, end: finalBlockEnd });
+          }
         }
       });
     });
 
+    if (blockedIntervals.length === 0) {
+      return 'fully available';
+    }
+
+    blockedIntervals.sort((a, b) => a.start - b.start);
+
+    const mergedIntervals = [blockedIntervals[0]];
+
+    for (let i = 1; i < blockedIntervals.length; i++) {
+      const lastMerged = mergedIntervals[mergedIntervals.length - 1];
+      const current = blockedIntervals[i];
+
+      if (current.start < lastMerged.end) {
+        lastMerged.end = Math.max(lastMerged.end, current.end);
+      } else {
+        mergedIntervals.push(current);
+      }
+    }
+
+    const totalBlockedHours = mergedIntervals.reduce((total, interval) => {
+      return total + (interval.end - interval.start);
+    }, 0);
+
+    const availableHours = totalHours - totalBlockedHours;
+
     if (availableHours <= 0) {
       return 'fully booked';
-    } else if (availableHours < (closingHour - openingHour)) {
+    } else if (availableHours < totalHours) {
       return 'partially booked';
     } else {
       return 'fully available';
