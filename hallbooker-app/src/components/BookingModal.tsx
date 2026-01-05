@@ -26,7 +26,7 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { disabledHours } = useBookingAvailability(hall, selectedDates);
+  const { disabledHours, getDateAvailability } = useBookingAvailability(hall, selectedDates);
 
   const nextStep = () => setStep(step + 1);
   const prevStep = () => setStep(step - 1);
@@ -37,7 +37,13 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
       const time = `${i.toString().padStart(2, '0')}:00`;
       const isDisabled = disabledHours.includes(i);
       options.push(
-        <option key={time} value={time} disabled={isDisabled} className={isDisabled ? "text-gray-400" : ""}>
+        <option
+          key={time}
+          value={time}
+          disabled={isDisabled}
+          className={isDisabled ? 'text-gray-400' : ''}
+          title={isDisabled ? 'Not Available/Booked' : 'Available'}
+        >
           {time}
         </option>
       );
@@ -200,6 +206,7 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
                 unavailableDates={[]}
                 selectedDates={selectedDates}
                 onChange={(dates) => setSelectedDates(dates)}
+                getDateAvailability={getDateAvailability}
               />
             </div>
           )}

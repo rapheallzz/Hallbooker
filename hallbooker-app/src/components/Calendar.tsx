@@ -10,6 +10,7 @@ interface CalendarProps {
   selectedDates: Date[] | undefined;
   onChange: (dates: Date[] | undefined) => void;
   onDisabledDateClick?: (date: Date) => void;
+  getDateAvailability: (date: Date) => 'fully booked' | 'partially booked' | 'fully available';
 }
 
 const Calendar: React.FC<CalendarProps> = ({
@@ -17,6 +18,7 @@ const Calendar: React.FC<CalendarProps> = ({
   selectedDates,
   onChange,
   onDisabledDateClick,
+  getDateAvailability,
 }) => {
   const handleDayClick = (day: Date, { disabled }: { disabled: boolean }) => {
     if (disabled && onDisabledDateClick) {
@@ -24,16 +26,36 @@ const Calendar: React.FC<CalendarProps> = ({
     }
   };
 
+  const modifiers = {
+    fully_booked: (date: Date) => getDateAvailability(date) === 'fully booked',
+    partially_booked: (date: Date) => getDateAvailability(date) === 'partially booked',
+    fully_available: (date: Date) => getDateAvailability(date) === 'fully available',
+  };
+
   return (
     <div className="custom-calendar-wrapper">
       <style>{`
-        .rdp-day_disabled {
+        .rdp-day_disabled, .rdp-day_fully_booked {
           background-color: #FECACA !important;
           color: #374151 !important;
           cursor: not-allowed;
         }
-        .rdp-day_disabled:hover {
+        .rdp-day_disabled:hover, .rdp-day_fully_booked:hover {
           background-color: #FCA5A5 !important;
+        }
+        .rdp-day_partially_booked {
+          background-color: #FDE68A !important;
+          color: #374151 !important;
+        }
+        .rdp-day_partially_booked:hover {
+          background-color: #FCD34D !important;
+        }
+        .rdp-day_fully_available {
+          background-color: #A7F3D0 !important;
+          color: #374151 !important;
+        }
+        .rdp-day_fully_available:hover {
+          background-color: #6EE7B7 !important;
         }
         .rdp-day_selected {
             background-color: #295FA7 !important;
@@ -47,9 +69,13 @@ const Calendar: React.FC<CalendarProps> = ({
         onSelect={onChange}
         disabled={unavailableDates}
         onDayClick={handleDayClick}
+        modifiers={modifiers}
         modifiersClassNames={{
             disabled: 'rdp-day_disabled',
             selected: 'rdp-day_selected',
+            fully_booked: 'rdp-day_fully_booked',
+            partially_booked: 'rdp-day_partially_booked',
+            fully_available: 'rdp-day_fully_available',
         }}
       />
     </div>
