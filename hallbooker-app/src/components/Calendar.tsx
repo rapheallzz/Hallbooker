@@ -10,7 +10,7 @@ interface CalendarProps {
   selectedDates: Date[] | undefined;
   onChange: (dates: Date[] | undefined) => void;
   onDisabledDateClick?: (date: Date) => void;
-  getDateAvailability: (date: Date) => 'fully booked' | 'partially booked' | 'fully available';
+  getDateAvailability?: (date: Date) => 'fully booked' | 'partially booked' | 'fully available';
 }
 
 const Calendar: React.FC<CalendarProps> = ({
@@ -27,9 +27,9 @@ const Calendar: React.FC<CalendarProps> = ({
   };
 
   const modifiers = {
-    fully_booked: (date: Date) => getDateAvailability(date) === 'fully booked',
-    partially_booked: (date: Date) => getDateAvailability(date) === 'partially booked',
-    fully_available: (date: Date) => getDateAvailability(date) === 'fully available',
+    fully_booked: (date: Date) => getDateAvailability ? getDateAvailability(date) === 'fully booked' : false,
+    partially_booked: (date: Date) => getDateAvailability ? getDateAvailability(date) === 'partially booked' : false,
+    fully_available: (date: Date) => getDateAvailability ? getDateAvailability(date) === 'fully available' : false,
   };
 
   return (
