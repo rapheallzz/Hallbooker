@@ -71,14 +71,7 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
       const hallCost = dailyRate * numberOfDays;
 
       const facilitiesCost = selectedFacilities.reduce((total, facility) => {
-        const quantity = facility.quantity || 1;
-        if (facility.chargeMethod === 'per_day') {
-          return total + (facility.cost * numberOfDays * quantity);
-        }
-        if (facility.chargeMethod === 'per_hour') {
-          return total + (facility.cost * durationInHours * numberOfDays * quantity);
-        }
-        return total + (facility.cost * quantity);
+        return total + calculateFacilityCost(facility);
       }, 0);
 
       setTotalPrice(hallCost + facilitiesCost);
@@ -120,6 +113,19 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
         f._id === facilityId ? { ...f, quantity: newQuantity } : f
       )
     );
+  };
+
+  const calculateFacilityCost = (facility: Facility & { quantity: number }) => {
+    const numberOfDays = selectedDates?.length || 1;
+    const quantity = facility.quantity || 1;
+
+    if (facility.chargeMethod === 'per_day') {
+      return facility.cost * numberOfDays * quantity;
+    }
+    if (facility.chargeMethod === 'per_hour') {
+      return facility.cost * durationInHours * numberOfDays * quantity;
+    }
+    return facility.cost * quantity;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -334,12 +340,22 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
                   <span className="text-gray-600">Event Details:</span>
                   <span className="font-medium text-gray-900">{eventDetails}</span>
                 </div>
+                <div className="border-t my-2"></div>
+                {hall && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Hall Rental:</span>
+                    <span className="font-medium text-gray-900">₦{(hall.pricing.dailyRate || 0 * (selectedDates?.length || 1)).toLocaleString()}</span>
+                  </div>
+                )}
                 {selectedFacilities.length > 0 && (
                   <div className="pt-2">
-                    <h4 className="font-medium text-gray-800">Selected Facilities:</h4>
-                    <ul className="list-disc list-inside pl-4 text-gray-600">
-                      {selectedFacilities.map(f => <li key={f._id}>{f.facility?.name || f.name}</li>)}
-                    </ul>
+                    <h4 className="font-medium text-gray-800 mb-1">Selected Facilities:</h4>
+                    {selectedFacilities.map(f => (
+                      <div key={f._id} className="flex justify-between items-center text-gray-600">
+                        <span>{f.facility?.name || f.name} (x{f.quantity})</span>
+                        <span className="font-medium">₦{calculateFacilityCost(f).toLocaleString()}</span>
+                      </div>
+                    ))}
                   </div>
                 )}
                 <div className="flex justify-between font-bold text-lg border-t pt-2 mt-2">
