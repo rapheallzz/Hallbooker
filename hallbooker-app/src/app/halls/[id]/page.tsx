@@ -68,7 +68,7 @@ const HallDetailPage = () => {
             );
             setRecommendations(recommendationsResponse.data.data || []);
           } catch (recErr: any) {
-            if (recErr.response?.data?.message?.includes('unable to find index for $geoNear query')) {
+            if (recErr.response?.status === 500) {
               setRecommendationsUnavailable(true);
             }
             console.error('Failed to fetch recommendations:', recErr);
