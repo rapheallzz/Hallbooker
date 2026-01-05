@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'https://qspfh08j-8000.uks1.devtunnels.ms/api/v1',
+  baseURL: 'https://hallbooker.onrender.com/api/v1',
   headers: {
     'Content-Type': 'application/json',
   },
