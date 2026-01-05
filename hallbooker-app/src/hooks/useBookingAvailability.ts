@@ -39,6 +39,18 @@ export const useBookingAvailability = (hall: Hall | null, selectedDates: Date[] 
 
     const selectedDays = selectedDates.map(d => new Date(d).setHours(0, 0, 0, 0));
 
+    const isToday = selectedDays.some(day => {
+        const today = new Date().setHours(0, 0, 0, 0);
+        return day === today;
+    });
+
+    if (isToday) {
+        const currentHour = new Date().getHours();
+        for (let i = 0; i < currentHour; i++) {
+            disabled.push(i);
+        }
+    }
+
     bookings.forEach(booking => {
       booking.bookingDates.forEach(dateRange => {
         const bookingStartTime = new Date(dateRange.startTime);

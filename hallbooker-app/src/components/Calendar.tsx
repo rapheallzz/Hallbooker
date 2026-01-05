@@ -44,11 +44,11 @@ const Calendar: React.FC<CalendarProps> = ({
           background-color: #FCA5A5 !important;
         }
         .rdp-day_partially_booked {
-          background-color: #FDE68A !important;
+          background-color: #FDBA74 !important;
           color: #374151 !important;
         }
         .rdp-day_partially_booked:hover {
-          background-color: #FCD34D !important;
+          background-color: #FB923C !important;
         }
         .rdp-day_fully_available {
           background-color: #A7F3D0 !important;

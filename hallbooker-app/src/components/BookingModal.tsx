@@ -222,8 +222,8 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
                     <span>Completely Booked</span>
                   </li>
                   <li className="flex items-center">
-                    <span className="w-5 h-5 rounded-full bg-yellow-300 mr-2"></span>
-                    <span>Partially Available</span>
+                    <span className="w-5 h-5 rounded-full bg-orange-300 mr-2"></span>
+                    <span>Booked, but some time slot still available</span>
                   </li>
                   <li className="flex items-center">
                     <span className="w-5 h-5 rounded-full bg-green-300 mr-2"></span>
@@ -344,7 +344,7 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
                 {hall && (
                   <div className="flex justify-between">
                     <span className="text-gray-600">Hall Rental:</span>
-                    <span className="font-medium text-gray-900">₦{(hall.pricing.dailyRate || 0 * (selectedDates?.length || 1)).toLocaleString()}</span>
+                    <span className="font-medium text-gray-900">₦{((hall.pricing.dailyRate || 0) * (selectedDates?.length || 1)).toLocaleString()}</span>
                   </div>
                 )}
                 {selectedFacilities.length > 0 && (
