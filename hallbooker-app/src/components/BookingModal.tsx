@@ -1,11 +1,14 @@
 'use client';
 
 import { FC, useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { X } from 'lucide-react';
 import api from '@/services/api';
 import Calendar from './Calendar';
 import { Hall, Facility } from '@/types';
 import { useBookingAvailability } from '@/hooks/useBookingAvailability';
+import { useAuth } from '@/context/AuthContext';
+import Swal from 'sweetalert2';
 
 interface BookingModalProps {
   hallId: string;
@@ -25,6 +28,8 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
   const [durationInHours, setDurationInHours] = useState(0);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const { user } = useAuth();
+  const router = useRouter();
 
   const { disabledHours, getDateAvailability } = useBookingAvailability(hall, selectedDates);
 
@@ -134,6 +139,21 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
       nextStep();
       return;
     }
+
+    if (!user) {
+      Swal.fire({
+        title: 'Authentication Required',
+        text: 'Please log in to continue with your booking.',
+        icon: 'info',
+        confirmButtonText: 'Log In'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          router.push('/auth/login');
+        }
+      });
+      return;
+    }
+
     setLoading(true);
     setError('');
 
