@@ -20,8 +20,11 @@ const VerifyPaymentContent = () => {
         try {
           // Pass the reference with the correct key
           const response = await api.get(`/payments/verify?paymentReference=${reference}`);
-          if (response.data.success) {
-            setPaymentStatus({ status: 'success', message: response.data.message || 'Payment verified successfully!' });
+          if (response.data.success && response.data.data) {
+            // Store booking data in localStorage to pass to the success page
+            localStorage.setItem('bookingConfirmation', JSON.stringify(response.data.data));
+            // Redirect to the booking successful page
+            router.push('/booking-successful');
           } else {
             setPaymentStatus({ status: 'error', message: response.data.message || 'Payment verification failed.' });
           }
