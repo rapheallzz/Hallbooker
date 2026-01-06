@@ -9,17 +9,17 @@ import { CheckCircle } from "lucide-react";
 interface BookingDetails {
   hall: {
     name: string;
-  } | string; // Hall can be a populated object or just an ID string
-  bookingDates: {
+  } | string;
+  bookingDates?: {
     startTime: string;
     endTime: string;
   }[];
+  startTime?: string;
+  endTime?: string;
   totalAmount: number;
   paymentReference: string;
   selectedFacilities?: {
-    facility: {
-      name: string;
-    };
+    name: string; // Corrected structure
     quantity: number;
   }[];
 }
@@ -59,7 +59,6 @@ const BookingSuccessPage = () => {
 
   const {
     hall,
-    bookingDates,
     totalAmount,
     paymentReference,
     selectedFacilities,
@@ -67,6 +66,13 @@ const BookingSuccessPage = () => {
 
   // Defensively get the hall name
   const hallName = typeof hall === 'object' && hall !== null ? hall.name : 'Hall';
+
+  // Normalize booking dates
+  const datesToDisplay = bookingDetails.bookingDates && bookingDetails.bookingDates.length > 0
+    ? bookingDetails.bookingDates
+    : (bookingDetails.startTime && bookingDetails.endTime
+      ? [{ startTime: bookingDetails.startTime, endTime: bookingDetails.endTime }]
+      : []);
 
 
   return (
@@ -94,7 +100,7 @@ const BookingSuccessPage = () => {
 
             <div className="p-4 bg-gray-50 rounded-lg">
               <h3 className="font-medium text-gray-700 mb-2">Booking Dates:</h3>
-              {bookingDates.map((date, index) => (
+              {datesToDisplay.map((date, index) => (
                 <div key={index} className="text-sm text-gray-800">
                   <p>
                     <strong>Start:</strong>{" "}
@@ -116,7 +122,7 @@ const BookingSuccessPage = () => {
                 <ul className="list-disc list-inside space-y-1 text-sm text-gray-800">
                   {selectedFacilities.map((item, index) => (
                     <li key={index}>
-                      {item.facility.name} (Quantity: {item.quantity})
+                      {item.name} (Quantity: {item.quantity})
                     </li>
                   ))}
                 </ul>
