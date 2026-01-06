@@ -8,7 +8,7 @@ import { CheckCircle } from "lucide-react";
 // Define a type for the booking data for type safety
 interface BookingDetails {
   _id: string;
-  hall: {
+  hall?: {
     name: string;
     location: string;
   };
@@ -87,13 +87,13 @@ const BookingSuccessfulPage = () => {
             <div className="col-span-1">
               <dt className="text-sm font-medium text-gray-500">Hall Name</dt>
               <dd className="mt-1 text-md text-gray-900">
-                {bookingDetails.hall.name}
+                {bookingDetails.hall?.name || 'Not Available'}
               </dd>
             </div>
             <div className="col-span-2">
               <dt className="text-sm font-medium text-gray-500">Location</dt>
               <dd className="mt-1 text-md text-gray-900">
-                {bookingDetails.hall.location}
+                {bookingDetails.hall?.location || 'Not Available'}
               </dd>
             </div>
             <div className="col-span-1">
