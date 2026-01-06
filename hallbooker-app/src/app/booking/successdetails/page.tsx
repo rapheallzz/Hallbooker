@@ -9,7 +9,7 @@ import { CheckCircle } from "lucide-react";
 interface BookingDetails {
   hall: {
     name: string;
-  };
+  } | string; // Hall can be a populated object or just an ID string
   bookingDates: {
     startTime: string;
     endTime: string;
@@ -65,6 +65,10 @@ const BookingSuccessPage = () => {
     selectedFacilities,
   } = bookingDetails;
 
+  // Defensively get the hall name
+  const hallName = typeof hall === 'object' && hall !== null ? hall.name : 'Hall';
+
+
   return (
     <div className="bg-gray-50 min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl w-full mx-auto bg-white p-6 sm:p-8 rounded-xl shadow-lg my-8">
@@ -85,7 +89,7 @@ const BookingSuccessPage = () => {
           <div className="space-y-4">
             <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
               <span className="font-medium text-gray-700">Hall Name:</span>
-              <span className="text-gray-900 font-semibold">{hall.name}</span>
+              <span className="text-gray-900 font-semibold">{hallName}</span>
             </div>
 
             <div className="p-4 bg-gray-50 rounded-lg">
