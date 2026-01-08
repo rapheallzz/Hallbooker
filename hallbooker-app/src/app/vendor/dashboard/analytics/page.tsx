@@ -1,64 +1,98 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import api from "@/services/api";
-
-interface AnalyticsData {
-  totalRevenue: number;
-  totalBookings: number;
-  totalHalls: number;
-  bookingsByHall: { hallName: string; count: number }[];
-}
+import { DateRange } from "react-day-picker";
+import { getHallOwnerAnalytics, AnalyticsData } from "@/services/analytics";
+import StatsCard from "./components/StatsCard";
+import RevenueChart from "./components/RevenueChart";
+import BookingsTable from "./components/BookingsTable";
+import { subDays } from "date-fns";
+import Calendar from "@/components/Calendar";
 
 const AnalyticsPage = () => {
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [date, setDate] = useState<DateRange | undefined>({
+    from: subDays(new Date(), 30),
+    to: new Date(),
+  });
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     const fetchAnalytics = async () => {
+      if (!date?.from || !date?.to) return;
+
+      setLoading(true);
       try {
-        const response = await api.get("/analytics/hall-owner");
-        setAnalytics(response.data.data);
+        const params = {
+          startDate: date.from.toISOString().split("T")[0],
+          endDate: date.to.toISOString().split("T")[0],
+          page: currentPage,
+        };
+        const response = await getHallOwnerAnalytics(params);
+        setAnalytics(response.data);
       } catch (error) {
         console.error("Error fetching analytics:", error);
       } finally {
         setLoading(false);
       }
     };
-    fetchAnalytics();
-  }, []);
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+    fetchAnalytics();
+  }, [date, currentPage]);
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-4 text-primary">Analytics</h1>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <div className="bg-white p-4 shadow-lg rounded-lg">
-          <h2 className="text-sm font-semibold text-gray-500 mb-2">Total Revenue</h2>
-          <p className="text-3xl font-bold text-gray-800">₦{analytics?.totalRevenue}</p>
-        </div>
-        <div className="bg-white p-4 shadow-lg rounded-lg">
-          <h2 className="text-sm font-semibold text-gray-500 mb-2">Total Bookings</h2>
-          <p className="text-3xl font-bold text-gray-800">{analytics?.totalBookings}</p>
-        </div>
-        <div className="bg-white p-4 shadow-lg rounded-lg">
-          <h2 className="text-sm font-semibold text-gray-500 mb-2">Total Halls</h2>
-          <p className="text-3xl font-bold text-gray-800">{analytics?.totalHalls}</p>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-3xl font-bold text-primary">Analytics</h1>
+        <div className="w-72">
+          <Calendar
+            mode="range"
+            selected={date}
+            onSelect={(newDate) => {
+              setDate(newDate);
+              setCurrentPage(1); // Reset to first page on new date range
+            }}
+            className="w-full"
+          />
         </div>
       </div>
-      <div className="bg-white p-4 shadow-lg rounded-lg">
-        <h2 className="text-xl font-bold mb-2 text-gray-600">Bookings by Hall</h2>
-        <ul>
-          {analytics?.bookingsByHall && analytics.bookingsByHall.map((hall) => (
-            <li key={hall.hallName} className="flex justify-between py-2 border-b">
-              <span>{hall.hallName}</span>
-              <span>{hall.count}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
+
+      {loading ? (
+        <div>Loading...</div>
+      ) : !analytics ? (
+        <div>No data available</div>
+      ) : (
+        <>
+          {/* Overall Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <StatsCard title="Total Revenue" value={`₦${analytics.overallStats.totalRevenue.toLocaleString()}`} />
+            <StatsCard title="Total Bookings" value={analytics.overallStats.totalBookings.confirmed} />
+            <StatsCard title="Total Views" value={analytics.overallStats.totalViews} />
+            <StatsCard title="Demo Bookings" value={analytics.overallStats.totalDemoBookings} />
+          </div>
+
+          {/* KPIs */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <StatsCard title="Booking Conversion Rate" value={`${analytics.kpis.bookingConversionRate}`} />
+            <StatsCard title="Average Booking Value" value={`₦${parseFloat(analytics.kpis.averageBookingValue).toLocaleString()}`} />
+            <StatsCard title="Busiest Day" value={analytics.kpis.busiestDays.length > 0 ? analytics.kpis.busiestDays[0].day : 'N/A'} />
+          </div>
+
+          {/* Revenue Breakdown */}
+          <div className="mb-8">
+            <RevenueChart data={analytics.revenueDetails.breakdownByHall} />
+          </div>
+
+          {/* Recent Bookings */}
+          <div>
+            <BookingsTable
+              bookings={analytics.recentBookings.bookings}
+              pagination={analytics.recentBookings.pagination}
+              onPageChange={setCurrentPage}
+            />
+          </div>
+        </>
+      )}
     </div>
   );
 };
