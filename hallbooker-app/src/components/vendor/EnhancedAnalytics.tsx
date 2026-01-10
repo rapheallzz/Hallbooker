@@ -149,7 +149,7 @@ const EnhancedAnalytics = () => {
       });
       if (selectedHall) params.append('hallId', selectedHall._id);
 
-      const response = await api.get(`https://hallbooker.onrender.com/api/v2/analytics/hall-owner?${params.toString()}`);
+      const response = await api.get(`/v2/analytics/hall-owner?${params.toString()}`);
       if (response.data?.success) setData(response.data.data);
       else throw new Error(response.data.message || 'Failed to fetch');
     } catch (err: any) {
