@@ -52,7 +52,7 @@ const AdminEnhancedAnalytics = () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({ startDate: formatDate(dateRange[0].startDate, 'yyyy-MM-dd'), endDate: formatDate(dateRange[0].endDate, 'yyyy-MM-dd') });
-      const response = await api.get(`/v2/analytics/super-admin?${params.toString()}`);
+      const response = await api.get(`../v2/analytics/super-admin?${params.toString()}`);
       if (response.data?.success) {
         setData(response.data.data);
       } else {
