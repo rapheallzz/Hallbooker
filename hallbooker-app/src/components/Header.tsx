@@ -55,22 +55,33 @@ const Header = () => {
   const dashboardUrl = user?.role?.includes('hall-owner') ? '/vendor/dashboard' : '/bookings';
 
   const handleRoleSwitch = async (role: string) => {
+    Swal.fire({
+      title: "Switching Role",
+      text: "Please wait...",
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+    });
+
     try {
-      const response = await api.post('/auth/switch-role', { role });
+      const response = await api.post('/auth/switch-role', { role }, { timeout: 15000 }); // 15 second timeout
       const { accessToken } = response.data.data;
       updateToken(accessToken);
-
-      // Redirect based on the new role
-      console.log(`Redirecting to /admin/dashboard for role: ${role}`);
-      if (role === 'super-admin') {
-        router.push('/admin/dashboard');
-      } else if (role === 'hall-owner' || role === 'staff') {
-        router.push('/vendor/dashboard');
-      } else {
-        router.push('/');
-      }
+      // No need to close Swal on success, redirection will unmount it.
     } catch (error: any) {
-      console.error("Failed to switch role", error.response?.data || error.message);
+      let errorMessage = 'An error occurred. Please try again.';
+      if (error.code === 'ECONNABORTED') {
+        errorMessage = 'The request timed out. Please try again.';
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+
+      Swal.fire({
+        icon: 'error',
+        title: 'Role Switch Failed',
+        text: errorMessage,
+      });
     }
   };
 
