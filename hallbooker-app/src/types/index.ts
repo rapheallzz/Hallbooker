@@ -51,3 +51,10 @@ export interface Hall {
     address?: string;
   };
 }
+
+export interface Notification {
+  _id: string;
+  message: string;
+  read: boolean;
+  createdAt: string;
+}
