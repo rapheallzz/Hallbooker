@@ -21,7 +21,7 @@ const NotificationDropdown = () => {
     setLoading(true);
     try {
       const response = await api.get("/notifications");
-      setNotifications(response.data.data);
+      setNotifications(response.data.data.notifications || []);
     } catch (error) {
       console.error("Failed to fetch notifications:", error);
     } finally {
