@@ -21,7 +21,7 @@ const NotificationDropdown = () => {
     setLoading(true);
     try {
       const response = await api.get("/notifications");
-      setNotifications(response.data.data.notifications || []);
+      setNotifications(response.data.data);
     } catch (error) {
       console.error("Failed to fetch notifications:", error);
     } finally {
@@ -37,7 +37,7 @@ const NotificationDropdown = () => {
 
   const handleMarkAsRead = async (notificationId: string) => {
     try {
-      await api.patch(`/notifications/${notificationId}/read`);
+      await api.post(`/notifications/${notificationId}/read`);
       fetchNotifications();
     } catch (error) {
       console.error("Failed to mark notification as read:", error);
@@ -46,7 +46,7 @@ const NotificationDropdown = () => {
 
   const handleMarkAsUnread = async (notificationId: string) => {
     try {
-      await api.patch(`/notifications/${notificationId}/unread`);
+      await api.post(`/notifications/${notificationId}/unread`);
       fetchNotifications();
     } catch (error) {
       console.error("Failed to mark notification as unread:", error);
@@ -55,7 +55,7 @@ const NotificationDropdown = () => {
 
   const handleMarkAllAsRead = async () => {
     try {
-      await api.patch("/notifications/read-all");
+      await api.post("/notifications/read-all");
       fetchNotifications();
     } catch (error) {
       console.error("Failed to mark all notifications as read:", error);
