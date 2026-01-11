@@ -37,7 +37,7 @@ const NotificationsPage = () => {
 
   const handleMarkAsRead = async (notificationId: string) => {
     try {
-      await api.post(`/notifications/${notificationId}/read`);
+      await api.patch(`/notifications/${notificationId}/read`);
       fetchNotifications();
     } catch (error) {
       console.error("Failed to mark notification as read:", error);
@@ -46,7 +46,7 @@ const NotificationsPage = () => {
 
   const handleMarkAsUnread = async (notificationId: string) => {
     try {
-      await api.post(`/notifications/${notificationId}/unread`);
+      await api.patch(`/notifications/${notificationId}/unread`);
       fetchNotifications();
     } catch (error) {
       console.error("Failed to mark notification as unread:", error);
