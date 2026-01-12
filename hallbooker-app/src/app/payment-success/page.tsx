@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle } from "lucide-react";
-
 import api from "@/services/api";
 
 // Define a type for the booking data for type safety
@@ -14,7 +13,7 @@ interface BookingDetails {
     _id: string;
     name: string;
     location: string;
-  } | string;
+  };
   bookingId?: string;
   reservationId?: string;
   startTime?: string;
@@ -22,70 +21,83 @@ interface BookingDetails {
   bookingDates?: { startTime: string; endTime: string }[];
   totalPrice: number;
   selectedFacilities?: {
-    name: string;
+    facility: {
+        name: string;
+    }
     quantity: number;
     cost: number;
   }[];
 }
 
-const BookingSuccessfulPage = () => {
-  const [bookingDetails, setBookingDetails] = useState<BookingDetails | null>(
-    null
-  );
+const PaymentSuccessContent = () => {
+  const [details, setDetails] = useState<BookingDetails | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const searchParams = useSearchParams();
   const router = useRouter();
 
   useEffect(() => {
-    const fetchData = async () => {
-      const storedBookingData = localStorage.getItem("bookingConfirmation");
-      if (storedBookingData) {
-        try {
-          const data = JSON.parse(storedBookingData);
-
-          // If hall is just an ID, fetch the full hall details
-          if (data.hall && typeof data.hall === 'string') {
-            try {
-              const hallResponse = await api.get(`/halls/${data.hall}`);
-              data.hall = hallResponse.data.data;
-            } catch (hallError) {
-              console.error("Failed to fetch hall details", hallError);
-              // Proceed with just the ID
-            }
-          }
-
-          setBookingDetails(data);
-          localStorage.removeItem("bookingConfirmation");
-        } catch (error) {
-          console.error("Failed to parse booking data from localStorage", error);
-          router.push("/");
-        }
+    const fetchDetails = async () => {
+      const bookingId = searchParams.get("bookingId");
+      const reservationId = searchParams.get("reservationId");
+      let endpoint = "";
+      if (bookingId) {
+        endpoint = `/bookings/${bookingId}`;
+      } else if (reservationId) {
+        endpoint = `/reservations/${reservationId}`;
       } else {
         router.push("/");
+        return;
       }
-      setLoading(false);
+
+      try {
+        const response = await api.get(endpoint);
+        setDetails(response.data.data);
+      } catch (err) {
+        console.error("Failed to fetch details", err);
+        setError("Failed to load booking/reservation details.");
+        // Optional: redirect on error after a delay
+        // setTimeout(() => router.push('/'), 5000);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    fetchData();
-  }, [router]);
+    fetchDetails();
+  }, [searchParams, router]);
 
   const handlePrint = () => {
     window.print();
   };
 
-  if (loading || !bookingDetails) {
+  if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <p>Loading booking details...</p>
+        <p>Loading details...</p>
       </div>
     );
   }
 
-  const displayId = bookingDetails.reservationId || bookingDetails.bookingId;
-  const startTime = bookingDetails.startTime || bookingDetails.bookingDates?.[0]?.startTime;
-  const endTime = bookingDetails.endTime || bookingDetails.bookingDates?.[0]?.endTime;
-  const hallName = typeof bookingDetails.hall === 'object' ? bookingDetails.hall.name : 'Not Available';
-  const hallLocation = typeof bookingDetails.hall === 'object' ? bookingDetails.hall.location : 'Not Available';
+  if (error) {
+    return (
+      <div className="flex flex-col justify-center items-center min-h-screen text-center">
+        <p className="text-red-500 text-lg">{error}</p>
+        <Link href="/" className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+            Go to Homepage
+        </Link>
+      </div>
+    );
+  }
 
+  if (!details) {
+    return null; // Or some fallback UI
+  }
+
+  const displayId = details.reservationId || details.bookingId;
+  const startTime = details.startTime || details.bookingDates?.[0]?.startTime;
+  const endTime = details.endTime || details.bookingDates?.[0]?.endTime;
+  const hallName = details.hall?.name || 'Not Available';
+  const hallLocation = details.hall?.location || 'Not Available';
 
   return (
     <div className="bg-gray-50 min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -93,10 +105,10 @@ const BookingSuccessfulPage = () => {
         <div className="text-center">
           <CheckCircle className="mx-auto h-12 w-12 text-green-500" />
           <h1 className="mt-4 text-3xl font-extrabold text-gray-900">
-            Booking Confirmed!
+            Payment Successful!
           </h1>
           <p className="mt-2 text-md text-gray-600">
-            Thank you. Your transaction was successful.
+            Thank you. Your transaction was successful and your booking is confirmed.
           </p>
         </div>
 
@@ -134,20 +146,20 @@ const BookingSuccessfulPage = () => {
             </div>)}
           </dl>
 
-          {bookingDetails.selectedFacilities && bookingDetails.selectedFacilities.length > 0 && (
+          {details.selectedFacilities && details.selectedFacilities.length > 0 && (
             <div className="mt-8">
               <h3 className="text-lg font-medium text-gray-900">
                 Selected Facilities
               </h3>
               <ul className="mt-4 border border-gray-200 rounded-md divide-y divide-gray-200">
-                {bookingDetails.selectedFacilities.map((facility, index) => (
+                {details.selectedFacilities.map((facility, index) => (
                   <li
                     key={index}
                     className="pl-4 pr-6 py-3 flex items-center justify-between text-sm"
                   >
                     <div className="flex-1 flex items-center">
                       <span className="font-medium text-gray-800">
-                        {facility.name} (x{facility.quantity})
+                        {facility.facility.name} (x{facility.quantity})
                       </span>
                     </div>
                     <span className="text-gray-600">
@@ -163,7 +175,7 @@ const BookingSuccessfulPage = () => {
             <div className="flex justify-end items-center">
               <p className="text-lg font-bold text-gray-900">Total Price:</p>
               <p className="ml-4 text-2xl font-bold text-primary">
-                ₦{(bookingDetails.totalPrice || 0).toLocaleString()}
+                ₦{(details.totalPrice || 0).toLocaleString()}
               </p>
             </div>
           </div>
@@ -194,4 +206,13 @@ const BookingSuccessfulPage = () => {
   );
 };
 
-export default BookingSuccessfulPage;
+
+const PaymentSuccessPage = () => {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <PaymentSuccessContent />
+        </Suspense>
+    )
+}
+
+export default PaymentSuccessPage;
