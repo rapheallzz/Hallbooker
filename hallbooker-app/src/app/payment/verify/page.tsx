@@ -27,8 +27,7 @@ const VerifyPaymentContent = () => {
             response = await api.get(`/payments/verify?paymentReference=${reference}`);
           }
 
-          if (response.data.success && response.data.data) {
-            localStorage.setItem('bookingConfirmation', JSON.stringify(response.data.data));
+          if (response.data.success) {
             router.push('/booking-successful');
           } else {
             setPaymentStatus({ status: 'error', message: response.data.message || 'Payment verification failed.' });
