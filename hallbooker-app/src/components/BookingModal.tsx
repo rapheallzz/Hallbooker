@@ -189,11 +189,13 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose, bookingM
 
       if (paymentType === 'reserve') {
         const reservationResponse = await api.post('/reservations', payload);
+        localStorage.setItem('bookingConfirmation', JSON.stringify(reservationResponse.data.data));
         const reservationId = reservationResponse.data.data.reservationId;
         const paymentResponse = await api.post(`/payments/reservations/${reservationId}/pay`);
         paymentUrl = `${paymentResponse.data.data.checkoutUrl}?type=reservation`;
       } else {
         const bookingResponse = await api.post('/bookings', payload);
+        localStorage.setItem('bookingConfirmation', JSON.stringify(bookingResponse.data.data));
         const bookingId = bookingResponse.data.data.bookingId;
         const paymentResponse = await api.post(`/payments/initialize/${bookingId}`);
         paymentUrl = paymentResponse.data.data.checkoutUrl;

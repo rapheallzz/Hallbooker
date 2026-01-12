@@ -5,18 +5,23 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle } from "lucide-react";
 
+import api from "@/services/api";
+
 // Define a type for the booking data for type safety
 interface BookingDetails {
   _id: string;
   hall?: {
+    _id: string;
     name: string;
     location: string;
-  };
-  bookingId: string;
-  startTime: string;
-  endTime: string;
+  } | string;
+  bookingId?: string;
+  reservationId?: string;
+  startTime?: string;
+  endTime?: string;
+  bookingDates?: { startTime: string; endTime: string }[];
   totalPrice: number;
-  selectedFacilities: {
+  selectedFacilities?: {
     name: string;
     quantity: number;
     cost: number;
@@ -31,24 +36,36 @@ const BookingSuccessfulPage = () => {
   const router = useRouter();
 
   useEffect(() => {
-    // Retrieve booking data from localStorage
-    const storedBookingData = localStorage.getItem("bookingConfirmation");
-    if (storedBookingData) {
-      try {
-        const data = JSON.parse(storedBookingData);
-        setBookingDetails(data);
-        // Clean up the localStorage after retrieving the data
-        localStorage.removeItem("bookingConfirmation");
-      } catch (error) {
-        console.error("Failed to parse booking data from localStorage", error);
-        // If data is malformed, redirect to home
+    const fetchData = async () => {
+      const storedBookingData = localStorage.getItem("bookingConfirmation");
+      if (storedBookingData) {
+        try {
+          const data = JSON.parse(storedBookingData);
+
+          // If hall is just an ID, fetch the full hall details
+          if (data.hall && typeof data.hall === 'string') {
+            try {
+              const hallResponse = await api.get(`/halls/${data.hall}`);
+              data.hall = hallResponse.data.data;
+            } catch (hallError) {
+              console.error("Failed to fetch hall details", hallError);
+              // Proceed with just the ID
+            }
+          }
+
+          setBookingDetails(data);
+          localStorage.removeItem("bookingConfirmation");
+        } catch (error) {
+          console.error("Failed to parse booking data from localStorage", error);
+          router.push("/");
+        }
+      } else {
         router.push("/");
       }
-    } else {
-      // If no data is found, redirect to the home page as this page shouldn't be accessed directly
-      router.push("/");
-    }
-    setLoading(false);
+      setLoading(false);
+    };
+
+    fetchData();
   }, [router]);
 
   const handlePrint = () => {
@@ -63,6 +80,13 @@ const BookingSuccessfulPage = () => {
     );
   }
 
+  const displayId = bookingDetails.reservationId || bookingDetails.bookingId;
+  const startTime = bookingDetails.startTime || bookingDetails.bookingDates?.[0]?.startTime;
+  const endTime = bookingDetails.endTime || bookingDetails.bookingDates?.[0]?.endTime;
+  const hallName = typeof bookingDetails.hall === 'object' ? bookingDetails.hall.name : 'Not Available';
+  const hallLocation = typeof bookingDetails.hall === 'object' ? bookingDetails.hall.location : 'Not Available';
+
+
   return (
     <div className="bg-gray-50 min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-2xl w-full bg-white shadow-lg rounded-lg p-8">
@@ -72,45 +96,45 @@ const BookingSuccessfulPage = () => {
             Booking Confirmed!
           </h1>
           <p className="mt-2 text-md text-gray-600">
-            Thank you for your booking. Here are your booking details:
+            Thank you. Your transaction was successful.
           </p>
         </div>
 
         <div className="mt-8 border-t border-gray-200 pt-8">
           <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-8">
             <div className="col-span-1">
-              <dt className="text-sm font-medium text-gray-500">Booking ID</dt>
+              <dt className="text-sm font-medium text-gray-500">Reference ID</dt>
               <dd className="mt-1 text-md text-gray-900">
-                {bookingDetails.bookingId}
+                {displayId}
               </dd>
             </div>
             <div className="col-span-1">
               <dt className="text-sm font-medium text-gray-500">Hall Name</dt>
               <dd className="mt-1 text-md text-gray-900">
-                {bookingDetails.hall?.name || 'Not Available'}
+                {hallName}
               </dd>
             </div>
             <div className="col-span-2">
               <dt className="text-sm font-medium text-gray-500">Location</dt>
               <dd className="mt-1 text-md text-gray-900">
-                {bookingDetails.hall?.location || 'Not Available'}
+                {hallLocation}
               </dd>
             </div>
-            <div className="col-span-1">
+            {startTime && (<div className="col-span-1">
               <dt className="text-sm font-medium text-gray-500">Start Time</dt>
               <dd className="mt-1 text-md text-gray-900">
-                {new Date(bookingDetails.startTime).toLocaleString()}
+                {new Date(startTime).toLocaleString()}
               </dd>
-            </div>
-            <div className="col-span-1">
+            </div>)}
+            {endTime && (<div className="col-span-1">
               <dt className="text-sm font-medium text-gray-500">End Time</dt>
               <dd className="mt-1 text-md text-gray-900">
-                {new Date(bookingDetails.endTime).toLocaleString()}
+                {new Date(endTime).toLocaleString()}
               </dd>
-            </div>
+            </div>)}
           </dl>
 
-          {bookingDetails.selectedFacilities?.length > 0 && (
+          {bookingDetails.selectedFacilities && bookingDetails.selectedFacilities.length > 0 && (
             <div className="mt-8">
               <h3 className="text-lg font-medium text-gray-900">
                 Selected Facilities
@@ -139,7 +163,7 @@ const BookingSuccessfulPage = () => {
             <div className="flex justify-end items-center">
               <p className="text-lg font-bold text-gray-900">Total Price:</p>
               <p className="ml-4 text-2xl font-bold text-primary">
-                ₦{bookingDetails.totalPrice.toLocaleString()}
+                ₦{(bookingDetails.totalPrice || 0).toLocaleString()}
               </p>
             </div>
           </div>
