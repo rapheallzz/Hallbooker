@@ -21,7 +21,9 @@ const VerifyPaymentContent = () => {
       const verify = async () => {
         try {
           let response;
-          if (type === 'reservation') {
+          if (type === 'conversion') {
+            response = await api.get(`/reservations/verify-conversion?paymentReference=${reference}`);
+          } else if (type === 'reservation') {
             response = await api.get(`/reservations/verify?paymentReference=${reference}`);
           } else {
             response = await api.get(`/payments/verify?paymentReference=${reference}`);
