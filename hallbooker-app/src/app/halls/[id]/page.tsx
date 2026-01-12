@@ -317,7 +317,7 @@ const HallDetailPage = () => {
                     setBookingMode('reserve');
                     openBookingModal();
                   }}
-                  className="w-full bg-transparent border border-[#B68945] text-[#B68945] font-bold py-3 px-4 rounded-lg transition duration-300"
+                  className="w-full bg-transparent border border-[#B68945] text-[#B68945] font-bold py-3 px-4 rounded-lg transition duration-300 hover:bg-[#B68945] hover:text-white"
                 >
                   Reserve this hall
                 </button>

@@ -189,8 +189,8 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose, bookingM
 
       if (paymentType === 'reserve') {
         const reservationResponse = await api.post('/reservations', payload);
-        const bookingId = reservationResponse.data.data.bookingId;
-        const paymentResponse = await api.post(`/payments/reservations/${bookingId}/pay`);
+        const reservationId = reservationResponse.data.data.reservationId;
+        const paymentResponse = await api.post(`/payments/reservations/${reservationId}/pay`);
         paymentUrl = `${paymentResponse.data.data.checkoutUrl}?type=reservation`;
       } else {
         const bookingResponse = await api.post('/bookings', payload);
@@ -397,6 +397,12 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose, bookingM
                     <span className="text-gray-800">Total Price:</span>
                     <span className="text-gray-900">₦{totalPrice.toLocaleString()}</span>
                 </div>
+                 {bookingMode === 'reserve' && (
+                  <div className="flex justify-between mt-2">
+                    <span className="text-gray-600">Reservation Fee:</span>
+                    <span className="font-medium text-gray-900">₦0</span>
+                  </div>
+                )}
               </div>
             </div>
           )}
