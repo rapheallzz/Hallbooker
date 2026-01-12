@@ -110,7 +110,7 @@ const BookingSuccessfulPage = () => {
             </div>
           </dl>
 
-          {bookingDetails.selectedFacilities.length > 0 && (
+          {bookingDetails.selectedFacilities?.length > 0 && (
             <div className="mt-8">
               <h3 className="text-lg font-medium text-gray-900">
                 Selected Facilities

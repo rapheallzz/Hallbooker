@@ -28,7 +28,11 @@ const VerifyPaymentContent = () => {
           }
 
           if (response.data.success && response.data.data) {
-            localStorage.setItem('bookingConfirmation', JSON.stringify(response.data.data));
+            const bookingData = response.data.data;
+            if (!bookingData.selectedFacilities) {
+              bookingData.selectedFacilities = [];
+            }
+            localStorage.setItem('bookingConfirmation', JSON.stringify(bookingData));
             router.push('/booking-successful');
           } else {
             setPaymentStatus({ status: 'error', message: response.data.message || 'Payment verification failed.' });
