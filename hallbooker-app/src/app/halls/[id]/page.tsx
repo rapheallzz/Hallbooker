@@ -24,6 +24,7 @@ const HallDetailPage = () => {
   const [error, setError] = useState('');
   const [recommendationsUnavailable, setRecommendationsUnavailable] = useState(false);
   const { isBookingModalOpen, openBookingModal, closeBookingModal } = useUI();
+  const [bookingMode, setBookingMode] = useState('book');
   const [isDemoModalOpen, setDemoModalOpen] = useState(false);
   const [ownerContact, setOwnerContact] = useState({ phone: '', whatsappNumber: '' });
   const [isMediaViewerOpen, setMediaViewerOpen] = useState(false);
@@ -310,9 +311,21 @@ const HallDetailPage = () => {
                   <p className="text-2xl font-bold text-gray-500">Price not available</p>
                 )}
               </div>
-              <div className="mt-4">
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-2">
                 <button
-                  onClick={openBookingModal}
+                  onClick={() => {
+                    setBookingMode('reserve');
+                    openBookingModal();
+                  }}
+                  className="w-full bg-transparent border border-[#B68945] text-[#B68945] font-bold py-3 px-4 rounded-lg transition duration-300"
+                >
+                  Reserve this hall
+                </button>
+                <button
+                  onClick={() => {
+                    setBookingMode('book');
+                    openBookingModal();
+                  }}
                   className="w-full bg-[#295FA7] hover:bg-[#204a8a] text-white font-bold py-3 px-4 rounded-lg transition duration-300"
                 >
                   Book Now
@@ -337,6 +350,7 @@ const HallDetailPage = () => {
             hallId={hall.id}
             isOpen={isBookingModalOpen}
             onClose={closeBookingModal}
+            bookingMode={bookingMode}
           />
           <DemoModal
             isOpen={isDemoModalOpen}

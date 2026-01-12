@@ -14,9 +14,10 @@ interface BookingModalProps {
   hallId: string;
   isOpen: boolean;
   onClose: () => void;
+  bookingMode?: 'book' | 'reserve';
 }
 
-const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
+const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose, bookingMode = 'book' }) => {
   const [hall, setHall] = useState<Hall | null>(null);
   const [step, setStep] = useState(1);
   const [selectedDates, setSelectedDates] = useState<Date[] | undefined>(undefined);
@@ -133,20 +134,14 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
     return facility.cost * quantity;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (step < 3) {
-      nextStep();
-      return;
-    }
-
+  const handlePayment = async (paymentType: 'book' | 'reserve') => {
     if (!user) {
       Swal.fire({
         title: 'Authentication Required',
-        text: 'Please log in to continue with your booking.',
+        text: 'Please log in to continue.',
         icon: 'info',
-        confirmButtonText: 'Log In'
-      }).then((result) => {
+        confirmButtonText: 'Log In',
+      }).then(result => {
         if (result.isConfirmed) {
           router.push('/auth/login');
         }
@@ -159,7 +154,7 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
 
     try {
       if (!selectedDates || selectedDates.length === 0) {
-        setError("Please select at least one date.");
+        setError('Please select at least one date.');
         setLoading(false);
         return;
       }
@@ -168,16 +163,14 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
       const [endHour, endMinute] = endTime.split(':').map(Number);
 
       const bookingDates = selectedDates.map(date => {
-          const startDate = new Date(date);
-          startDate.setHours(startHour, startMinute, 0, 0);
-
-          const endDate = new Date(date);
-          endDate.setHours(endHour, endMinute, 0, 0);
-
-          return {
-              startTime: startDate.toISOString(),
-              endTime: endDate.toISOString()
-          };
+        const startDate = new Date(date);
+        startDate.setHours(startHour, startMinute, 0, 0);
+        const endDate = new Date(date);
+        endDate.setHours(endHour, endMinute, 0, 0);
+        return {
+          startTime: startDate.toISOString(),
+          endTime: endDate.toISOString(),
+        };
       });
 
       const facilitiesPayload = selectedFacilities.map(f => ({
@@ -185,28 +178,48 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
         quantity: f.quantity,
       }));
 
-      const bookingResponse = await api.post('/bookings', {
-        hallId: hallId,
+      const payload = {
+        hallId,
         bookingDates,
         eventDetails,
         selectedFacilities: facilitiesPayload,
-      });
+      };
 
-      const bookingId = bookingResponse.data.data.bookingId;
-      const paymentResponse = await api.post(`/payments/initialize/${bookingId}`);
-      const { checkoutUrl } = paymentResponse.data.data;
+      let paymentUrl;
 
-      if (checkoutUrl) {
-        window.location.href = checkoutUrl;
+      if (paymentType === 'reserve') {
+        const reservationResponse = await api.post('/reservations', payload);
+        const bookingId = reservationResponse.data.data.bookingId;
+        const paymentResponse = await api.post(`/payments/reservations/${bookingId}/pay`);
+        paymentUrl = `${paymentResponse.data.data.checkoutUrl}?type=reservation`;
+      } else {
+        const bookingResponse = await api.post('/bookings', payload);
+        const bookingId = bookingResponse.data.data.bookingId;
+        const paymentResponse = await api.post(`/payments/initialize/${bookingId}`);
+        paymentUrl = paymentResponse.data.data.checkoutUrl;
+      }
+
+      if (paymentUrl) {
+        window.location.href = paymentUrl;
       } else {
         setError('Could not retrieve payment URL. Please try again.');
       }
     } catch (err: any) {
-      console.error('Booking failed:', err);
-      const errorMessage = err.response?.data?.message || 'An unexpected error occurred. Please try again.';
+      const errorMessage = err.response?.data?.message || 'An unexpected error occurred.';
       setError(errorMessage);
+      Swal.fire('Error', errorMessage, 'error');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleBookNow = () => handlePayment('book');
+  const handleReserveNow = () => handlePayment('reserve');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (step < 3) {
+      nextStep();
     }
   };
 
@@ -398,13 +411,38 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
                 Back
               </button>
             )}
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-5 py-2 text-sm font-semibold text-white bg-[#295FA7] border border-transparent rounded-lg shadow-sm hover:bg-[#204a8a] transition-colors duration-200 disabled:opacity-50"
-            >
-              {step === 3 ? (loading ? 'Processing...' : 'Proceed to Payment') : 'Next'}
-            </button>
+            {step === 3 ? (
+              <div className="flex gap-x-2">
+                <button
+                  type="button"
+                  onClick={handleReserveNow}
+                  disabled={loading}
+                  className={`px-5 py-2 text-sm font-semibold border rounded-lg shadow-sm transition-colors duration-200 disabled:opacity-50 ${
+                    bookingMode === 'reserve'
+                      ? 'bg-[#B68945] text-white border-[#B68945]'
+                      : 'bg-transparent text-[#B68945] border-[#B68945]'
+                  }`}
+                >
+                  {loading ? 'Processing...' : 'Reserve with Part Payment'}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleBookNow}
+                  disabled={loading}
+                  className="px-5 py-2 text-sm font-semibold text-white bg-[#295FA7] border border-transparent rounded-lg shadow-sm hover:bg-[#204a8a] transition-colors duration-200 disabled:opacity-50"
+                >
+                  {loading ? 'Processing...' : 'Pay in Full'}
+                </button>
+              </div>
+            ) : (
+              <button
+                type="submit"
+                disabled={loading}
+                className="px-5 py-2 text-sm font-semibold text-white bg-[#295FA7] border border-transparent rounded-lg shadow-sm hover:bg-[#204a8a] transition-colors duration-200 disabled:opacity-50"
+              >
+                Next
+              </button>
+            )}
           </div>
         </form>
       </div>
