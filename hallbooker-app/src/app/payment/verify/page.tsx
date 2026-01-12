@@ -18,31 +18,24 @@ const VerifyPaymentContent = () => {
     const type = searchParams.get('type'); // To distinguish between booking and reservation
 
     if (reference) {
-      const verify = async () => {
-        try {
-          let response;
-          if (type === 'conversion') {
-            response = await api.get(`/reservations/verify-conversion?paymentReference=${reference}`);
-          } else if (type === 'reservation') {
-            response = await api.get(`/reservations/verify?paymentReference=${reference}`);
-          } else {
-            response = await api.get(`/payments/verify?paymentReference=${reference}`);
-          }
+      const baseUrl = api.defaults.baseURL;
+      let verificationUrl = '';
 
-          if (response.data.success) {
-            router.push('/booking-successful');
-          } else {
-            setPaymentStatus({ status: 'error', message: response.data.message || 'Payment verification failed.' });
-          }
-        } catch (error) {
-          setPaymentStatus({ status: 'error', message: 'An error occurred during payment verification.' });
-        }
-      };
-      verify();
+      if (type === 'conversion') {
+        verificationUrl = `${baseUrl}/reservations/verify-conversion?paymentReference=${reference}`;
+      } else if (type === 'reservation') {
+        verificationUrl = `${baseUrl}/reservations/verify?paymentReference=${reference}`;
+      } else {
+        verificationUrl = `${baseUrl}/payments/verify?paymentReference=${reference}`;
+      }
+
+      // Redirect for verification. The browser will follow the server's redirect.
+      window.location.href = verificationUrl;
+
     } else {
       setPaymentStatus({ status: 'error', message: 'No payment reference found.' });
     }
-  }, [searchParams, router]);
+  }, [searchParams]);
 
   const renderIcon = () => {
     switch (paymentStatus.status) {
