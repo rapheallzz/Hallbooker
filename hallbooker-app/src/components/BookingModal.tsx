@@ -14,9 +14,10 @@ interface BookingModalProps {
   hallId: string;
   isOpen: boolean;
   onClose: () => void;
+  isReservation?: boolean;
 }
 
-const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
+const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose, isReservation = false }) => {
   const [hall, setHall] = useState<Hall | null>(null);
   const [step, setStep] = useState(1);
   const [selectedDates, setSelectedDates] = useState<Date[] | undefined>(undefined);
@@ -133,8 +134,87 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
     return facility.cost * quantity;
   };
 
+  const handleReservation = async () => {
+    if (!user) {
+      Swal.fire({
+        title: 'Authentication Required',
+        text: 'Please log in to reserve this hall.',
+        icon: 'info',
+        confirmButtonText: 'Log In'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          router.push('/auth/login');
+        }
+      });
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      if (!selectedDates || selectedDates.length === 0) {
+        setError("Please select at least one date.");
+        setLoading(false);
+        return;
+      }
+
+      const [startHour, startMinute] = startTime.split(':').map(Number);
+      const [endHour, endMinute] = endTime.split(':').map(Number);
+
+      const bookingDates = selectedDates.map(date => {
+        const startDate = new Date(date);
+        startDate.setHours(startHour, startMinute, 0, 0);
+        const endDate = new Date(date);
+        endDate.setHours(endHour, endMinute, 0, 0);
+        return {
+          startTime: startDate.toISOString(),
+          endTime: endDate.toISOString()
+        };
+      });
+
+      const facilitiesPayload = selectedFacilities.map(f => ({
+        facilityId: f.facility?._id,
+        quantity: f.quantity,
+      }));
+
+      const reservationResponse = await api.post('/reservations', {
+        hallId: hallId,
+        bookingDates,
+        eventDetails,
+        selectedFacilities: facilitiesPayload,
+      });
+
+      const reservationId = reservationResponse.data.data._id;
+      const paymentResponse = await api.post(`/payments/reservations/${reservationId}/pay`);
+      const { checkoutUrl } = paymentResponse.data.data;
+
+      if (checkoutUrl) {
+        window.location.href = checkoutUrl;
+      } else {
+        setError('Could not retrieve payment URL. Please try again.');
+      }
+    } catch (err: any) {
+      console.error('Reservation failed:', err);
+      const errorMessage = err.response?.data?.message || 'An unexpected error occurred. Please try again.';
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (isReservation) {
+      if (step < 3) {
+        nextStep();
+        return;
+      }
+      handleReservation();
+      return;
+    }
+
     if (step < 3) {
       nextStep();
       return;
@@ -352,7 +432,9 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
 
           {step === 3 && (
             <div className="bg-gray-50 p-6 rounded-lg">
-              <h3 className="text-xl font-semibold text-gray-900 mb-4 border-b pb-2">Booking Summary</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-4 border-b pb-2">
+                {isReservation ? 'Reservation Summary' : 'Booking Summary'}
+              </h3>
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Dates:</span>
@@ -363,13 +445,13 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
                   <span className="font-medium text-gray-900">{eventDetails}</span>
                 </div>
                 <div className="border-t my-2"></div>
-                {hall && (
+                {hall && !isReservation && (
                   <div className="flex justify-between">
                     <span className="text-gray-600">Hall Rental:</span>
                     <span className="font-medium text-gray-900">₦{((hall.pricing.dailyRate || 0) * (selectedDates?.length || 1)).toLocaleString()}</span>
                   </div>
                 )}
-                {selectedFacilities.length > 0 && (
+                {selectedFacilities.length > 0 && !isReservation && (
                   <div className="pt-2">
                     <h4 className="font-medium text-gray-800 mb-1">Selected Facilities:</h4>
                     {selectedFacilities.map(f => (
@@ -381,9 +463,16 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
                   </div>
                 )}
                 <div className="flex justify-between font-bold text-lg border-t pt-2 mt-2">
-                    <span className="text-gray-800">Total Price:</span>
-                    <span className="text-gray-900">₦{totalPrice.toLocaleString()}</span>
+                  <span className="text-gray-800">{isReservation ? 'Reservation Fee:' : 'Total Price:'}</span>
+                  <span className="text-gray-900">
+                    ₦{isReservation ? (hall?.pricing.reservationFee?.toLocaleString() || 'N/A') : totalPrice.toLocaleString()}
+                  </span>
                 </div>
+                {isReservation && (
+                  <p className="text-xs text-gray-500 mt-2">
+                    This is a partial payment to reserve the hall. The remaining balance will be due later.
+                  </p>
+                )}
               </div>
             </div>
           )}
@@ -403,7 +492,7 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose }) => {
               disabled={loading}
               className="px-5 py-2 text-sm font-semibold text-white bg-[#295FA7] border border-transparent rounded-lg shadow-sm hover:bg-[#204a8a] transition-colors duration-200 disabled:opacity-50"
             >
-              {step === 3 ? (loading ? 'Processing...' : 'Proceed to Payment') : 'Next'}
+              {step === 3 ? (loading ? 'Processing...' : (isReservation ? 'Proceed to Reserve' : 'Proceed to Payment')) : 'Next'}
             </button>
           </div>
         </form>

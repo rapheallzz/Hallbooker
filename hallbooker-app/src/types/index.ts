@@ -41,6 +41,7 @@ export interface Hall {
   pricing: {
     dailyRate?: number;
     hourlyRate?: number;
+    reservationFee?: number;
   };
   openingHour?: number;
   closingHour?: number;

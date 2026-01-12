@@ -24,12 +24,17 @@ const HallDetailPage = () => {
   const [error, setError] = useState('');
   const [recommendationsUnavailable, setRecommendationsUnavailable] = useState(false);
   const { isBookingModalOpen, openBookingModal, closeBookingModal } = useUI();
+  const [isReservationModalOpen, setReservationModalOpen] = useState(false);
   const [isDemoModalOpen, setDemoModalOpen] = useState(false);
   const [ownerContact, setOwnerContact] = useState({ phone: '', whatsappNumber: '' });
   const [isMediaViewerOpen, setMediaViewerOpen] = useState(false);
   const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);
   const params = useParams();
   const { id } = params;
+
+  const handleReserveHall = () => {
+    setReservationModalOpen(true);
+  };
 
   const handleBookDemo = async () => {
     try {
@@ -320,6 +325,14 @@ const HallDetailPage = () => {
               </div>
               <div className="mt-2">
                 <button
+                  onClick={handleReserveHall}
+                  className="w-full border border-secondary text-secondary py-3 rounded-lg font-semibold hover:bg-secondary hover:text-white transition duration-300"
+                >
+                  Reserve this hall
+                </button>
+              </div>
+              <div className="mt-2">
+                <button
                   onClick={handleBookDemo}
                   className="w-full border border-gray-300 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-50 transition duration-300"
                 >
@@ -337,6 +350,13 @@ const HallDetailPage = () => {
             hallId={hall.id}
             isOpen={isBookingModalOpen}
             onClose={closeBookingModal}
+            isReservation={false}
+          />
+          <BookingModal
+            hallId={hall.id}
+            isOpen={isReservationModalOpen}
+            onClose={() => setReservationModalOpen(false)}
+            isReservation={true}
           />
           <DemoModal
             isOpen={isDemoModalOpen}
