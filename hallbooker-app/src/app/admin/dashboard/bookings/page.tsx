@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import api from '@/services/api';
 import AdminBookingDetailsModal from '@/components/admin/AdminBookingDetailsModal';
 import AdminBookingModal from '@/components/admin/AdminBookingModal';
+import ConversionModal from '@/components/shared/ConversionModal';
 import { Search } from 'lucide-react';
 import LoadingSpinner from '@/components/admin/LoadingSpinner';
 import Swal from 'sweetalert2';
@@ -39,10 +40,25 @@ interface Hall {
 
 const BOOKINGS_PER_PAGE = 10;
 
+interface Reservation {
+  _id: string;
+  walkInUserDetails?: {
+    fullName: string;
+  };
+  bookingDates: {
+    startTime: string;
+    endTime: string;
+  }[];
+  status: string;
+  paymentStatus?: string;
+}
+
 const BookingsPage = () => {
   const searchParams = useSearchParams();
   const hallIdFromQuery = searchParams.get('hallId');
+  const [activeTab, setActiveTab] = useState('bookings');
   const [allBookings, setAllBookings] = useState<Booking[]>([]);
+  const [reservations, setReservations] = useState<Reservation[]>([]);
   const [halls, setHalls] = useState<Hall[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -53,22 +69,34 @@ const BookingsPage = () => {
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isConversionModalOpen, setIsConversionModalOpen] = useState(false);
+  const [selectedReservationId, setSelectedReservationId] = useState<string | null>(null);
   const [expandedBookingId, setExpandedBookingId] = useState<string | null>(null);
 
   const fetchAllData = async () => {
     setLoading(true);
     try {
-      let bookingsRes;
-      if (selectedHall) {
-        bookingsRes = await api.get(`/halls/${selectedHall}/bookings`);
-        const normalizedBookings = bookingsRes.data.data.bookings.map((booking: any) => ({
-          ...booking,
-          hall: booking.hall,
-        }));
-        setAllBookings(normalizedBookings || []);
+      if (activeTab === 'bookings') {
+        let bookingsRes;
+        if (selectedHall) {
+          bookingsRes = await api.get(`/halls/${selectedHall}/bookings`);
+          const normalizedBookings = bookingsRes.data.data.bookings.map((booking: any) => ({
+            ...booking,
+            hall: booking.hall,
+          }));
+          setAllBookings(normalizedBookings || []);
+        } else {
+          bookingsRes = await api.get('/admin/bookings?limit=10000');
+          setAllBookings(bookingsRes.data.data.bookings || []);
+        }
       } else {
-        bookingsRes = await api.get('/admin/bookings?limit=10000');
-        setAllBookings(bookingsRes.data.data.bookings || []);
+        if (selectedHall) {
+          const reservationsRes = await api.get(`/reservations/halls/${selectedHall}`);
+          setReservations(reservationsRes.data.data.reservations || []);
+        } else {
+          // You might want a new endpoint for all reservations, for now, we clear it
+          setReservations([]);
+        }
       }
 
       if (!halls.length) {
@@ -86,7 +114,7 @@ const BookingsPage = () => {
 
   useEffect(() => {
     fetchAllData();
-  }, [selectedHall]);
+  }, [selectedHall, activeTab]);
 
   const filteredBookings = useMemo(() => {
     return allBookings
@@ -141,6 +169,8 @@ const BookingsPage = () => {
         endpoint = '/bookings/recurring';
       } else if (type === 'walk-in') {
         endpoint = '/bookings/walk-in';
+      } else if (type === 'reservation') {
+        endpoint = '/reservations/walk-in';
       }
       const response = await api.post(endpoint, formData);
 
@@ -151,9 +181,12 @@ const BookingsPage = () => {
 
       Swal.fire({
         icon: 'success',
-        title: 'Booking Created!',
-        text: 'The booking has been successfully created.',
+        title: type === 'reservation' ? 'Reservation Created!' : 'Booking Created!',
+        text: `The ${type} has been successfully created.`,
       });
+      if (type === 'reservation') {
+        setActiveTab('reservations');
+      }
       fetchAllData();
       setIsCreateModalOpen(false);
     } catch (error: any) {
@@ -179,9 +212,23 @@ const BookingsPage = () => {
       </div>
 
       <div className="bg-white p-6 shadow-lg rounded-lg">
+        <div className="flex border-b mb-4">
+          <button
+            className={`px-4 py-2 ${activeTab === 'bookings' ? 'border-b-2 border-primary text-primary' : 'text-gray-500'}`}
+            onClick={() => setActiveTab('bookings')}
+          >
+            Bookings
+          </button>
+          <button
+            className={`px-4 py-2 ${activeTab === 'reservations' ? 'border-b-2 border-primary text-primary' : 'text-gray-500'}`}
+            onClick={() => setActiveTab('reservations')}
+          >
+            Reservations
+          </button>
+        </div>
         {loading ? (
           <LoadingSpinner />
-        ) : (
+        ) : activeTab === 'bookings' ? (
           <>
             <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
               <div className="relative w-full md:w-1/3">
@@ -281,6 +328,52 @@ const BookingsPage = () => {
               </button>
             </div>
           </>
+        ) : (
+          <div className="overflow-x-auto shadow-sm border rounded-lg">
+            <table className="min-w-full bg-white">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Customer</th>
+                  <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Date</th>
+                  <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                  <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Payment Status</th>
+                  <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {reservations.length > 0 ? (
+                  reservations.map((reservation) => (
+                    <tr key={reservation._id}>
+                      <td className="py-3 px-4 text-sm text-gray-900">{reservation.walkInUserDetails?.fullName}</td>
+                      <td className="py-3 px-4 text-sm text-gray-900">
+                        <div><span className="font-semibold">From:</span> {new Date(reservation.bookingDates[0].startTime).toLocaleString()}</div>
+                        <div><span className="font-semibold">To:</span> {new Date(reservation.bookingDates[0].endTime).toLocaleString()}</div>
+                      </td>
+                      <td className="py-3 px-4 text-sm text-gray-900">{reservation.status}</td>
+                      <td className="py-3 px-4 text-sm text-gray-900">{reservation.paymentStatus}</td>
+                      <td className="py-3 px-4 text-sm">
+                        {reservation.status === 'ACTIVE' && (
+                          <button
+                            onClick={() => {
+                              setSelectedReservationId(reservation._id);
+                              setIsConversionModalOpen(true);
+                            }}
+                            className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
+                          >
+                            Convert to Booking
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={5} className="py-4 text-center text-gray-800">No reservations found.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
@@ -297,6 +390,14 @@ const BookingsPage = () => {
         onClose={() => setIsCreateModalOpen(false)}
         onSubmit={handleCreateBooking}
       />
+      {selectedReservationId && (
+        <ConversionModal
+          isOpen={isConversionModalOpen}
+          onClose={() => setIsConversionModalOpen(false)}
+          reservationId={selectedReservationId}
+          onSuccess={fetchAllData}
+        />
+      )}
     </div>
   );
 };
