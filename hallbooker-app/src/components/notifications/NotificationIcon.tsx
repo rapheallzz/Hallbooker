@@ -18,6 +18,7 @@ const NotificationIcon = () => {
         setUnreadCount(unread);
       } catch (error) {
         console.error("Failed to fetch notifications:", error);
+        setUnreadCount(0);
       }
     };
 
