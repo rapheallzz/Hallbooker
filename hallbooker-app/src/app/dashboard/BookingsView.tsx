@@ -11,7 +11,7 @@ const BookingsView = () => {
     const fetchBookings = async () => {
       try {
         const response = await api.get("/bookings/my-bookings");
-        setBookings(response.data.data);
+        setBookings(response.data.data.bookings || []);
       } catch (error) {
         console.error("Error fetching bookings:", error);
       }

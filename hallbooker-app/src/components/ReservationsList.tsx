@@ -25,11 +25,11 @@ const ReservationsList = () => {
     const fetchReservations = async () => {
       try {
         const response = await api.get('/reservations/my-reservations');
-        const reservationsData = response.data.data;
+        const reservationsData = response.data.data.reservations || [];
 
         // Fetch hall details for each reservation
         const reservationsWithHallDetails = await Promise.all(
-          reservationsData.map(async (reservation: Reservation) => {
+          (Array.isArray(reservationsData) ? reservationsData : []).map(async (reservation: Reservation) => {
             if (typeof reservation.hall === 'string') {
               try {
                 const hallResponse = await api.get(`/halls/${reservation.hall}`);
@@ -106,21 +106,29 @@ const ReservationsList = () => {
                   Status: <span className={`font-semibold ${
                     reservation.status === 'ACTIVE' ? 'text-green-600' :
                     reservation.status === 'CONVERTED' ? 'text-blue-600' : 'text-red-600'
-                  }`}>{reservation.status}</span>
+                  }`}>{reservation.status === 'CONVERTED' ? 'Fully Paid' : reservation.status}</span>
                 </p>
                 <p className="text-md font-semibold text-gray-900 mt-2">
                   Price: ₦{reservation.totalPrice.toLocaleString()}
                 </p>
               </div>
-              {reservation.status === 'ACTIVE' && (
-                <button
-                  onClick={() => handleCompleteBooking(reservation)}
-                  disabled={paymentLoading === reservation.reservationId}
-                  className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-dark transition-colors disabled:opacity-50"
+              <div className="flex flex-col items-end space-y-2">
+                {reservation.status === 'ACTIVE' && (
+                  <button
+                    onClick={() => handleCompleteBooking(reservation)}
+                    disabled={paymentLoading === reservation.reservationId}
+                    className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-dark transition-colors disabled:opacity-50 w-full text-center"
+                  >
+                    {paymentLoading === reservation.reservationId ? 'Processing...' : 'Complete Booking'}
+                  </button>
+                )}
+                <a
+                  href={`/payment-success?id=${reservation.reservationId}&type=reservation`}
+                  className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300 transition-colors text-center w-full"
                 >
-                  {paymentLoading === reservation.reservationId ? 'Processing...' : 'Complete Booking'}
-                </button>
-              )}
+                  View Receipt
+                </a>
+              </div>
             </div>
           ))}
         </div>
