@@ -40,15 +40,14 @@ const PaymentSuccessContent = () => {
     const fetchDetails = async () => {
       const bookingId = searchParams.get("bookingId");
       const reservationId = searchParams.get("reservationId");
-      let endpoint = "";
-      if (bookingId) {
-        endpoint = `/bookings/${bookingId}`;
-      } else if (reservationId) {
-        endpoint = `/reservations/${reservationId}`;
-      } else {
+      const id = bookingId || reservationId;
+
+      if (!id) {
         router.push("/");
         return;
       }
+
+      const endpoint = `/bookings/search/${id}`;
 
       try {
         const response = await api.get(endpoint);
