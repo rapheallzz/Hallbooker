@@ -217,7 +217,7 @@ const EnhancedAnalytics = () => {
                 </div>
                 <div className="lg:col-span-2 bg-white p-6 rounded-lg shadow-md">
                     <h2 className="text-xl font-bold text-gray-800 mb-4">Revenue by Hall</h2>
-                    {revenueDetails.breakdownByHall && revenueDetails.breakdownByHall.length > 0 ? (
+                    {revenueDetails && revenueDetails.breakdownByHall && revenueDetails.breakdownByHall.length > 0 ? (
                         <ResponsiveContainer width="100%" height={300}>
                             <PieChart>
                                 <Pie activeIndex={activeIndex} activeShape={renderActiveShape} data={revenueDetails.breakdownByHall} cx="50%" cy="50%" innerRadius={60} outerRadius={80} fill="#295FA7" dataKey="totalRevenue" onMouseEnter={onPieEnter}>
