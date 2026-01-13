@@ -15,27 +15,41 @@ const VerifyPaymentContent = () => {
 
   useEffect(() => {
     const reference = searchParams.get('paymentReference');
-    const type = searchParams.get('type'); // To distinguish between booking and reservation
+    const type = searchParams.get('type');
+
+    const verifyConversion = async (ref: string) => {
+      try {
+        const response = await api.get(`/reservations/verify-conversion?paymentReference=${ref}`);
+        if (response.data.success && response.data.data.reservationId) {
+          // On successful conversion, manually redirect to the success page with the reservation ID
+          router.push(`/payment-success?reservationId=${response.data.data.reservationId}`);
+        } else {
+          setPaymentStatus({ status: 'error', message: response.data.message || 'Payment verification failed.' });
+        }
+      } catch (error) {
+        setPaymentStatus({ status: 'error', message: 'An error occurred during payment verification.' });
+      }
+    };
 
     if (reference) {
-      const baseUrl = api.defaults.baseURL;
-      let verificationUrl = '';
-
       if (type === 'conversion') {
-        verificationUrl = `${baseUrl}/reservations/verify-conversion?paymentReference=${reference}`;
-      } else if (type === 'reservation') {
-        verificationUrl = `${baseUrl}/reservations/verify?paymentReference=${reference}`;
+        // Handle reservation conversion with a client-side API call
+        verifyConversion(reference);
       } else {
-        verificationUrl = `${baseUrl}/payments/verify?paymentReference=${reference}`;
+        // For other payment types, use the server-side redirect
+        const baseUrl = api.defaults.baseURL;
+        let verificationUrl = '';
+        if (type === 'reservation') {
+          verificationUrl = `${baseUrl}/reservations/verify?paymentReference=${reference}`;
+        } else {
+          verificationUrl = `${baseUrl}/payments/verify?paymentReference=${reference}`;
+        }
+        window.location.href = verificationUrl;
       }
-
-      // Redirect for verification. The browser will follow the server's redirect.
-      window.location.href = verificationUrl;
-
     } else {
       setPaymentStatus({ status: 'error', message: 'No payment reference found.' });
     }
-  }, [searchParams]);
+  }, [searchParams, router]);
 
   const renderIcon = () => {
     switch (paymentStatus.status) {

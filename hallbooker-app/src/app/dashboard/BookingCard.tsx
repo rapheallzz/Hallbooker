@@ -19,8 +19,16 @@ const BookingCard = ({ booking }) => {
       <div className="p-6">
         <h3 className="text-xl font-semibold text-gray-800">{booking.hall.name}</h3>
         <p className="text-gray-600 mt-2">Booking ID: {booking.bookingId}</p>
-        <p className="text-gray-600">Date: {new Date(booking.checkInDate).toLocaleDateString()}</p>
-        <div className="mt-4 flex justify-end">
+        <p className="text-gray-600">Date: {new Date(booking.bookingDates[0].startTime).toLocaleDateString()}</p>
+        <div className="mt-4 flex justify-end space-x-2">
+          <a
+            href={`/payment-success?bookingId=${booking.bookingId}`}
+            className="bg-gray-200 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-300 transition-colors duration-300 text-center"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            View Receipt
+          </a>
           <button
             onClick={handleCancel}
             className="bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600 transition-colors duration-300"

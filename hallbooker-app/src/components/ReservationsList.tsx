@@ -25,7 +25,7 @@ const ReservationsList = () => {
     const fetchReservations = async () => {
       try {
         const response = await api.get('/reservations/my-reservations');
-        const reservationsData = response.data.data.reservations;
+        const reservationsData = response.data.data;
 
         // Fetch hall details for each reservation
         const reservationsWithHallDetails = await Promise.all(
