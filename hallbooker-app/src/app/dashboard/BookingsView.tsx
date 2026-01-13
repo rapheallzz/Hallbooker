@@ -4,27 +4,20 @@ import api from "../../services/api";
 import BookingCard from "./BookingCard";
 
 const BookingsView = () => {
-  const [bookings, setBookings] = useState([
-    {
-        _id: "6966092af275e9bf89adeb14",
-        bookingId: "BOK-SHA-13-01-26-001",
-        hall: { _id: "691733ec9f3fd413c3c6258f", name: "Test Booking Hall" },
-        bookingDates: [{ startTime: "2026-01-28T07:00:00.000Z", endTime: "2026-01-28T12:00:00.000Z" }],
-    }
-  ]);
+  const [bookings, setBookings] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // useEffect(() => {
-  //   const fetchBookings = async () => {
-  //     try {
-  //       const response = await api.get("/bookings/my-bookings");
-  //       setBookings(response.data.data);
-  //     } catch (error) {
-  //       console.error("Error fetching bookings:", error);
-  //     }
-  //   };
-  //   fetchBookings();
-  // }, []);
+  useEffect(() => {
+    const fetchBookings = async () => {
+      try {
+        const response = await api.get("/bookings/my-bookings");
+        setBookings(response.data.data);
+      } catch (error) {
+        console.error("Error fetching bookings:", error);
+      }
+    };
+    fetchBookings();
+  }, []);
 
   const filteredBookings = bookings.filter((booking) =>
     booking.bookingId.toLowerCase().includes(searchTerm.toLowerCase())

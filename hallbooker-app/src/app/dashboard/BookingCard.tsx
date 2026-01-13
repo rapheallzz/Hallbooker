@@ -22,7 +22,7 @@ const BookingCard = ({ booking }) => {
         <p className="text-gray-600">Date: {new Date(booking.bookingDates[0].startTime).toLocaleDateString()}</p>
         <div className="mt-4 flex justify-end space-x-2">
           <a
-            href={`/payment-success?bookingId=${booking.bookingId}`}
+            href={`/payment-success?id=${booking.bookingId}&type=booking`}
             className="bg-gray-200 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-300 transition-colors duration-300 text-center"
             target="_blank"
             rel="noopener noreferrer"
