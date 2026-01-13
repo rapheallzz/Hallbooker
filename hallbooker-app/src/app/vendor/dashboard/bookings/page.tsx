@@ -31,6 +31,9 @@ interface Booking {
 
 interface Reservation {
   _id: string;
+  user?: {
+    fullName: string;
+  };
   walkInUserDetails?: {
     fullName: string;
   };
@@ -340,7 +343,7 @@ const BookingsPage = () => {
               {reservations.length > 0 ? reservations.map((reservation) => (
                 <tr key={reservation._id}>
                   <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">
-                    {reservation.walkInUserDetails?.fullName}
+                    {reservation.user?.fullName || reservation.walkInUserDetails?.fullName}
                   </td>
                   <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">
                     <div><span className="font-semibold">From:</span> {new Date(reservation.bookingDates[0].startTime).toLocaleString()}</div>
