@@ -9,7 +9,7 @@ import Swal from 'sweetalert2';
 interface ConversionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  reservationId: string;
+  reservationId: string; // This should be the public-facing reservation ID (e.g., "RES-...")
   onSuccess: () => void;
 }
 

@@ -42,6 +42,7 @@ const BOOKINGS_PER_PAGE = 10;
 
 interface Reservation {
   _id: string;
+  reservationId: string;
   user?: {
     fullName: string;
   };
@@ -358,7 +359,7 @@ const BookingsPage = () => {
                         {reservation.status === 'ACTIVE' && (
                           <button
                             onClick={() => {
-                              setSelectedReservationId(reservation._id);
+                              setSelectedReservationId(reservation.reservationId);
                               setIsConversionModalOpen(true);
                             }}
                             className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
