@@ -9,6 +9,7 @@ import 'react-date-range/dist/theme/default.css';
 import { format as formatDate } from 'date-fns';
 import useOnClickOutside from '@/hooks/useOnClickOutside';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, Sector } from 'recharts';
+import ReservationAnalyticsCard from './ReservationAnalyticsCard';
 
 // (Keep all the previously defined types)
 interface OverallStats {
@@ -80,6 +81,12 @@ interface AnalyticsData {
     };
   };
   kpis: KPIs;
+  reservationAnalytics?: {
+    new: number;
+    converted: number;
+    expired: number;
+    active: number;
+  };
 }
 interface Hall {
   _id: string;
@@ -118,9 +125,9 @@ const renderActiveShape = (props: any) => {
 const formatCurrency = (amount: number) => new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(amount);
 
 
-const EnhancedAnalytics = () => {
-  const [data, setData] = useState<AnalyticsData | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+const EnhancedAnalytics = ({ initialData }: { initialData?: AnalyticsData | null }) => {
+  const [data, setData] = useState<AnalyticsData | null>(initialData || null);
+  const [loading, setLoading] = useState<boolean>(!initialData);
   const [halls, setHalls] = useState<Hall[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [dateRange, setDateRange] = useState([{ startDate: new Date(new Date().setDate(new Date().getDate() - 7)), endDate: new Date(), key: 'selection' }]);
@@ -159,8 +166,10 @@ const EnhancedAnalytics = () => {
   }, [dateRange, selectedHall]);
 
   useEffect(() => {
-    fetchAnalytics(currentPage);
-  }, [fetchAnalytics, currentPage]);
+    if (!initialData) {
+      fetchAnalytics(currentPage);
+    }
+  }, [fetchAnalytics, currentPage, initialData]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -177,8 +186,14 @@ const EnhancedAnalytics = () => {
     setCurrentPage(1);
   };
 
-  const analyticsData = data || { overallStats: { totalRevenue: 0, totalViews: 0, totalDemoBookings: 0, totalBookings: { confirmed: 0, cancelled: 0, pending: 0 } }, revenueDetails: { breakdownByHall: [] }, recentBookings: { bookings: [], pagination: { currentPage: 1, totalPages: 1, totalBookings: 0 } }, kpis: { bookingConversionRate: '0.00', averageBookingValue: '0.00', busiestDays: [] } };
-  const { overallStats, kpis, revenueDetails, recentBookings } = analyticsData;
+  const analyticsData = data || {
+    overallStats: { totalRevenue: 0, totalViews: 0, totalDemoBookings: 0, totalBookings: { confirmed: 0, cancelled: 0, pending: 0 } },
+    revenueDetails: { breakdownByHall: [] },
+    recentBookings: { bookings: [], pagination: { currentPage: 1, totalPages: 1, totalBookings: 0 } },
+    kpis: { bookingConversionRate: '0.00', averageBookingValue: '0.00', busiestDays: [] },
+    reservationAnalytics: undefined,
+  };
+  const { overallStats, kpis, revenueDetails, recentBookings, reservationAnalytics } = analyticsData;
 
   const COLORS = ['#295FA7', '#B68945', '#4A90E2', '#D0021B', '#F5A623'];
 
@@ -193,6 +208,12 @@ const EnhancedAnalytics = () => {
 
         {loading ? ( <div className="animate-pulse space-y-6"><div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">{[...Array(6)].map((_, i) => ( <div key={i} className="bg-gray-200 p-6 rounded-lg shadow-md h-24"></div> ))}</div><div className="grid grid-cols-1 lg:grid-cols-2 gap-6"><div className="bg-gray-200 rounded-lg shadow-md h-96"></div><div className="bg-gray-200 rounded-lg shadow-md h-96"></div></div><div className="bg-gray-200 rounded-lg shadow-md h-96"></div></div>)
         : ( <>
+            {reservationAnalytics && (
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold text-gray-800 mb-4">Reservation Analytics</h2>
+                <ReservationAnalyticsCard analytics={reservationAnalytics} />
+              </div>
+            )}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 <StatCard title="Total Revenue" value={formatCurrency(overallStats.totalRevenue)} icon={BarChartIcon} /> <StatCard title="Total Hall Views" value={overallStats.totalViews} icon={Eye} /> <StatCard title="Confirmed Bookings" value={overallStats.totalBookings.confirmed} icon={Briefcase} /> <StatCard title="Booking Conversion" value={`${kpis.bookingConversionRate}%`} icon={Target} /> <StatCard title="Avg. Booking Value" value={formatCurrency(Number(kpis.averageBookingValue))} icon={TrendingUp} /> <StatCard title="Demo Bookings" value={overallStats.totalDemoBookings} icon={CalendarCheck} />
             </div>
