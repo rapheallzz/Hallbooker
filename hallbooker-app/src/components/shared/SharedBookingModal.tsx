@@ -645,11 +645,11 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
                <div>
                 <label className="block text-sm font-medium text-gray-800">Payment Method</label>
                 <select name="paymentMethod" value={formData.paymentMethod} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900">
-                  <option value="cash">Cash</option>
+                  <option value="CASH">Cash</option>
                   <option value="bank_transfer">Bank Transfer</option>
-                  <option value="pos">POS</option>
-                  <option value="online">Online</option>
-                  <option value="cheque">Cheque</option>
+                  <option value="POS">POS</option>
+                  <option value="ONLINE">Online</option>
+                  <option value="CHEQUE">Cheque</option>
                 </select>
               </div>
               <div>
