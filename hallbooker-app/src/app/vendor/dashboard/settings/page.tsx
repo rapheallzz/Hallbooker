@@ -86,7 +86,7 @@ const SettingsPage = () => {
       setBankLoading(true);
       setBankError(null);
       try {
-        const response = await api.get("/users/me/bank-details");
+        const response = await api.get("/users/bank-account");
         setBankAccount(response.data.data || { accountNumber: "", bankName: "", accountName: "" });
       } catch (error) {
         if (axios.isAxiosError(error) && error.response?.status === 403) {
