@@ -22,19 +22,4 @@ export interface Hall {
     coordinates: number[];
     address: string;
   };
-  openingHour?: number;
-  closingHour?: number;
-  bookingBufferInHours?: number;
-}
-
-export interface UnavailableDate {
-  reason: string;
-  eventTime: {
-    startTime: string;
-    endTime: string;
-  };
-  bufferTime: {
-    startTime: string;
-    endTime: string;
-  };
 }

@@ -38,7 +38,6 @@ export const useBookingAvailability = (hall: Hall | null, selectedDates: Date[] 
     if (!hall || !selectedDates || selectedDates.length === 0 || !Array.isArray(unavailableDates)) {
       return [];
     }
-
     const openingHour = hall.openingHour || 0;
     const closingHour = hall.closingHour || 24;
     const disabled: number[] = [];

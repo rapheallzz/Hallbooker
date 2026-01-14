@@ -11,6 +11,8 @@ interface CalendarProps {
   onChange: (dates: Date[] | undefined) => void;
   onDisabledDateClick?: (date: Date) => void;
   getDateAvailability?: (date: Date) => 'fully booked' | 'partially booked' | 'fully available';
+  displayedMonth: Date;
+  onMonthChange: (date: Date) => void;
 }
 
 const Calendar: React.FC<CalendarProps> = ({
@@ -19,6 +21,8 @@ const Calendar: React.FC<CalendarProps> = ({
   onChange,
   onDisabledDateClick,
   getDateAvailability,
+  displayedMonth,
+  onMonthChange,
 }) => {
   const handleDayClick = (day: Date, { disabled }: { disabled: boolean }) => {
     if (disabled && onDisabledDateClick) {
@@ -69,6 +73,8 @@ const Calendar: React.FC<CalendarProps> = ({
         onSelect={onChange}
         disabled={unavailableDates}
         onDayClick={handleDayClick}
+        month={displayedMonth}
+        onMonthChange={onMonthChange}
         modifiers={modifiers}
         modifiersClassNames={{
             disabled: 'rdp-day_disabled',
