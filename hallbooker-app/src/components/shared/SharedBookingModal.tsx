@@ -21,6 +21,7 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
   const [hallPrice, setHallPrice] = useState(0);
   const [facilitiesPrice, setFacilitiesPrice] = useState(0);
   const [totalPrice, setTotalPrice] = useState(0);
+  const [paymentOptions, setPaymentOptions] = useState({ paymentMethods: [], paymentStatuses: [] });
   const [formData, setFormData] = useState({
     hall: '',
     startTime: '',
@@ -52,6 +53,20 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
         }
       };
       fetchHalls();
+
+      const fetchPaymentOptions = async () => {
+        try {
+          const response = await api.get('/settings/payment-options');
+          setPaymentOptions(response.data.data);
+        } catch (error) {
+          console.error('Failed to fetch payment options:', error);
+          setPaymentOptions({
+            paymentMethods: ['CASH', 'BANK_TRANSFER', 'POS', 'ONLINE', 'CHEQUE'],
+            paymentStatuses: ['pending', 'paid', 'failed', 'refunded'],
+          });
+        }
+      };
+      fetchPaymentOptions();
     }
   }, [isOpen, userRole]);
 
@@ -236,6 +251,13 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
     onSubmit({ hallId: hall, bookingDates, eventDetails, walkInUserDetails, paymentMethod, selectedFacilities }, 'reservation');
   };
 
+  const formatLabel = (label: string) => {
+    if (label === 'POS') return 'POS';
+    return label
+      .replace(/_/g, ' ')
+      .replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -352,11 +374,11 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
                <div>
                 <label className="block text-sm font-medium text-gray-800">Payment Method</label>
                 <select name="paymentMethod" value={formData.paymentMethod} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900">
-                  <option value="CASH">Cash</option>
-                  <option value="BANK_TRANSFER">Bank Transfer</option>
-                  <option value="POS">POS</option>
-                  <option value="online">Online</option>
-                  <option value="CHEQUE">Cheque</option>
+                  {paymentOptions.paymentMethods.map((method: string) => (
+                    <option key={method} value={method}>
+                      {formatLabel(method)}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div className="flex justify-between items-center mt-8">
@@ -534,22 +556,22 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
               <div>
                 <label className="block text-sm font-medium text-gray-800">Payment Method</label>
                 <select name="paymentMethod" value={formData.paymentMethod} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900">
-                  <option value="CASH">Cash</option>
-                  <option value="BANK_TRANSFER">Bank Transfer</option>
-                  <option value="POS">POS</option>
-                  <option value="ONLINE">Online</option>
-                  <option value="CHEQUE">Cheque</option>
+                  {paymentOptions.paymentMethods.map((method: string) => (
+                    <option key={method} value={method}>
+                      {formatLabel(method)}
+                    </option>
+                  ))}
                 </select>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-800">Payment Status</label>
                 <select name="paymentStatus" value={formData.paymentStatus} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900">
-                  <option value="pending">Pending</option>
-                  <option value="paid">Paid</option>
-                  <option value="cancelled">Cancelled</option>
-                  <option value="refunded">Refunded</option>
-                  <option value="failed">Failed</option>
+                  {paymentOptions.paymentStatuses.map((status: string) => (
+                    <option key={status} value={status}>
+                      {formatLabel(status)}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -645,21 +667,21 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
                <div>
                 <label className="block text-sm font-medium text-gray-800">Payment Method</label>
                 <select name="paymentMethod" value={formData.paymentMethod} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900">
-                  <option value="CASH">Cash</option>
-                  <option value="bank_transfer">Bank Transfer</option>
-                  <option value="POS">POS</option>
-                  <option value="ONLINE">Online</option>
-                  <option value="CHEQUE">Cheque</option>
+                  {paymentOptions.paymentMethods.map((method: string) => (
+                    <option key={method} value={method}>
+                      {formatLabel(method)}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-800">Payment Status</label>
                 <select name="paymentStatus" value={formData.paymentStatus} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900">
-                  <option value="pending">Pending</option>
-                  <option value="paid">Paid</option>
-                  <option value="cancelled">Cancelled</option>
-                  <option value="refunded">Refunded</option>
-                  <option value="failed">Failed</option>
+                  {paymentOptions.paymentStatuses.map((status: string) => (
+                    <option key={status} value={status}>
+                      {formatLabel(status)}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div className="flex justify-between items-center mt-8">
