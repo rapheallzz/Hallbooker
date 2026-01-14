@@ -1,38 +1,37 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import api from '@/services/api';
-import { Booking, Hall } from '@/types';
+import { Hall, UnavailableDate } from '@/types';
 
 export const useBookingAvailability = (hall: Hall | null, selectedDates: Date[] | undefined) => {
-  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [unavailableDates, setUnavailableDates] = useState<UnavailableDate[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const fetchBookings = async () => {
+    const fetchUnavailableDates = async () => {
       if (!hall) {
-        setBookings([]);
+        setUnavailableDates([]);
         return;
       }
       setLoading(true);
       try {
-        const response = await api.get(`/halls/${hall._id}/bookings`);
-        setBookings(response.data.data.bookings || []);
+        const response = await api.get(`/halls/${hall._id}/unavailable-dates`);
+        setUnavailableDates(response.data.data || []);
       } catch (error) {
-        console.error('Failed to fetch bookings:', error);
-        setBookings([]);
+        console.error('Failed to fetch unavailable dates:', error);
+        setUnavailableDates([]);
       } finally {
         setLoading(false);
       }
     };
-    fetchBookings();
+    fetchUnavailableDates();
   }, [hall]);
 
   const disabledHours = useMemo(() => {
-    if (!hall || !selectedDates || selectedDates.length === 0 || !Array.isArray(bookings)) {
+    if (!hall || !selectedDates || selectedDates.length === 0 || !Array.isArray(unavailableDates)) {
       return [];
     }
 
-    const buffer = hall.bookingBufferInHours || 0;
     const openingHour = hall.openingHour || 0;
     const closingHour = hall.closingHour || 24;
     const disabled: number[] = [];
@@ -51,39 +50,33 @@ export const useBookingAvailability = (hall: Hall | null, selectedDates: Date[] 
         }
     }
 
-    bookings.forEach(booking => {
-      booking.bookingDates.forEach(dateRange => {
-        const bookingStartTime = new Date(dateRange.startTime);
-        const bookingDay = new Date(bookingStartTime).setHours(0, 0, 0, 0);
+    unavailableDates.forEach(unavailable => {
+      const bufferStartTime = new Date(unavailable.bufferTime.startTime);
+      const bufferDay = new Date(bufferStartTime).setHours(0, 0, 0, 0);
 
-        if (selectedDays.includes(bookingDay)) {
-          const bookingEndTime = new Date(dateRange.endTime);
+      if (selectedDays.includes(bufferDay)) {
+        const bufferEndTime = new Date(unavailable.bufferTime.endTime);
 
-          const startHour = bookingStartTime.getHours();
-          const endHour = bookingEndTime.getMinutes() > 0 ? bookingEndTime.getHours() + 1 : bookingEndTime.getHours();
+        const startHour = bufferStartTime.getHours();
+        const endHour = bufferEndTime.getMinutes() > 0 ? bufferEndTime.getHours() + 1 : bufferEndTime.getHours();
 
-          const blockStart = Math.floor(startHour - buffer);
-          const blockEnd = Math.ceil(endHour + buffer);
+        const finalBlockStart = Math.max(openingHour, startHour);
+        const finalBlockEnd = Math.min(closingHour, endHour);
 
-          const finalBlockStart = Math.max(openingHour, blockStart);
-          const finalBlockEnd = Math.min(closingHour, blockEnd);
-
-          for (let i = finalBlockStart; i < finalBlockEnd; i++) {
-            if (!disabled.includes(i)) {
-              disabled.push(i);
-            }
+        for (let i = finalBlockStart; i < finalBlockEnd; i++) {
+          if (!disabled.includes(i)) {
+            disabled.push(i);
           }
         }
-      });
+      }
     });
 
     return disabled.sort((a, b) => a - b);
-  }, [bookings, hall, selectedDates]);
+  }, [unavailableDates, hall, selectedDates]);
 
   const getDateAvailability = useCallback((date: Date): 'fully booked' | 'partially booked' | 'fully available' => {
     if (!hall) return 'fully available';
 
-    const buffer = hall.bookingBufferInHours || 0;
     const openingHour = hall.openingHour || 0;
     const closingHour = hall.closingHour || 24;
     const totalHours = closingHour - openingHour;
@@ -92,27 +85,22 @@ export const useBookingAvailability = (hall: Hall | null, selectedDates: Date[] 
 
     const blockedIntervals: { start: number; end: number }[] = [];
 
-    bookings.forEach(booking => {
-      booking.bookingDates.forEach(dateRange => {
-        const bookingStartTime = new Date(dateRange.startTime);
-        const bookingDay = new Date(bookingStartTime).setHours(0, 0, 0, 0);
+    unavailableDates.forEach(unavailable => {
+      const bufferStartTime = new Date(unavailable.bufferTime.startTime);
+      const bufferDay = new Date(bufferStartTime).setHours(0, 0, 0, 0);
 
-        if (dateToCheck === bookingDay) {
-          const bookingEndTime = new Date(dateRange.endTime);
-          const startHour = bookingStartTime.getHours();
-          const endHour = bookingEndTime.getMinutes() > 0 ? bookingEndTime.getHours() + 1 : bookingEndTime.getHours();
+      if (dateToCheck === bufferDay) {
+        const bufferEndTime = new Date(unavailable.bufferTime.endTime);
+        const startHour = bufferStartTime.getHours();
+        const endHour = bufferEndTime.getMinutes() > 0 ? bufferEndTime.getHours() + 1 : bufferEndTime.getHours();
 
-          const blockStart = Math.floor(startHour - buffer);
-          const blockEnd = Math.ceil(endHour + buffer);
+        const finalBlockStart = Math.max(openingHour, startHour);
+        const finalBlockEnd = Math.min(closingHour, endHour);
 
-          const finalBlockStart = Math.max(openingHour, blockStart);
-          const finalBlockEnd = Math.min(closingHour, blockEnd);
-
-          if (finalBlockStart < finalBlockEnd) {
-            blockedIntervals.push({ start: finalBlockStart, end: finalBlockEnd });
-          }
+        if (finalBlockStart < finalBlockEnd) {
+          blockedIntervals.push({ start: finalBlockStart, end: finalBlockEnd });
         }
-      });
+      }
     });
 
     if (blockedIntervals.length === 0) {
@@ -147,7 +135,7 @@ export const useBookingAvailability = (hall: Hall | null, selectedDates: Date[] 
     } else {
       return 'fully available';
     }
-  }, [bookings, hall]);
+  }, [unavailableDates, hall]);
 
-  return { bookings, disabledHours, loading, getDateAvailability };
+  return { disabledHours, loading, getDateAvailability };
 };
