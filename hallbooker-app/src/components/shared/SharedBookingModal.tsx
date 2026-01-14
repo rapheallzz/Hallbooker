@@ -35,7 +35,7 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
     fullName: '',
     email: '',
     phone: '',
-    paymentMethod: 'cash',
+    paymentMethod: 'CASH',
     paymentStatus: 'pending',
     selectedFacilities: [],
   });
