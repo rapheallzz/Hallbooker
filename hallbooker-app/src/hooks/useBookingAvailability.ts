@@ -2,8 +2,9 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import api from '@/services/api';
 import { Hall, UnavailableDate } from '@/types';
+import { startOfMonth, endOfMonth, format } from 'date-fns';
 
-export const useBookingAvailability = (hall: Hall | null, selectedDates: Date[] | undefined) => {
+export const useBookingAvailability = (hall: Hall | null, selectedDates: Date[] | undefined, displayedMonth: Date) => {
   const [unavailableDates, setUnavailableDates] = useState<UnavailableDate[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -14,8 +15,14 @@ export const useBookingAvailability = (hall: Hall | null, selectedDates: Date[] 
         return;
       }
       setLoading(true);
+
+      const startDate = format(startOfMonth(displayedMonth), 'yyyy-MM-dd');
+      const endDate = format(endOfMonth(displayedMonth), 'yyyy-MM-dd');
+
       try {
-        const response = await api.get(`/halls/${hall._id}/unavailable-dates`);
+        const response = await api.get(`/halls/${hall._id}/unavailable-dates`, {
+          params: { startDate, endDate },
+        });
         setUnavailableDates(response.data.data || []);
       } catch (error) {
         console.error('Failed to fetch unavailable dates:', error);
@@ -25,7 +32,7 @@ export const useBookingAvailability = (hall: Hall | null, selectedDates: Date[] 
       }
     };
     fetchUnavailableDates();
-  }, [hall]);
+  }, [hall, displayedMonth]);
 
   const disabledHours = useMemo(() => {
     if (!hall || !selectedDates || selectedDates.length === 0 || !Array.isArray(unavailableDates)) {

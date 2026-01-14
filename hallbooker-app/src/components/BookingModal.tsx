@@ -21,6 +21,7 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose, bookingM
   const [hall, setHall] = useState<Hall | null>(null);
   const [step, setStep] = useState(1);
   const [selectedDates, setSelectedDates] = useState<Date[] | undefined>(undefined);
+  const [displayedMonth, setDisplayedMonth] = useState<Date>(new Date());
   const [eventDetails, setEventDetails] = useState('');
   const [selectedFacilities, setSelectedFacilities] = useState<(Facility & { quantity: number })[]>([]);
   const [totalPrice, setTotalPrice] = useState(0);
@@ -32,7 +33,7 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose, bookingM
   const { user } = useAuth();
   const router = useRouter();
 
-  const { disabledHours, getDateAvailability } = useBookingAvailability(hall, selectedDates);
+  const { disabledHours, getDateAvailability } = useBookingAvailability(hall, selectedDates, displayedMonth);
 
   const nextStep = () => setStep(step + 1);
   const prevStep = () => setStep(step - 1);
@@ -248,6 +249,8 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose, bookingM
                 selectedDates={selectedDates}
                 onChange={(dates) => setSelectedDates(dates)}
                 getDateAvailability={getDateAvailability}
+                displayedMonth={displayedMonth}
+                onMonthChange={setDisplayedMonth}
               />
               <div className="mt-4 p-4 border rounded-lg bg-gray-50">
                 <h3 className="font-semibold text-lg mb-3">Legend</h3>
