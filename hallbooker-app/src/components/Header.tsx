@@ -11,6 +11,7 @@ import NotificationIcon from "./notifications/NotificationIcon";
 import NotificationDropdown from "./notifications/NotificationDropdown";
 import TermsOfServiceModal from "./TermsOfServiceModal";
 import Swal from "sweetalert2";
+import { getDashboardPath } from "@/utils/redirects";
 
 const Header = () => {
   const { user, logout, updateToken, updateUserApplicationStatus } = useAuth();
@@ -52,7 +53,7 @@ const Header = () => {
     }
   };
 
-  const dashboardUrl = user?.role?.includes('hall-owner') ? '/vendor/dashboard' : '/bookings';
+  const dashboardUrl = getDashboardPath(user?.activeRole || 'user');
 
   const handleRoleSwitch = async (role: string) => {
     Swal.fire({
@@ -71,14 +72,8 @@ const Header = () => {
       updateToken(accessToken);
 
       // Redirect based on the new role
-      console.log(`Redirecting to /admin/dashboard for role: ${role}`);
-      if (role === 'super-admin') {
-        router.push('/admin/dashboard');
-      } else if (role === 'hall-owner' || role === 'staff') {
-        router.push('/vendor/dashboard');
-      } else {
-        router.push('/');
-      }
+      const redirectPath = getDashboardPath(role);
+      router.push(redirectPath);
     } catch (error: any) {
       let errorMessage = 'An error occurred. Please try again.';
       if (error.code === 'ECONNABORTED') {
