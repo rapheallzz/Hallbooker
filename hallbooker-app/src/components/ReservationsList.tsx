@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import api from '@/services/api';
 import ReservationCard from "@/app/dashboard/ReservationCard";
+import BookingDetailsModal from "@/app/dashboard/BookingDetailsModal";
+import Swal from "sweetalert2";
 
 interface Hall {
   _id: string;
@@ -21,6 +23,8 @@ const ReservationsList = () => {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedReservation, setSelectedReservation] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchReservations = async () => {
@@ -87,6 +91,27 @@ const ReservationsList = () => {
     return <p className="text-red-500">{error}</p>;
   }
 
+  const handleViewReceipt = async (reservationId) => {
+    try {
+      const response = await api.get(`/bookings/search/${reservationId}`);
+      if (response.data.data) {
+        const bookingData = { ...response.data.data, bookingId: response.data.data.reservationId };
+        setSelectedReservation(bookingData);
+        setIsModalOpen(true);
+      } else {
+        Swal.fire("Not Found", "Reservation details could not be found.", "error");
+      }
+    } catch (error) {
+      console.error("Error fetching reservation details:", error);
+      Swal.fire("Error", "Failed to fetch reservation details.", "error");
+    }
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedReservation(null);
+  };
+
   return (
     <div>
       <h2 className="text-2xl font-semibold mb-6">My Reservations</h2>
@@ -99,9 +124,16 @@ const ReservationsList = () => {
               key={reservation._id}
               reservation={reservation}
               onCompleteBooking={handleCompleteBooking}
+              onViewReceipt={handleViewReceipt}
             />
           ))}
         </div>
+      )}
+      {isModalOpen && (
+        <BookingDetailsModal
+          booking={selectedReservation}
+          onClose={handleCloseModal}
+        />
       )}
     </div>
   );

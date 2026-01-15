@@ -29,12 +29,12 @@ const ReservationCard = ({ reservation, onCompleteBooking, onViewReceipt }) => {
               Complete Booking
             </button>
           )}
-          <a
-            href={`/payment-success?id=${reservation.reservationId}&type=reservation`}
+          <button
+            onClick={() => onViewReceipt(reservation.reservationId)}
             className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300 transition-colors"
           >
             View Receipt
-          </a>
+          </button>
         </div>
       </div>
     </div>
