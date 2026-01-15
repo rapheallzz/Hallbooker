@@ -49,6 +49,21 @@ const BookingsView = () => {
     setSelectedBooking(null);
   };
 
+  const handleViewReceipt = async (bookingId) => {
+    try {
+      const response = await api.get(`/bookings/search/${bookingId}`);
+      if (response.data.data) {
+        setSelectedBooking(response.data.data);
+        setIsModalOpen(true);
+      } else {
+        Swal.fire("Not Found", "Booking details could not be found.", "error");
+      }
+    } catch (error) {
+      console.error("Error fetching booking details:", error);
+      Swal.fire("Error", "Failed to fetch booking details.", "error");
+    }
+  };
+
   const filteredBookings = bookings.filter((booking) =>
     booking.bookingId.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -80,7 +95,11 @@ const BookingsView = () => {
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredBookings.map((booking) => (
-          <BookingCard key={booking._id} booking={booking} />
+          <BookingCard
+            key={booking._id}
+            booking={booking}
+            onViewReceipt={handleViewReceipt}
+          />
         ))}
       </div>
       {isModalOpen && (
