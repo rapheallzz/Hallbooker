@@ -132,7 +132,7 @@ const AdminEnhancedAnalytics = () => {
                               {data.hallPerformance?.mostActiveHalls.map((hall, index) => (
                                   <tr key={hall._id}>
                                       <td className="p-3 text-sm font-semibold text-gray-700">{index + 1}</td>
-                                      <td className="p-3"><div className="text-sm font-medium text-gray-900">{hall.name}</div><div className="text-xs text-gray-500">{hall.owner.fullName}</div></td>
+                                      <td className="p-3"><div className="text-sm font-medium text-gray-900">{hall.name}</div><div className="text-xs text-gray-500">{hall.owner?.fullName ?? 'N/A'}</div></td>
                                       <td className="p-3 text-sm font-semibold text-gray-800">{formatCurrency(hall.revenue)}</td>
                                       <td className="p-3 text-sm text-center text-gray-600">{hall.bookingCount}</td>
                                   </tr>
@@ -149,9 +149,9 @@ const AdminEnhancedAnalytics = () => {
                           <thead><tr className="bg-gray-50"><th className="p-3 text-left text-xs font-medium text-gray-500 uppercase">Hall Name</th><th className="p-3 text-left text-xs font-medium text-gray-500 uppercase">Owner</th><th className="p-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th></tr></thead>
                           <tbody className="divide-y divide-gray-200">
                               {data.hallPerformance?.inactiveHalls.map((hall) => (
-                                  <tr key={hall._id}>
-                                      <td className="p-3 text-sm font-medium text-gray-900">{hall.name}</td>
-                                      <td className="p-3 text-sm text-gray-600">{hall.owner.fullName}</td>
+                                  <tr key={hall.hallId}>
+                                      <td className="p-3 text-sm font-medium text-gray-900">{hall.hallName}</td>
+                                      <td className="p-3 text-sm text-gray-600">{hall.ownerName ?? 'N/A'}</td>
                                       <td className="p-3"><button className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-1 px-2 rounded">View Details</button></td>
                                   </tr>
                               ))}
