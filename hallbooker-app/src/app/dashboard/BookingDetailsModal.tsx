@@ -71,7 +71,7 @@ const BookingDetailsModal = ({ booking, onClose }) => {
             <div className="border-t pt-4">
               <div className="flex justify-between items-center text-2xl font-bold text-gray-800">
                 <span>Total Price:</span>
-                <span>${booking.totalPrice}</span>
+                <span>₦{booking.totalPrice.toLocaleString()}</span>
               </div>
             </div>
           </div>

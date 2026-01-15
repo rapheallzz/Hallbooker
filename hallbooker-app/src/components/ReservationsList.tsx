@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import api from '@/services/api';
+import ReservationCard from "@/app/dashboard/ReservationCard";
 
 interface Hall {
   _id: string;
@@ -92,44 +93,13 @@ const ReservationsList = () => {
       {reservations.length === 0 ? (
         <p>You have no reservations.</p>
       ) : (
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {reservations.map((reservation) => (
-            <div key={reservation._id} className="bg-white p-4 rounded-lg shadow-md flex justify-between items-center">
-              <div>
-                <h3 className="text-lg font-bold text-gray-800">
-                  {typeof reservation.hall === 'object' ? reservation.hall.name : 'Hall details unavailable'}
-                </h3>
-                <p className="text-sm text-gray-600">
-                  Date: {new Date(reservation.bookingDates[0].startTime).toLocaleDateString()}
-                </p>
-                <p className="text-sm text-gray-500">
-                  Status: <span className={`font-semibold ${
-                    reservation.status === 'ACTIVE' ? 'text-green-600' :
-                    reservation.status === 'CONVERTED' ? 'text-blue-600' : 'text-red-600'
-                  }`}>{reservation.status === 'CONVERTED' ? 'Fully Paid' : reservation.status}</span>
-                </p>
-                <p className="text-md font-semibold text-gray-900 mt-2">
-                  Price: ₦{reservation.totalPrice.toLocaleString()}
-                </p>
-              </div>
-              <div className="flex flex-col items-end space-y-2">
-                {reservation.status === 'ACTIVE' && (
-                  <button
-                    onClick={() => handleCompleteBooking(reservation)}
-                    disabled={paymentLoading === reservation.reservationId}
-                    className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-dark transition-colors disabled:opacity-50 w-full text-center"
-                  >
-                    {paymentLoading === reservation.reservationId ? 'Processing...' : 'Complete Booking'}
-                  </button>
-                )}
-                <a
-                  href={`/payment-success?id=${reservation.reservationId}&type=reservation`}
-                  className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300 transition-colors text-center w-full"
-                >
-                  View Receipt
-                </a>
-              </div>
-            </div>
+            <ReservationCard
+              key={reservation._id}
+              reservation={reservation}
+              onCompleteBooking={handleCompleteBooking}
+            />
           ))}
         </div>
       )}
