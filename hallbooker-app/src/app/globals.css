@@ -91,3 +91,17 @@ body {
 .hall-card-slick .slick-dots li.slick-active button {
   background-color: white;
 }
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #booking-details-content, #booking-details-content * {
+    visibility: visible;
+  }
+  #booking-details-content {
+    position: absolute;
+    left: 0;
+    top: 0;
+  }
+}
