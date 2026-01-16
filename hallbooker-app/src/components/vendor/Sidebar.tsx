@@ -2,6 +2,7 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 import {
   LayoutDashboard,
   Building,
@@ -14,6 +15,7 @@ import {
 
 const Sidebar = () => {
   const pathname = usePathname();
+  const { logout } = useAuth();
 
   const navLinks = [
     {
@@ -72,7 +74,11 @@ const Sidebar = () => {
         ))}
       </nav>
       <div className="mt-auto">
-        <button className="flex items-center justify-center h-12 w-12 rounded-lg text-gray-500 hover:bg-gray-100">
+        <button
+          onClick={logout}
+          className="flex items-center justify-center h-12 w-12 rounded-lg text-gray-500 hover:bg-gray-100"
+          title="Sign Out"
+        >
           <LogOut size={24} />
         </button>
       </div>
