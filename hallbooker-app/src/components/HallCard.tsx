@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Star } from "lucide-react";
+import { Star, Eye } from "lucide-react";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
@@ -54,7 +54,7 @@ const HallCard = ({ hall }: HallCardProps) => {
           <div className="p-1.5">
             <h3 className="text-[11px] font-bold text-gray-800 truncate">{hall.name}</h3>
           <p className="mt-0 text-[10px] text-gray-500 truncate">{hall.location}</p>
-          <div className="mt-0.5 flex justify-between items-center">
+          <div className="mt-0.5 flex justify-between items-end">
             <div className="text-[11px] font-semibold text-gray-800 min-h-[3em] flex items-center">
               {dailyRate && hourlyRate ? (
                 <div>
@@ -77,17 +77,21 @@ const HallCard = ({ hall }: HallCardProps) => {
                 <span className="text-gray-500">Price not available</span>
               )}
             </div>
-            <div className="flex items-center text-[10px]">
-              <Star className="h-3 w-3 text-gray-400" />
-              {hall.averageRating > 0 ? (
-                <>
+            <div className="flex flex-col items-end text-[10px] space-y-0.5 pb-1">
+              <div className="flex items-center">
+                <Star className="h-3 w-3 text-gray-400" />
+                {hall.averageRating > 0 ? (
                   <span className="ml-1 text-gray-600 font-semibold">
                     {hall.averageRating.toFixed(1)}
                   </span>
-                </>
-              ) : (
-                <span className="ml-1 text-gray-500">New</span>
-              )}
+                ) : (
+                  <span className="ml-1 text-gray-500">New</span>
+                )}
+              </div>
+              <div className="flex items-center text-gray-500">
+                <Eye className="h-3 w-3 mr-1" />
+                <span>{hall.views || 0}</span>
+              </div>
             </div>
           </div>
         </div>

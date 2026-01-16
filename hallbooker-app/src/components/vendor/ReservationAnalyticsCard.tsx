@@ -28,7 +28,7 @@ const ReservationAnalyticsCard: React.FC<ReservationAnalyticsCardProps> = ({ ana
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md md:col-span-2 flex flex-col justify-center">
-      <h2 className="text-sm font-semibold text-gray-500 mb-4 uppercase tracking-wider text-center">Reservation Analytics</h2>
+      <h2 className="text-sm font-semibold text-gray-500 mb-4 uppercase tracking-wider text-center">Reservations</h2>
       <div className="grid grid-cols-2 gap-4">
         {stats.map((stat, index) => {
           const Icon = stat.icon;
