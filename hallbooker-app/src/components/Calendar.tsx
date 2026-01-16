@@ -61,9 +61,12 @@ const Calendar: React.FC<CalendarProps> = ({
         .rdp-day_fully_available:hover {
           background-color: #6EE7B7 !important;
         }
-        .rdp-day_selected {
+        .rdp-day_selected, .rdp-day_selected:hover,
+        .rdp-day_selected.rdp-day_fully_available,
+        .rdp-day_selected.rdp-day_partially_booked {
             background-color: #295FA7 !important;
             color: white !important;
+            opacity: 1 !important;
         }
       `}</style>
       <DayPicker

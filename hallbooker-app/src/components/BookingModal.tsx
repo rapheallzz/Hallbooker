@@ -341,38 +341,36 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose, bookingM
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label htmlFor="startTime" className="block text-sm font-medium text-gray-700 mb-1">
-                    {usePerDateTimes ? 'Default Start Time' : 'Start Time'}
-                  </label>
-                  <select
-                    id="startTime"
-                    value={startTime}
-                    onChange={(e) => setStartTime(e.target.value)}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-[#295FA7] sm:text-sm"
-                    required
-                  >
-                    <option value="">Select a time</option>
-                    {hall && generateTimeOptions(hall.openingHour || 0, hall.closingHour || 24, disabledHours)}
-                  </select>
+              {!usePerDateTimes && (
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label htmlFor="startTime" className="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
+                    <select
+                      id="startTime"
+                      value={startTime}
+                      onChange={(e) => setStartTime(e.target.value)}
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-[#295FA7] sm:text-sm"
+                      required
+                    >
+                      <option value="">Select a time</option>
+                      {hall && generateTimeOptions(hall.openingHour || 0, hall.closingHour || 24, disabledHours)}
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="endTime" className="block text-sm font-medium text-gray-700 mb-1">End Time</label>
+                    <select
+                      id="endTime"
+                      value={endTime}
+                      onChange={(e) => setEndTime(e.target.value)}
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-[#295FA7] sm:text-sm"
+                      required
+                    >
+                      <option value="">Select a time</option>
+                      {hall && generateTimeOptions(hall.openingHour || 0, hall.closingHour || 24, disabledHours)}
+                    </select>
+                  </div>
                 </div>
-                <div>
-                  <label htmlFor="endTime" className="block text-sm font-medium text-gray-700 mb-1">
-                    {usePerDateTimes ? 'Default End Time' : 'End Time'}
-                  </label>
-                  <select
-                    id="endTime"
-                    value={endTime}
-                    onChange={(e) => setEndTime(e.target.value)}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-[#295FA7] sm:text-sm"
-                    required
-                  >
-                    <option value="">Select a time</option>
-                    {hall && generateTimeOptions(hall.openingHour || 0, hall.closingHour || 24, disabledHours)}
-                  </select>
-                </div>
-              </div>
+              )}
 
               {selectedDates && selectedDates.length > 1 && (
                 <div className="mb-4">

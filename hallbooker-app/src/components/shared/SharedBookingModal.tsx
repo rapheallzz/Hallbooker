@@ -339,6 +339,11 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
       .replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
   };
 
+  const parseLocalDate = (dateStr: string) => {
+    const [year, month, day] = dateStr.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -387,29 +392,35 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
               <div>
                 <label className="block text-sm font-medium text-gray-800">Select Dates</label>
                 <Calendar
-                  selectedDates={formData.dates.map(date => new Date(date))}
+                  selectedDates={formData.dates.map(date => parseLocalDate(date))}
                   onChange={(dates) => {
                     if (dates) {
-                      setFormData(prev => ({ ...prev, dates: dates.map(d => d.toISOString().split('T')[0]) }));
+                      setFormData(prev => ({
+                        ...prev,
+                        dates: dates.map(d => {
+                          const year = d.getFullYear();
+                          const month = String(d.getMonth() + 1).padStart(2, '0');
+                          const day = String(d.getDate()).padStart(2, '0');
+                          return `${year}-${month}-${day}`;
+                        })
+                      }));
                     }
                   }}
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-800">
-                    {usePerDateTimes ? 'Default Start Time' : 'Start Time'}
-                  </label>
-                  <input type="time" name="startTime" value={formData.startTime} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900" />
+              {!usePerDateTimes && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-800">Start Time</label>
+                    <input type="time" name="startTime" value={formData.startTime} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-800">End Time</label>
+                    <input type="time" name="endTime" value={formData.endTime} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900" />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-800">
-                    {usePerDateTimes ? 'Default End Time' : 'End Time'}
-                  </label>
-                  <input type="time" name="endTime" value={formData.endTime} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900" />
-                </div>
-              </div>
+              )}
 
               {formData.dates.length > 1 && (
                 <div className="flex items-center space-x-2">
@@ -742,29 +753,35 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
               <div>
                 <label className="block text-sm font-medium text-gray-800">Select Dates</label>
                 <Calendar
-                  selectedDates={formData.dates.map(date => new Date(date))}
+                  selectedDates={formData.dates.map(date => parseLocalDate(date))}
                   onChange={(dates) => {
                     if (dates) {
-                      setFormData(prev => ({ ...prev, dates: dates.map(d => d.toISOString().split('T')[0]) }));
+                      setFormData(prev => ({
+                        ...prev,
+                        dates: dates.map(d => {
+                          const year = d.getFullYear();
+                          const month = String(d.getMonth() + 1).padStart(2, '0');
+                          const day = String(d.getDate()).padStart(2, '0');
+                          return `${year}-${month}-${day}`;
+                        })
+                      }));
                     }
                   }}
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-800">
-                    {usePerDateTimes ? 'Default Start Time' : 'Start Time'}
-                  </label>
-                  <input type="time" name="startTime" value={formData.startTime} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900" />
+              {!usePerDateTimes && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-800">Start Time</label>
+                    <input type="time" name="startTime" value={formData.startTime} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-800">End Time</label>
+                    <input type="time" name="endTime" value={formData.endTime} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900" />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-800">
-                    {usePerDateTimes ? 'Default End Time' : 'End Time'}
-                  </label>
-                  <input type="time" name="endTime" value={formData.endTime} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900" />
-                </div>
-              </div>
+              )}
 
               {formData.dates.length > 1 && (
                 <div className="flex items-center space-x-2">
