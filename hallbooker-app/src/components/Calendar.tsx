@@ -10,6 +10,7 @@ interface CalendarProps {
   selectedDates: Date[] | undefined;
   onChange: (dates: Date[] | undefined) => void;
   onDisabledDateClick?: (date: Date) => void;
+  onDateClick?: (date: Date) => void;
   getDateAvailability?: (date: Date) => 'fully booked' | 'partially booked' | 'fully available';
   displayedMonth: Date;
   onMonthChange: (date: Date) => void;
@@ -20,13 +21,16 @@ const Calendar: React.FC<CalendarProps> = ({
   selectedDates,
   onChange,
   onDisabledDateClick,
+  onDateClick,
   getDateAvailability,
   displayedMonth,
   onMonthChange,
 }) => {
   const handleDayClick = (day: Date, { disabled }: { disabled: boolean }) => {
-    if (disabled && onDisabledDateClick) {
-      onDisabledDateClick(day);
+    if (disabled) {
+      if (onDisabledDateClick) onDisabledDateClick(day);
+    } else {
+      if (onDateClick) onDateClick(day);
     }
   };
 

@@ -10,8 +10,8 @@ import ReviewCard from '@/components/ReviewCard';
 import Calendar from '@/components/Calendar';
 import HallDetailSkeleton from '@/components/HallDetailSkeleton';
 import Carousel from '@/components/Carousel';
-import { Range } from 'react-date-range';
 import MediaViewerModal from '@/components/MediaViewerModal';
+import { useBookingAvailability } from '@/hooks/useBookingAvailability';
 import { Hall } from '@/types';
 import FacilityIcon from '@/components/FacilityIcon';
 import { CheckCircle, CircleDollarSign } from 'lucide-react';
@@ -25,12 +25,17 @@ const HallDetailPage = () => {
   const [recommendationsUnavailable, setRecommendationsUnavailable] = useState(false);
   const { isBookingModalOpen, openBookingModal, closeBookingModal } = useUI();
   const [bookingMode, setBookingMode] = useState('book');
+  const [initialSelectedDates, setInitialSelectedDates] = useState<Date[] | undefined>(undefined);
+  const [initialStep, setInitialStep] = useState(1);
+  const [displayedMonth, setDisplayedMonth] = useState<Date>(new Date());
   const [isDemoModalOpen, setDemoModalOpen] = useState(false);
   const [ownerContact, setOwnerContact] = useState({ phone: '', whatsappNumber: '' });
   const [isMediaViewerOpen, setMediaViewerOpen] = useState(false);
   const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);
   const params = useParams();
   const { id } = params;
+
+  const { getDateAvailability } = useBookingAvailability(hall, undefined, displayedMonth);
 
   const handleBookDemo = async () => {
     try {
@@ -229,17 +234,67 @@ const HallDetailPage = () => {
             {/* Availability Section */}
             <div className="py-6 border-b">
               <h3 className="font-semibold text-xl text-gray-800 mb-4">Availability</h3>
-              <Calendar
-                unavailableDates={hall.blockedDates?.map(date => new Date(date)) || []}
-                onChange={(range: Range) => {}}
-                onDisabledDateClick={() => {
-                  Swal.fire({
-                    icon: 'error',
-                    title: 'Not Available',
-                    text: 'This date is not available for booking.',
-                  });
-                }}
-              />
+              <div className="flex flex-col md:flex-row justify-center items-start gap-8">
+                <Calendar
+                  unavailableDates={[]}
+                  selectedDates={undefined}
+                  onChange={() => {}}
+                  onMonthChange={setDisplayedMonth}
+                  displayedMonth={displayedMonth}
+                  getDateAvailability={getDateAvailability}
+                  onDateClick={(date) => {
+                    const availability = getDateAvailability(date);
+                    if (availability === 'fully booked') {
+                      Swal.fire({
+                        icon: 'error',
+                        title: 'Not Available',
+                        text: 'This date is not available for booking.',
+                      });
+                      return;
+                    }
+
+                    Swal.fire({
+                      title: 'Choose an option',
+                      text: `What would you like to do for ${date.toLocaleDateString()}?`,
+                      icon: 'question',
+                      showCancelButton: true,
+                      confirmButtonText: 'Book Now',
+                      cancelButtonText: 'Reserve Hall',
+                      confirmButtonColor: '#295FA7',
+                      cancelButtonColor: '#B68945',
+                    }).then((result) => {
+                      if (result.isConfirmed) {
+                        setBookingMode('book');
+                        setInitialSelectedDates([date]);
+                        setInitialStep(2);
+                        openBookingModal();
+                      } else if (result.dismiss === Swal.DismissReason.cancel) {
+                        setBookingMode('reserve');
+                        setInitialSelectedDates([date]);
+                        setInitialStep(2);
+                        openBookingModal();
+                      }
+                    });
+                  }}
+                />
+                <div className="mt-4 p-4 border rounded-lg bg-gray-50 w-full md:w-64">
+                  <h3 className="font-semibold text-lg mb-3">Legend</h3>
+                  <ul className="space-y-2">
+                    <li className="flex items-center">
+                      <span className="w-5 h-5 rounded-full bg-red-300 mr-2"></span>
+                      <span className="text-sm">Completely Booked</span>
+                    </li>
+                    <li className="flex items-center">
+                      <span className="w-5 h-5 rounded-full bg-orange-300 mr-2"></span>
+                      <span className="text-sm">Partially Booked</span>
+                    </li>
+                    <li className="flex items-center">
+                      <span className="w-5 h-5 rounded-full bg-green-300 mr-2"></span>
+                      <span className="text-sm">Completely Available</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
             </div>
 
             {/* Reviews Section */}
@@ -315,6 +370,8 @@ const HallDetailPage = () => {
                 <button
                   onClick={() => {
                     setBookingMode('reserve');
+                    setInitialSelectedDates(undefined);
+                    setInitialStep(1);
                     openBookingModal();
                   }}
                   className="w-full bg-transparent border border-[#B68945] text-[#B68945] cursor-pointer font-bold py-3 px-4 rounded-lg transition duration-300 hover:bg-[#B68945] hover:text-white"
@@ -324,6 +381,8 @@ const HallDetailPage = () => {
                 <button
                   onClick={() => {
                     setBookingMode('book');
+                    setInitialSelectedDates(undefined);
+                    setInitialStep(1);
                     openBookingModal();
                   }}
                   className="w-full bg-[#295FA7] hover:bg-[#204a8a] cursor-pointer text-white font-bold py-3 px-4 rounded-lg transition duration-300"
@@ -351,6 +410,8 @@ const HallDetailPage = () => {
             isOpen={isBookingModalOpen}
             onClose={closeBookingModal}
             bookingMode={bookingMode}
+            initialSelectedDates={initialSelectedDates}
+            initialStep={initialStep}
           />
           <DemoModal
             isOpen={isDemoModalOpen}

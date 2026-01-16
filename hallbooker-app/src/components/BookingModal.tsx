@@ -15,12 +15,21 @@ interface BookingModalProps {
   isOpen: boolean;
   onClose: () => void;
   bookingMode?: 'book' | 'reserve';
+  initialSelectedDates?: Date[];
+  initialStep?: number;
 }
 
-const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose, bookingMode = 'book' }) => {
+const BookingModal: FC<BookingModalProps> = ({
+  hallId,
+  isOpen,
+  onClose,
+  bookingMode = 'book',
+  initialSelectedDates,
+  initialStep
+}) => {
   const [hall, setHall] = useState<Hall | null>(null);
-  const [step, setStep] = useState(1);
-  const [selectedDates, setSelectedDates] = useState<Date[] | undefined>(undefined);
+  const [step, setStep] = useState(initialStep || 1);
+  const [selectedDates, setSelectedDates] = useState<Date[] | undefined>(initialSelectedDates);
   const [displayedMonth, setDisplayedMonth] = useState<Date>(new Date());
   const [eventDetails, setEventDetails] = useState('');
   const [selectedFacilities, setSelectedFacilities] = useState<(Facility & { quantity: number })[]>([]);
@@ -115,6 +124,20 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose, bookingM
 
   useEffect(() => {
     if (isOpen) {
+      setStep(initialStep || 1);
+      const dates = initialSelectedDates || undefined;
+      setSelectedDates(dates);
+      if (dates && dates.length > 0) {
+        setDisplayedMonth(new Date(dates[0]));
+      }
+      setEventDetails('');
+      setSelectedFacilities([]);
+      setStartTime('');
+      setEndTime('');
+      setUsePerDateTimes(false);
+      setDateTimes({});
+      setError('');
+
       const fetchHallDetails = async () => {
         try {
           const response = await api.get(`/halls/${hallId}`);
@@ -126,7 +149,7 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose, bookingM
       };
       fetchHallDetails();
     }
-  }, [hallId, isOpen]);
+  }, [hallId, isOpen, initialStep, initialSelectedDates]);
 
   const handleFacilityChange = (facility: Facility) => {
     setSelectedFacilities((prevSelected) => {
