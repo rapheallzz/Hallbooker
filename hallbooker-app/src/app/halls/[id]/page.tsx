@@ -317,16 +317,16 @@ const HallDetailPage = () => {
                     setBookingMode('reserve');
                     openBookingModal();
                   }}
-                  className="w-full bg-transparent border border-[#B68945] text-[#B68945] font-bold py-3 px-4 rounded-lg transition duration-300 hover:bg-[#B68945] hover:text-white"
+                  className="w-full bg-transparent border border-[#B68945] text-[#B68945] cursor-pointer font-bold py-3 px-4 rounded-lg transition duration-300 hover:bg-[#B68945] hover:text-white"
                 >
-                  Reserve this hall
+                  Reserve hall
                 </button>
                 <button
                   onClick={() => {
                     setBookingMode('book');
                     openBookingModal();
                   }}
-                  className="w-full bg-[#295FA7] hover:bg-[#204a8a] text-white font-bold py-3 px-4 rounded-lg transition duration-300"
+                  className="w-full bg-[#295FA7] hover:bg-[#204a8a] cursor-pointer text-white font-bold py-3 px-4 rounded-lg transition duration-300"
                 >
                   Book Now
                 </button>
@@ -334,7 +334,7 @@ const HallDetailPage = () => {
               <div className="mt-2">
                 <button
                   onClick={handleBookDemo}
-                  className="w-full border border-gray-300 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-50 transition duration-300"
+                  className="w-full border border-gray-300 text-gray-700 py-3 rounded-lg font-semibold hover:bg-[#B68945] hover:text-white cursor-pointer transition duration-300"
                 >
                   Book a Demo
                 </button>
