@@ -22,4 +22,7 @@ export interface Hall {
     coordinates: number[];
     address: string;
   };
+  views?: number;
+  createdAt?: string;
+  distance?: number;
 }

@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import Carousel from '@/components/Carousel';
 import SkeletonCard from '@/components/SkeletonCard';
 import SearchBar from '@/components/SearchBar';
@@ -9,11 +10,11 @@ import useScroll from '@/hooks/useScroll';
 import { Hall } from '@/types/hall';
 
 const HomePage = () => {
+  const router = useRouter();
   const [allHalls, setAllHalls] = useState<Hall[]>([]);
-  const [filteredHalls, setFilteredHalls] = useState<Hall[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [searchPerformed, setSearchPerformed] = useState(false);
+  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const scrolled = useScroll(100);
 
   useEffect(() => {
@@ -24,7 +25,6 @@ const HomePage = () => {
 
         if (Array.isArray(hallsData)) {
           setAllHalls(hallsData);
-          setFilteredHalls(hallsData);
         } else {
           throw new Error('Invalid data format');
         }
@@ -37,35 +37,89 @@ const HomePage = () => {
     };
 
     fetchHalls();
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          });
+        },
+        (error) => {
+          console.error('Error getting geolocation:', error);
+        }
+      );
+    }
   }, []);
 
-  const handleSearch = (filters: { location:string; dateRange: any; capacity: string; priceRange: [number, number] }) => {
-    const { location, priceRange } = filters;
-    setSearchPerformed(true);
+  const handleSearch = (filters: { location: string; dateRange: any; capacity: string; priceRange: [number, number] }) => {
+    const { location, capacity, priceRange } = filters;
+    const [minPrice, maxPrice] = priceRange;
 
-    let filtered = allHalls;
-
-    // Location filtering
-    if (location) {
-        filtered = filtered.filter((hall) =>
-            hall.location.toLowerCase().includes(location.toLowerCase().split(',')[0])
-        );
+    const params = new URLSearchParams();
+    if (location) params.set('keyword', location.split(',')[0]);
+    if (capacity && capacity !== 'Any') {
+      const match = capacity.match(/(\d+)/);
+      if (match) params.set('minCapacity', match[0]);
     }
+    params.set('minPrice', minPrice.toString());
+    params.set('maxPrice', maxPrice.toString());
 
-    // Price filtering
-    if (priceRange) {
-      const [minPrice, maxPrice] = priceRange;
-      filtered = filtered.filter((hall) => {
-        const hallPrice = hall.pricing?.dailyRate;
-        if (hallPrice) {
-          return hallPrice >= minPrice && hallPrice <= maxPrice;
-        }
-        return false;
-      });
-    }
-
-    setFilteredHalls(filtered);
+    router.push(`/search?${params.toString()}`);
   };
+
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const R = 6371; // Radius of the earth in km
+    const dLat = (lat2 - lat1) * (Math.PI / 180);
+    const dLon = (lon2 - lon1) * (Math.PI / 180);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c; // Distance in km
+  };
+
+  const popularHalls = useMemo(() => {
+    return [...allHalls].sort((a, b) => (b.views || 0) - (a.views || 0));
+  }, [allHalls]);
+
+  const closestHalls = useMemo(() => {
+    if (!userLocation) return [];
+    return allHalls
+      .filter((hall) => hall.geoLocation?.coordinates && hall.geoLocation.coordinates.length === 2)
+      .map((hall) => ({
+        ...hall,
+        distance: calculateDistance(
+          userLocation.latitude,
+          userLocation.longitude,
+          hall.geoLocation!.coordinates[1],
+          hall.geoLocation!.coordinates[0]
+        ),
+      }))
+      .sort((a, b) => (a.distance || 0) - (b.distance || 0));
+  }, [allHalls, userLocation]);
+
+  const largeCapacityHalls = useMemo(() => {
+    return allHalls.filter((hall) => hall.capacity >= 500);
+  }, [allHalls]);
+
+  const budgetFriendlyHalls = useMemo(() => {
+    return allHalls.filter(
+      (hall) => (hall.pricing?.dailyRate || 0) <= 200000 && (hall.pricing?.dailyRate || 0) > 0
+    );
+  }, [allHalls]);
+
+  const newlyAddedHalls = useMemo(() => {
+    return [...allHalls].sort((a, b) => {
+      return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+    });
+  }, [allHalls]);
+
+  const highlyRatedHalls = useMemo(() => {
+    return allHalls.filter((hall) => hall.averageRating >= 4);
+  }, [allHalls]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -100,24 +154,52 @@ const HomePage = () => {
         {error && <p className="mt-8 text-center text-red-600">{error}</p>}
 
         {!loading && !error && (
-          <div>
+          <div className="space-y-12">
+            {popularHalls.length > 0 && (
+              <section>
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">Popular Halls</h2>
+                <Carousel halls={popularHalls} />
+              </section>
+            )}
+
+            {closestHalls.length > 0 && (
+              <section>
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">Closest to You</h2>
+                <Carousel halls={closestHalls} />
+              </section>
+            )}
+
+            {highlyRatedHalls.length > 0 && (
+              <section>
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">Highly Rated</h2>
+                <Carousel halls={highlyRatedHalls} />
+              </section>
+            )}
+
+            {newlyAddedHalls.length > 0 && (
+              <section>
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">Newly Added</h2>
+                <Carousel halls={newlyAddedHalls} />
+              </section>
+            )}
+
+            {largeCapacityHalls.length > 0 && (
+              <section>
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">Large Capacity Halls</h2>
+                <Carousel halls={largeCapacityHalls} />
+              </section>
+            )}
+
+            {budgetFriendlyHalls.length > 0 && (
+              <section>
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">Budget Friendly</h2>
+                <Carousel halls={budgetFriendlyHalls} />
+              </section>
+            )}
+
             <section>
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                {searchPerformed && filteredHalls.length > 0 ? 'Search Results' : 'Popular Halls'}
-              </h2>
-              {filteredHalls.length > 0 ? (
-                <Carousel halls={filteredHalls} />
-              ) : (
-                <p className="text-gray-600">No halls found matching your criteria.</p>
-              )}
-            </section>
-            <section className="mt-12">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Featured Locations</h2>
               <Carousel halls={allHalls.slice(0, 7)} />
-            </section>
-            <section className="mt-12">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Newly Added</h2>
-              <Carousel halls={allHalls.slice(7, 14)} />
             </section>
           </div>
         )}
