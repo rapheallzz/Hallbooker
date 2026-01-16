@@ -274,6 +274,21 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose, bookingM
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (step === 2) {
+      if (usePerDateTimes && selectedDates) {
+        for (const date of selectedDates) {
+          const times = dateTimes[date.toDateString()];
+          if (!times || !times.startTime || !times.endTime) {
+            setError(`Please select start and end times for ${date.toLocaleDateString()}.`);
+            return;
+          }
+        }
+      } else if (!startTime || !endTime) {
+        setError('Please select start and end times.');
+        return;
+      }
+    }
+    setError('');
     if (step < 3) {
       nextStep();
     }
@@ -543,26 +558,25 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose, bookingM
             )}
             {step === 3 ? (
               <div className="flex gap-x-2">
-                <button
-                  type="button"
-                  onClick={handleReserveNow}
-                  disabled={loading}
-                  className={`px-5 py-2 text-sm font-semibold border rounded-lg shadow-sm transition-colors duration-200 disabled:opacity-50 ${
-                    bookingMode === 'reserve'
-                      ? 'bg-[#B68945] text-white border-[#B68945]'
-                      : 'bg-transparent text-[#B68945] border-[#B68945]'
-                  }`}
-                >
-                  {loading ? 'Processing...' : 'Reserve with Part Payment'}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleBookNow}
-                  disabled={loading}
-                  className="px-5 py-2 text-sm font-semibold text-white bg-[#295FA7] border border-transparent rounded-lg shadow-sm hover:bg-[#204a8a] transition-colors duration-200 disabled:opacity-50"
-                >
-                  {loading ? 'Processing...' : 'Pay in Full'}
-                </button>
+                {bookingMode === 'reserve' ? (
+                  <button
+                    type="button"
+                    onClick={handleReserveNow}
+                    disabled={loading}
+                    className="px-5 py-2 text-sm font-semibold border rounded-lg shadow-sm transition-colors duration-200 disabled:opacity-50 bg-[#B68945] text-white border-[#B68945]"
+                  >
+                    {loading ? 'Processing...' : 'Reserve with Part Payment'}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleBookNow}
+                    disabled={loading}
+                    className="px-5 py-2 text-sm font-semibold text-white bg-[#295FA7] border border-transparent rounded-lg shadow-sm hover:bg-[#204a8a] transition-colors duration-200 disabled:opacity-50"
+                  >
+                    {loading ? 'Processing...' : 'Pay in Full'}
+                  </button>
+                )}
               </div>
             ) : (
               <button

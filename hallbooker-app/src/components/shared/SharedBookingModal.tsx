@@ -281,6 +281,21 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
   const handleWalkInSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const { hall, startTime, endTime, dates, eventDetails, fullName, email, phone, paymentMethod, paymentStatus, selectedFacilities } = formData;
+
+    if (usePerDateTimes && dates.length > 0) {
+      for (const dateStr of dates) {
+        const times = dateTimes[dateStr];
+        if (!times || !times.startTime || !times.endTime) {
+          setError(`Please select start and end times for ${dateStr}.`);
+          return;
+        }
+      }
+    } else if (!startTime || !endTime) {
+      setError('Please select start and end times.');
+      return;
+    }
+    setError('');
+
     const walkInUserDetails = { fullName, email, phone };
 
     let bookingDates;
@@ -289,9 +304,9 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
         const times = usePerDateTimes && dateTimes[dateStr] ? dateTimes[dateStr] : { startTime, endTime };
         const [startH, startM] = times.startTime.split(':').map(Number);
         const [endH, endM] = times.endTime.split(':').map(Number);
-        const start = new Date(dateStr);
+        const start = parseLocalDate(dateStr);
         start.setHours(startH, startM, 0, 0);
-        const end = new Date(dateStr);
+        const end = parseLocalDate(dateStr);
         end.setHours(endH, endM, 0, 0);
         return {
           startTime: start.toISOString(),
@@ -308,6 +323,21 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
   const handleReservationSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const { hall, startTime, endTime, dates, eventDetails, fullName, email, phone, paymentMethod, selectedFacilities } = formData;
+
+    if (usePerDateTimes && dates.length > 0) {
+      for (const dateStr of dates) {
+        const times = dateTimes[dateStr];
+        if (!times || !times.startTime || !times.endTime) {
+          setError(`Please select start and end times for ${dateStr}.`);
+          return;
+        }
+      }
+    } else if (!startTime || !endTime) {
+      setError('Please select start and end times.');
+      return;
+    }
+    setError('');
+
     const walkInUserDetails = { fullName, email, phone };
 
     let bookingDates;
@@ -316,9 +346,9 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
         const times = usePerDateTimes && dateTimes[dateStr] ? dateTimes[dateStr] : { startTime, endTime };
         const [startH, startM] = times.startTime.split(':').map(Number);
         const [endH, endM] = times.endTime.split(':').map(Number);
-        const start = new Date(dateStr);
+        const start = parseLocalDate(dateStr);
         start.setHours(startH, startM, 0, 0);
-        const end = new Date(dateStr);
+        const end = parseLocalDate(dateStr);
         end.setHours(endH, endM, 0, 0);
         return {
           startTime: start.toISOString(),
@@ -542,7 +572,7 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
                   <div>Total Price: ₦{totalPrice.toLocaleString()}</div>
                 </div>
                 <button type="submit" className="px-4 py-2 rounded-md text-white bg-primary hover:bg-primary-dark">
-                  Create Reservation
+                  Reserve with Part Payment
                 </button>
               </div>
             </form>
@@ -913,7 +943,7 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
                   <div>Total Price: ₦{totalPrice.toLocaleString()}</div>
                 </div>
                 <button type="submit" className="px-4 py-2 rounded-md text-white bg-primary hover:bg-primary-dark">
-                  Create Walk-in Booking
+                  Pay in Full
                 </button>
               </div>
             </form>
