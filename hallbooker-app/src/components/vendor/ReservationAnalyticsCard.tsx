@@ -20,26 +20,26 @@ const ReservationAnalyticsCard: React.FC<ReservationAnalyticsCardProps> = ({ ana
   }
 
   const stats = [
-    { title: "New Reservations", value: analytics.new, icon: Briefcase },
-    { title: "Converted Reservations", value: analytics.converted, icon: CheckCircle },
-    { title: "Expired Reservations", value: analytics.expired, icon: XCircle },
-    { title: "Active Reservations", value: analytics.active, icon: Clock },
+    { title: "New", value: analytics.new, icon: Briefcase },
+    { title: "Converted", value: analytics.converted, icon: CheckCircle },
+    { title: "Expired", value: analytics.expired, icon: XCircle },
+    { title: "Active", value: analytics.active, icon: Clock },
   ];
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md">
-      <h2 className="text-xl font-bold text-gray-800 mb-6">Reservation Analytics</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="bg-white p-6 rounded-lg shadow-md md:col-span-2 flex flex-col justify-center">
+      <h2 className="text-sm font-semibold text-gray-500 mb-4 uppercase tracking-wider text-center">Reservation Analytics</h2>
+      <div className="grid grid-cols-2 gap-4">
         {stats.map((stat, index) => {
           const Icon = stat.icon;
           return (
-            <div key={index} className="flex items-center space-x-4 p-2">
-              <div className="bg-gray-100 p-3 rounded-full">
-                <Icon className="h-6 w-6 text-gray-600" />
+            <div key={index} className="flex items-center space-x-2 p-1">
+              <div className="bg-gray-50 p-2 rounded-full hidden sm:block">
+                <Icon className="h-4 w-4 text-gray-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-500">{stat.title}</p>
-                <p className="text-2xl font-bold text-gray-800">{stat.value}</p>
+                <p className="text-[10px] sm:text-xs text-gray-400 uppercase font-medium">{stat.title}</p>
+                <p className="text-lg font-bold text-gray-800">{stat.value}</p>
               </div>
             </div>
           );

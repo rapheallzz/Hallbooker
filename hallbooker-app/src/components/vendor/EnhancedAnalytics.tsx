@@ -208,13 +208,11 @@ const EnhancedAnalytics = ({ initialData }: { initialData?: AnalyticsData | null
 
         {loading ? ( <div className="animate-pulse space-y-6"><div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">{[...Array(6)].map((_, i) => ( <div key={i} className="bg-gray-200 p-6 rounded-lg shadow-md h-24"></div> ))}</div><div className="grid grid-cols-1 lg:grid-cols-2 gap-6"><div className="bg-gray-200 rounded-lg shadow-md h-96"></div><div className="bg-gray-200 rounded-lg shadow-md h-96"></div></div><div className="bg-gray-200 rounded-lg shadow-md h-96"></div></div>)
         : ( <>
-            {reservationAnalytics && (
-              <div className="mb-6">
-                <ReservationAnalyticsCard analytics={reservationAnalytics} />
-              </div>
-            )}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 <StatCard title="Total Revenue" value={formatCurrency(overallStats.totalRevenue)} icon={BarChartIcon} /> <StatCard title="Total Hall Views" value={overallStats.totalViews} icon={Eye} /> <StatCard title="Confirmed Bookings" value={overallStats.totalBookings.confirmed} icon={Briefcase} /> <StatCard title="Booking Conversion" value={`${kpis.bookingConversionRate}%`} icon={Target} /> <StatCard title="Avg. Booking Value" value={formatCurrency(Number(kpis.averageBookingValue))} icon={TrendingUp} /> <StatCard title="Demo Bookings" value={overallStats.totalDemoBookings} icon={CalendarCheck} />
+                {reservationAnalytics && (
+                    <ReservationAnalyticsCard analytics={reservationAnalytics} />
+                )}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
