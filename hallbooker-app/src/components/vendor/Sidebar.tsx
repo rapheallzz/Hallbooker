@@ -15,7 +15,7 @@ import {
 
 const Sidebar = () => {
   const pathname = usePathname();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
 
   const navLinks = [
     {
@@ -33,22 +33,28 @@ const Sidebar = () => {
       label: "Bookings",
       icon: <Calendar size={24} />,
     },
-    {
-      href: "/vendor/dashboard/analytics",
-      label: "Analytics",
-      icon: <BarChart size={24} />,
-    },
-    {
-      href: "/vendor/dashboard/staff",
-      label: "Staff",
-      icon: <Users size={24} />,
-    },
-    {
-      href: "/vendor/dashboard/settings",
-      label: "Settings",
-      icon: <Settings size={24} />,
-    },
   ];
+
+  // Only add these links if the user is a hall-owner
+  if (user?.activeRole === "hall-owner") {
+    navLinks.push(
+      {
+        href: "/vendor/dashboard/analytics",
+        label: "Analytics",
+        icon: <BarChart size={24} />,
+      },
+      {
+        href: "/vendor/dashboard/staff",
+        label: "Staff",
+        icon: <Users size={24} />,
+      },
+      {
+        href: "/vendor/dashboard/settings",
+        label: "Settings",
+        icon: <Settings size={24} />,
+      }
+    );
+  }
 
   return (
     <div className="w-20 bg-white border-r border-gray-200 flex flex-col items-center py-4">

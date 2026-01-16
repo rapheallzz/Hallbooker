@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import api from '@/services/api';
 import StaffModal from '@/components/vendor/StaffModal';
 import { useUI } from '@/context/UIContext';
+import withAuth from '@/components/auth/withAuth';
 
 interface Staff {
   id: string;
@@ -164,4 +165,4 @@ const StaffPage = () => (
   </Suspense>
 );
 
-export default StaffPage;
+export default withAuth(StaffPage, ['hall-owner']);

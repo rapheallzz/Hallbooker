@@ -4,6 +4,7 @@ import api from "@/services/api";
 import SubscriptionCard from "@/components/vendor/SubscriptionCard";
 import axios from "axios";
 import Swal from "sweetalert2";
+import withAuth from "@/components/auth/withAuth";
 
 // Interfaces for our data structures
 interface BankAccount {
@@ -259,4 +260,4 @@ const SettingsPage = () => {
   );
 };
 
-export default SettingsPage;
+export default withAuth(SettingsPage, ["hall-owner"]);
