@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import api from '@/services/api';
-import { Building, Calendar, Briefcase, TrendingUp } from 'lucide-react';
+import { Building, Briefcase } from 'lucide-react';
 import { format as formatDate } from 'date-fns';
 
 interface Booking {

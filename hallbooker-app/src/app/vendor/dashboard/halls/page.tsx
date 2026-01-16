@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useMemo, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 import api from "@/services/api";
 import HallModal from "@/components/vendor/HallModal";
 import ReservationModal from "@/components/vendor/ReservationModal";
@@ -30,6 +31,7 @@ interface Hall {
 
 const HallsContent = () => {
   const router = useRouter();
+  const { user } = useAuth();
   const searchParams = useSearchParams();
   const searchTerm = searchParams.get("search") || "";
   const [halls, setHalls] = useState<Hall[]>([]);
@@ -145,12 +147,32 @@ const HallsContent = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this hall?')) {
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: "You won't be able to revert this!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, delete it!'
+    });
+
+    if (result.isConfirmed) {
       try {
         await api.delete(`/halls/${id}`);
+        Swal.fire(
+          'Deleted!',
+          'The hall has been deleted.',
+          'success'
+        );
         fetchHalls();
       } catch (error) {
         console.error('Failed to delete hall:', error);
+        Swal.fire(
+          'Error!',
+          'Failed to delete the hall. Please try again.',
+          'error'
+        );
       }
     }
   };
@@ -233,12 +255,14 @@ const HallsContent = () => {
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-3xl font-bold text-primary">Halls</h1>
-        <button
-          onClick={handleOpenCreateModal}
-          className="bg-primary text-white px-4 py-2 rounded-lg"
-        >
-          Create Hall
-        </button>
+        {user?.activeRole === "hall-owner" && (
+          <button
+            onClick={handleOpenCreateModal}
+            className="bg-primary text-white px-4 py-2 rounded-lg"
+          >
+            Create Hall
+          </button>
+        )}
       </div>
 
       {loading && <div>Loading halls...</div>}
@@ -278,7 +302,9 @@ const HallsContent = () => {
                         >
                           <CalendarIcon size={18} />
                         </button>
-                        <button onClick={() => handleDelete(hall.id)} className="ml-2 px-5 py-2 border-red-500 border text-red-500 rounded transition duration-300 hover:bg-red-500 hover:text-white focus:outline-none">Delete</button>
+                        {user?.activeRole === "hall-owner" && (
+                          <button onClick={() => handleDelete(hall.id)} className="ml-2 px-5 py-2 border-red-500 border text-red-500 rounded transition duration-300 hover:bg-red-500 hover:text-white focus:outline-none">Delete</button>
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-no-wrap text-center border-b border-gray-500">
                         <button onClick={() => handleToggle(hall.id)} className="focus:outline-none">

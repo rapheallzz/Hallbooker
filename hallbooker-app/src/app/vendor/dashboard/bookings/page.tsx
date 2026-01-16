@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from 'next/navigation';
+import { useAuth } from "@/context/AuthContext";
 import api from "@/services/api";
 import BookingModal from "@/components/vendor/BookingModal";
 import ConversionModal from "@/components/shared/ConversionModal";
@@ -52,6 +53,7 @@ interface Hall {
 }
 
 const BookingsPage = () => {
+  const { user } = useAuth();
   const searchParams = useSearchParams();
   const hallIdFromQuery = searchParams.get('hallId');
   const searchTerm = searchParams.get('search') || '';
@@ -220,12 +222,14 @@ const BookingsPage = () => {
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-3xl font-bold text-primary">Bookings</h1>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark"
-        >
-          Create Booking
-        </button>
+        {user?.activeRole === "hall-owner" && (
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark"
+          >
+            Create Booking
+          </button>
+        )}
       </div>
       <div className="mb-4">
         <label htmlFor="hall-select" className="block text-sm font-medium text-gray-700">Select a Hall</label>
