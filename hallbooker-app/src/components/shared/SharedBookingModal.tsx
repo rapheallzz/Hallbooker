@@ -21,6 +21,8 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
   const [hallPrice, setHallPrice] = useState(0);
   const [facilitiesPrice, setFacilitiesPrice] = useState(0);
   const [totalPrice, setTotalPrice] = useState(0);
+  const [usePerDateTimes, setUsePerDateTimes] = useState(false);
+  const [dateTimes, setDateTimes] = useState<Record<string, { startTime: string; endTime: string }>>({});
   const [paymentOptions, setPaymentOptions] = useState({ paymentMethods: [], paymentStatuses: [] });
   const [formData, setFormData] = useState({
     hall: '',
@@ -82,21 +84,52 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
   useEffect(() => {
     const calculateTotalPrice = () => {
       const selectedHall = halls.find((h: any) => h._id === formData.hall);
-      if (!selectedHall || !formData.startTime || !formData.endTime) {
+      if (!selectedHall) {
         setHallPrice(0);
         setFacilitiesPrice(0);
         setTotalPrice(0);
         return;
       }
 
-      const startTime = new Date(formData.startTime);
-      const endTime = new Date(formData.endTime);
-      const durationInHours = (endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60);
-      const durationInDays = Math.ceil(durationInHours / 24);
+      let durationInHours = 0;
+      let durationInDays = 0;
+
+      if ((activeTab === 'reservation' || activeTab === 'walk-in') && formData.dates.length > 0) {
+        durationInDays = formData.dates.length;
+        formData.dates.forEach(date => {
+          const times = usePerDateTimes && dateTimes[date] ? dateTimes[date] : { startTime: formData.startTime, endTime: formData.endTime };
+          if (times.startTime && times.endTime) {
+            const [startH, startM] = times.startTime.split(':').map(Number);
+            const [endH, endM] = times.endTime.split(':').map(Number);
+            const diff = (endH + endM / 60) - (startH + startM / 60);
+            if (diff > 0) durationInHours += diff;
+          }
+        });
+      } else if (formData.startTime && formData.endTime) {
+        const start = formData.startTime.includes('T') ? new Date(formData.startTime) : new Date(`1970-01-01T${formData.startTime}:00`);
+        const end = formData.endTime.includes('T') ? new Date(formData.endTime) : new Date(`1970-01-01T${formData.endTime}:00`);
+        durationInHours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+        durationInDays = Math.ceil(durationInHours / 24) || 1;
+      }
+
+      if (durationInHours <= 0 && durationInDays <= 0) {
+        setHallPrice(0);
+        setFacilitiesPrice(0);
+        setTotalPrice(0);
+        return;
+      }
 
       // Calculate hall price
-      const hallPrice = (selectedHall as any).pricing.hourlyRate * durationInHours;
-      setHallPrice(hallPrice);
+      const dailyRate = (selectedHall as any).pricing.dailyRate || 0;
+      const hourlyRate = (selectedHall as any).pricing.hourlyRate || 0;
+
+      let calculatedHallPrice = 0;
+      if (dailyRate > 0) {
+        calculatedHallPrice = dailyRate * durationInDays;
+      } else {
+        calculatedHallPrice = hourlyRate * durationInHours;
+      }
+      setHallPrice(calculatedHallPrice);
 
       // Calculate facilities price
       let facilitiesPrice = 0;
@@ -125,7 +158,7 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
     };
 
     calculateTotalPrice();
-  }, [formData.hall, formData.startTime, formData.endTime, formData.selectedFacilities, halls, facilities]);
+  }, [formData.hall, formData.startTime, formData.endTime, formData.dates, formData.selectedFacilities, halls, facilities, activeTab, usePerDateTimes, dateTimes]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -139,6 +172,16 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
         : [...prev.daysOfWeek, dayIndex];
       return { ...prev, daysOfWeek };
     });
+  };
+
+  const handleDateTimeChange = (dateStr: string, field: 'startTime' | 'endTime', value: string) => {
+    setDateTimes(prev => ({
+      ...prev,
+      [dateStr]: {
+        ...(prev[dateStr] || { startTime: formData.startTime, endTime: formData.endTime }),
+        [field]: value
+      }
+    }));
   };
 
   const handleRecurringSubmit = async (e: React.FormEvent) => {
@@ -237,17 +280,55 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
 
   const handleWalkInSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { hall, startTime, endTime, eventDetails, fullName, email, phone, paymentMethod, paymentStatus, selectedFacilities } = formData;
+    const { hall, startTime, endTime, dates, eventDetails, fullName, email, phone, paymentMethod, paymentStatus, selectedFacilities } = formData;
     const walkInUserDetails = { fullName, email, phone };
-    const bookingDates = [{ startTime, endTime }];
+
+    let bookingDates;
+    if (dates.length > 0) {
+      bookingDates = dates.map(dateStr => {
+        const times = usePerDateTimes && dateTimes[dateStr] ? dateTimes[dateStr] : { startTime, endTime };
+        const [startH, startM] = times.startTime.split(':').map(Number);
+        const [endH, endM] = times.endTime.split(':').map(Number);
+        const start = new Date(dateStr);
+        start.setHours(startH, startM, 0, 0);
+        const end = new Date(dateStr);
+        end.setHours(endH, endM, 0, 0);
+        return {
+          startTime: start.toISOString(),
+          endTime: end.toISOString(),
+        };
+      });
+    } else {
+      bookingDates = [{ startTime, endTime }];
+    }
+
     onSubmit({ hallId: hall, bookingDates, eventDetails, walkInUserDetails, paymentMethod, paymentStatus, selectedFacilities }, 'walk-in');
   };
 
   const handleReservationSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { hall, startTime, endTime, eventDetails, fullName, email, phone, paymentMethod, selectedFacilities } = formData;
+    const { hall, startTime, endTime, dates, eventDetails, fullName, email, phone, paymentMethod, selectedFacilities } = formData;
     const walkInUserDetails = { fullName, email, phone };
-    const bookingDates = [{ startTime, endTime }];
+
+    let bookingDates;
+    if (dates.length > 0) {
+      bookingDates = dates.map(dateStr => {
+        const times = usePerDateTimes && dateTimes[dateStr] ? dateTimes[dateStr] : { startTime, endTime };
+        const [startH, startM] = times.startTime.split(':').map(Number);
+        const [endH, endM] = times.endTime.split(':').map(Number);
+        const start = new Date(dateStr);
+        start.setHours(startH, startM, 0, 0);
+        const end = new Date(dateStr);
+        end.setHours(endH, endM, 0, 0);
+        return {
+          startTime: start.toISOString(),
+          endTime: end.toISOString(),
+        };
+      });
+    } else {
+      bookingDates = [{ startTime, endTime }];
+    }
+
     onSubmit({ hallId: hall, bookingDates, eventDetails, walkInUserDetails, paymentMethod, selectedFacilities }, 'reservation');
   };
 
@@ -302,16 +383,78 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
                   ))}
                 </select>
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-800">Select Dates</label>
+                <Calendar
+                  selectedDates={formData.dates.map(date => new Date(date))}
+                  onChange={(dates) => {
+                    if (dates) {
+                      setFormData(prev => ({ ...prev, dates: dates.map(d => d.toISOString().split('T')[0]) }));
+                    }
+                  }}
+                />
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-800">Start Time</label>
-                  <input type="datetime-local" name="startTime" value={formData.startTime} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900" />
+                  <label className="block text-sm font-medium text-gray-800">
+                    {usePerDateTimes ? 'Default Start Time' : 'Start Time'}
+                  </label>
+                  <input type="time" name="startTime" value={formData.startTime} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-800">End Time</label>
-                  <input type="datetime-local" name="endTime" value={formData.endTime} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900" />
+                  <label className="block text-sm font-medium text-gray-800">
+                    {usePerDateTimes ? 'Default End Time' : 'End Time'}
+                  </label>
+                  <input type="time" name="endTime" value={formData.endTime} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900" />
                 </div>
               </div>
+
+              {formData.dates.length > 1 && (
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="usePerDateTimesRes"
+                    checked={usePerDateTimes}
+                    onChange={(e) => setUsePerDateTimes(e.target.checked)}
+                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                  />
+                  <label htmlFor="usePerDateTimesRes" className="text-sm font-medium text-gray-800">
+                    Set different times for each date
+                  </label>
+                </div>
+              )}
+
+              {usePerDateTimes && formData.dates.length > 0 && (
+                <div className="space-y-4 p-4 border rounded-md bg-gray-50 max-h-60 overflow-y-auto">
+                  <h4 className="text-sm font-semibold text-gray-800">Date-specific Times</h4>
+                  {formData.dates.map((dateStr) => {
+                    const times = dateTimes[dateStr] || { startTime: formData.startTime, endTime: formData.endTime };
+                    return (
+                      <div key={dateStr} className="grid grid-cols-2 gap-4 border-b pb-2 last:border-b-0">
+                        <div className="col-span-2 text-xs font-medium text-gray-600">{dateStr}</div>
+                        <div>
+                          <input
+                            type="time"
+                            value={times.startTime}
+                            onChange={(e) => handleDateTimeChange(dateStr, 'startTime', e.target.value)}
+                            className="w-full px-3 py-1 border border-gray-300 rounded-md text-sm text-gray-900"
+                          />
+                        </div>
+                        <div>
+                          <input
+                            type="time"
+                            value={times.endTime}
+                            onChange={(e) => handleDateTimeChange(dateStr, 'endTime', e.target.value)}
+                            className="w-full px-3 py-1 border border-gray-300 rounded-md text-sm text-gray-900"
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-medium text-gray-800">Event Details</label>
                 <input type="text" name="eventDetails" value={formData.eventDetails} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900" />
@@ -595,16 +738,78 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
                   ))}
                 </select>
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-800">Select Dates</label>
+                <Calendar
+                  selectedDates={formData.dates.map(date => new Date(date))}
+                  onChange={(dates) => {
+                    if (dates) {
+                      setFormData(prev => ({ ...prev, dates: dates.map(d => d.toISOString().split('T')[0]) }));
+                    }
+                  }}
+                />
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-800">Start Time</label>
-                  <input type="datetime-local" name="startTime" value={formData.startTime} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900" />
+                  <label className="block text-sm font-medium text-gray-800">
+                    {usePerDateTimes ? 'Default Start Time' : 'Start Time'}
+                  </label>
+                  <input type="time" name="startTime" value={formData.startTime} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-800">End Time</label>
-                  <input type="datetime-local" name="endTime" value={formData.endTime} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900" />
+                  <label className="block text-sm font-medium text-gray-800">
+                    {usePerDateTimes ? 'Default End Time' : 'End Time'}
+                  </label>
+                  <input type="time" name="endTime" value={formData.endTime} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900" />
                 </div>
               </div>
+
+              {formData.dates.length > 1 && (
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="usePerDateTimesWalk"
+                    checked={usePerDateTimes}
+                    onChange={(e) => setUsePerDateTimes(e.target.checked)}
+                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                  />
+                  <label htmlFor="usePerDateTimesWalk" className="text-sm font-medium text-gray-800">
+                    Set different times for each date
+                  </label>
+                </div>
+              )}
+
+              {usePerDateTimes && formData.dates.length > 0 && (
+                <div className="space-y-4 p-4 border rounded-md bg-gray-50 max-h-60 overflow-y-auto">
+                  <h4 className="text-sm font-semibold text-gray-800">Date-specific Times</h4>
+                  {formData.dates.map((dateStr) => {
+                    const times = dateTimes[dateStr] || { startTime: formData.startTime, endTime: formData.endTime };
+                    return (
+                      <div key={dateStr} className="grid grid-cols-2 gap-4 border-b pb-2 last:border-b-0">
+                        <div className="col-span-2 text-xs font-medium text-gray-600">{dateStr}</div>
+                        <div>
+                          <input
+                            type="time"
+                            value={times.startTime}
+                            onChange={(e) => handleDateTimeChange(dateStr, 'startTime', e.target.value)}
+                            className="w-full px-3 py-1 border border-gray-300 rounded-md text-sm text-gray-900"
+                          />
+                        </div>
+                        <div>
+                          <input
+                            type="time"
+                            value={times.endTime}
+                            onChange={(e) => handleDateTimeChange(dateStr, 'endTime', e.target.value)}
+                            className="w-full px-3 py-1 border border-gray-300 rounded-md text-sm text-gray-900"
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-medium text-gray-800">Event Details</label>
                 <input type="text" name="eventDetails" value={formData.eventDetails} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900" />

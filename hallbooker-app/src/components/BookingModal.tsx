@@ -25,15 +25,18 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose, bookingM
   const [eventDetails, setEventDetails] = useState('');
   const [selectedFacilities, setSelectedFacilities] = useState<(Facility & { quantity: number })[]>([]);
   const [totalPrice, setTotalPrice] = useState(0);
+  const [hallCost, setHallCost] = useState(0);
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
+  const [usePerDateTimes, setUsePerDateTimes] = useState(false);
+  const [dateTimes, setDateTimes] = useState<Record<string, { startTime: string; endTime: string }>>({});
   const [durationInHours, setDurationInHours] = useState(0);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
   const router = useRouter();
 
-  const { disabledHours, getDateAvailability } = useBookingAvailability(hall, selectedDates, displayedMonth);
+  const { disabledHours, getDateAvailability, getDisabledHoursForDate } = useBookingAvailability(hall, selectedDates, displayedMonth);
 
   const nextStep = () => setStep(step + 1);
   const prevStep = () => setStep(step - 1);
@@ -60,10 +63,11 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose, bookingM
 
   useEffect(() => {
     if (startTime && endTime) {
-      const start = parseInt(startTime.split(':')[0]);
-      const end = parseInt(endTime.split(':')[0]);
-      if (end > start) {
-        setDurationInHours(end - start);
+      const [startHour, startMinute] = startTime.split(':').map(Number);
+      const [endHour, endMinute] = endTime.split(':').map(Number);
+      const duration = (endHour + endMinute / 60) - (startHour + startMinute / 60);
+      if (duration > 0) {
+        setDurationInHours(duration);
       } else {
         setDurationInHours(0);
       }
@@ -73,19 +77,41 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose, bookingM
   useEffect(() => {
     if (hall && selectedDates && selectedDates.length > 0) {
       const dailyRate = hall.pricing.dailyRate || 0;
+      const hourlyRate = hall.pricing.hourlyRate || 0;
       const numberOfDays = selectedDates.length;
 
-      const hallCost = dailyRate * numberOfDays;
+      let calculatedHallCost = 0;
+      if (dailyRate > 0) {
+        calculatedHallCost = dailyRate * numberOfDays;
+      } else if (hourlyRate > 0) {
+        let totalDuration = 0;
+        if (usePerDateTimes) {
+          selectedDates.forEach(date => {
+            const times = dateTimes[date.toDateString()] || { startTime, endTime };
+            if (times.startTime && times.endTime) {
+              const [startH, startM] = times.startTime.split(':').map(Number);
+              const [endH, endM] = times.endTime.split(':').map(Number);
+              const diff = (endH + endM / 60) - (startH + startM / 60);
+              if (diff > 0) totalDuration += diff;
+            }
+          });
+        } else {
+          totalDuration = durationInHours * numberOfDays;
+        }
+        calculatedHallCost = hourlyRate * totalDuration;
+      }
+      setHallCost(calculatedHallCost);
 
       const facilitiesCost = selectedFacilities.reduce((total, facility) => {
         return total + calculateFacilityCost(facility);
       }, 0);
 
-      setTotalPrice(hallCost + facilitiesCost);
+      setTotalPrice(calculatedHallCost + facilitiesCost);
     } else {
+      setHallCost(0);
       setTotalPrice(0);
     }
-  }, [hall, selectedDates, selectedFacilities, durationInHours]);
+  }, [hall, selectedDates, selectedFacilities, durationInHours, usePerDateTimes, dateTimes, startTime, endTime]);
 
   useEffect(() => {
     if (isOpen) {
@@ -122,6 +148,16 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose, bookingM
     );
   };
 
+  const handleDateTimeChange = (dateStr: string, field: 'startTime' | 'endTime', value: string) => {
+    setDateTimes(prev => ({
+      ...prev,
+      [dateStr]: {
+        ...(prev[dateStr] || { startTime, endTime }),
+        [field]: value
+      }
+    }));
+  };
+
   const calculateFacilityCost = (facility: Facility & { quantity: number }) => {
     const numberOfDays = selectedDates?.length || 1;
     const quantity = facility.quantity || 1;
@@ -130,7 +166,21 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose, bookingM
       return facility.cost * numberOfDays * quantity;
     }
     if (facility.chargeMethod === 'per_hour') {
-      return facility.cost * durationInHours * numberOfDays * quantity;
+      let totalDuration = 0;
+      if (usePerDateTimes && selectedDates) {
+        selectedDates.forEach(date => {
+          const times = dateTimes[date.toDateString()] || { startTime, endTime };
+          if (times.startTime && times.endTime) {
+            const [startH, startM] = times.startTime.split(':').map(Number);
+            const [endH, endM] = times.endTime.split(':').map(Number);
+            const diff = (endH + endM / 60) - (startH + startM / 60);
+            if (diff > 0) totalDuration += diff;
+          }
+        });
+      } else {
+        totalDuration = durationInHours * numberOfDays;
+      }
+      return facility.cost * totalDuration * quantity;
     }
     return facility.cost * quantity;
   };
@@ -160,10 +210,13 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose, bookingM
         return;
       }
 
-      const [startHour, startMinute] = startTime.split(':').map(Number);
-      const [endHour, endMinute] = endTime.split(':').map(Number);
-
       const bookingDates = selectedDates.map(date => {
+        const dateStr = date.toDateString();
+        const times = usePerDateTimes && dateTimes[dateStr] ? dateTimes[dateStr] : { startTime, endTime };
+
+        const [startHour, startMinute] = times.startTime.split(':').map(Number);
+        const [endHour, endMinute] = times.endTime.split(':').map(Number);
+
         const startDate = new Date(date);
         startDate.setHours(startHour, startMinute, 0, 0);
         const endDate = new Date(date);
@@ -290,7 +343,9 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose, bookingM
 
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label htmlFor="startTime" className="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
+                  <label htmlFor="startTime" className="block text-sm font-medium text-gray-700 mb-1">
+                    {usePerDateTimes ? 'Default Start Time' : 'Start Time'}
+                  </label>
                   <select
                     id="startTime"
                     value={startTime}
@@ -303,7 +358,9 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose, bookingM
                   </select>
                 </div>
                 <div>
-                  <label htmlFor="endTime" className="block text-sm font-medium text-gray-700 mb-1">End Time</label>
+                  <label htmlFor="endTime" className="block text-sm font-medium text-gray-700 mb-1">
+                    {usePerDateTimes ? 'Default End Time' : 'End Time'}
+                  </label>
                   <select
                     id="endTime"
                     value={endTime}
@@ -316,6 +373,59 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose, bookingM
                   </select>
                 </div>
               </div>
+
+              {selectedDates && selectedDates.length > 1 && (
+                <div className="mb-4">
+                  <label className="flex items-center text-sm font-medium text-gray-700 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="mr-2 h-4 w-4 text-[#295FA7] rounded border-gray-300 focus:ring-[#295FA7]"
+                      checked={usePerDateTimes}
+                      onChange={(e) => setUsePerDateTimes(e.target.checked)}
+                    />
+                    Set different times for each date
+                  </label>
+                </div>
+              )}
+
+              {usePerDateTimes && selectedDates && (
+                <div className="space-y-4 mb-6 p-4 border rounded-lg bg-gray-50 max-h-60 overflow-y-auto">
+                  <h4 className="text-sm font-semibold text-gray-800">Date-specific Times</h4>
+                  {selectedDates.map((date) => {
+                    const dateStr = date.toDateString();
+                    const times = dateTimes[dateStr] || { startTime, endTime };
+                    const dateDisabledHours = getDisabledHoursForDate(date);
+
+                    return (
+                      <div key={dateStr} className="border-b pb-3 last:border-b-0">
+                        <p className="text-xs font-medium text-gray-600 mb-2">{dateStr}</p>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <select
+                              value={times.startTime}
+                              onChange={(e) => handleDateTimeChange(dateStr, 'startTime', e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900"
+                            >
+                              <option value="">Start Time</option>
+                              {hall && generateTimeOptions(hall.openingHour || 0, hall.closingHour || 24, dateDisabledHours)}
+                            </select>
+                          </div>
+                          <div>
+                            <select
+                              value={times.endTime}
+                              onChange={(e) => handleDateTimeChange(dateStr, 'endTime', e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900"
+                            >
+                              <option value="">End Time</option>
+                              {hall && generateTimeOptions(hall.openingHour || 0, hall.closingHour || 24, dateDisabledHours)}
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
 
               {hall && hall.facilities.length > 0 && (
                 <div className="mb-6">
@@ -369,12 +479,23 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose, bookingM
           )}
 
           {step === 3 && (
-            <div className="bg-gray-50 p-6 rounded-lg">
+            <div className="bg-gray-50 p-6 rounded-lg max-h-[60vh] overflow-y-auto">
               <h3 className="text-xl font-semibold text-gray-900 mb-4 border-b pb-2">Booking Summary</h3>
               <div className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Dates:</span>
-                  <span className="font-medium text-gray-900">{selectedDates?.map(date => date.toLocaleDateString()).join(', ')}</span>
+                <div className="flex flex-col border-b pb-2">
+                  <span className="text-gray-600 font-medium mb-1">Dates & Times:</span>
+                  <div className="pl-2 space-y-1">
+                    {selectedDates?.map(date => {
+                      const dateStr = date.toDateString();
+                      const times = usePerDateTimes && dateTimes[dateStr] ? dateTimes[dateStr] : { startTime, endTime };
+                      return (
+                        <div key={dateStr} className="flex justify-between text-xs">
+                          <span>{date.toLocaleDateString()}:</span>
+                          <span className="font-medium">{times.startTime} - {times.endTime}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Event Details:</span>
@@ -384,7 +505,7 @@ const BookingModal: FC<BookingModalProps> = ({ hallId, isOpen, onClose, bookingM
                 {hall && (
                   <div className="flex justify-between">
                     <span className="text-gray-600">Hall Rental:</span>
-                    <span className="font-medium text-gray-900">₦{((hall.pricing.dailyRate || 0) * (selectedDates?.length || 1)).toLocaleString()}</span>
+                    <span className="font-medium text-gray-900">₦{hallCost.toLocaleString()}</span>
                   </div>
                 )}
                 {selectedFacilities.length > 0 && (

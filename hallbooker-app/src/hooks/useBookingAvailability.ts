@@ -80,6 +80,48 @@ export const useBookingAvailability = (hall: Hall | null, selectedDates: Date[] 
     return disabled.sort((a, b) => a - b);
   }, [unavailableDates, hall, selectedDates]);
 
+  const getDisabledHoursForDate = useCallback((date: Date) => {
+    if (!hall || !Array.isArray(unavailableDates)) {
+      return [];
+    }
+    const openingHour = hall.openingHour || 0;
+    const closingHour = hall.closingHour || 24;
+    const disabled: number[] = [];
+
+    const targetDay = new Date(date).setHours(0, 0, 0, 0);
+
+    const today = new Date().setHours(0, 0, 0, 0);
+    if (targetDay === today) {
+      const currentHour = new Date().getHours();
+      for (let i = 0; i < currentHour; i++) {
+        disabled.push(i);
+      }
+    }
+
+    unavailableDates.forEach(unavailable => {
+      const bufferStartTime = new Date(unavailable.bufferTime.startTime);
+      const bufferDay = new Date(bufferStartTime).setHours(0, 0, 0, 0);
+
+      if (targetDay === bufferDay) {
+        const bufferEndTime = new Date(unavailable.bufferTime.endTime);
+
+        const startHour = bufferStartTime.getHours();
+        const endHour = bufferEndTime.getMinutes() > 0 ? bufferEndTime.getHours() + 1 : bufferEndTime.getHours();
+
+        const finalBlockStart = Math.max(openingHour, startHour);
+        const finalBlockEnd = Math.min(closingHour, endHour);
+
+        for (let i = finalBlockStart; i < finalBlockEnd; i++) {
+          if (!disabled.includes(i)) {
+            disabled.push(i);
+          }
+        }
+      }
+    });
+
+    return disabled.sort((a, b) => a - b);
+  }, [unavailableDates, hall]);
+
   const getDateAvailability = useCallback((date: Date): 'fully booked' | 'partially booked' | 'fully available' => {
     if (!hall) return 'fully available';
 
@@ -143,5 +185,5 @@ export const useBookingAvailability = (hall: Hall | null, selectedDates: Date[] 
     }
   }, [unavailableDates, hall]);
 
-  return { disabledHours, loading, getDateAvailability };
+  return { disabledHours, loading, getDateAvailability, getDisabledHoursForDate };
 };
