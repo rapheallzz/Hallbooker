@@ -60,7 +60,15 @@ const VendorHeader = () => {
   const suggestions = [
     { label: "Search in Halls", icon: Building, path: "/vendor/dashboard/halls" },
     { label: "Search in Bookings", icon: Calendar, path: "/vendor/dashboard/bookings" },
-    { label: "Search in Staff", icon: Users, path: "/vendor/dashboard/staff" },
+    ...(user?.activeRole === "hall-owner"
+      ? [
+          {
+            label: "Search in Staff",
+            icon: Users,
+            path: "/vendor/dashboard/staff",
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -106,6 +114,7 @@ const VendorHeader = () => {
         )}
       </div>
       <div className="flex items-center space-x-4">
+        {user?.activeRole === "hall-owner" && (
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -155,6 +164,7 @@ const VendorHeader = () => {
             </div>
           )}
         </div>
+        )}
         <div
           className="relative"
           ref={notificationDropdownRef}
