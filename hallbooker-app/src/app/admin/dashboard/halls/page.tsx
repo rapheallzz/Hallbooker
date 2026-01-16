@@ -1,5 +1,6 @@
 "use client";
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import withAuth from "@/components/auth/withAuth";
 import api from "@/services/api";
 import Swal from "sweetalert2";
@@ -27,14 +28,16 @@ interface Facility {
   name: string;
 }
 
-const HallManagementPage = () => {
+const HallManagementContent = () => {
   // Common State
+  const searchParams = useSearchParams();
+  const initialSearch = searchParams.get("search") || "";
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("halls");
 
   // Halls State
   const [halls, setHalls] = useState<Hall[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState(initialSearch);
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingHall, setEditingHall] = useState<Hall | undefined>(undefined);
@@ -428,5 +431,11 @@ const HallManagementPage = () => {
     </div>
   );
 };
+
+const HallManagementPage = () => (
+  <Suspense fallback={<div>Loading...</div>}>
+    <HallManagementContent />
+  </Suspense>
+);
 
 export default withAuth(HallManagementPage, ["super-admin"]);

@@ -1,6 +1,6 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, useEffect, useMemo, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import api from "@/services/api";
 import HallModal from "@/components/vendor/HallModal";
 import ReservationModal from "@/components/vendor/ReservationModal";
@@ -28,8 +28,10 @@ interface Hall {
   carParkCapacity: number;
 }
 
-const HallsPage = () => {
+const HallsContent = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const searchTerm = searchParams.get("search") || "";
   const [halls, setHalls] = useState<Hall[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -217,6 +219,16 @@ const HallsPage = () => {
     }
   };
 
+  const filteredHalls = useMemo(() => {
+    if (!searchTerm) return halls;
+    return halls.filter(
+      (hall) =>
+        hall.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        hall.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        hall.geoLocation?.address.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [halls, searchTerm]);
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-4">
@@ -248,8 +260,8 @@ const HallsPage = () => {
               </tr>
             </thead>
             <tbody>
-              {halls.length > 0 ? (
-                halls.map((hall) => (
+              {filteredHalls.length > 0 ? (
+                filteredHalls.map((hall) => (
                   <React.Fragment key={hall.id}>
                     <tr>
                       <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">{hall.name}</td>
@@ -309,7 +321,7 @@ const HallsPage = () => {
               ) : (
                 <tr>
                   <td colSpan={7} className="text-center py-10">
-                    { !error && "No halls found. Create one to get started."}
+                    {!error && (searchTerm ? `No halls found matching "${searchTerm}"` : "No halls found. Create one to get started.")}
                   </td>
                 </tr>
               )}
@@ -338,5 +350,11 @@ const HallsPage = () => {
     </div>
   );
 };
+
+const HallsPage = () => (
+  <Suspense fallback={<div>Loading...</div>}>
+    <HallsContent />
+  </Suspense>
+);
 
 export default HallsPage;

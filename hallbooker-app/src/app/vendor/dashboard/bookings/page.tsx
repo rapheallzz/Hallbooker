@@ -54,6 +54,7 @@ interface Hall {
 const BookingsPage = () => {
   const searchParams = useSearchParams();
   const hallIdFromQuery = searchParams.get('hallId');
+  const searchTerm = searchParams.get('search') || '';
   const [activeTab, setActiveTab] = useState('bookings');
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [reservations, setReservations] = useState<Reservation[]>([]);
@@ -143,6 +144,27 @@ const BookingsPage = () => {
       }
     }
   };
+
+  const filteredBookings = React.useMemo(() => {
+    if (!searchTerm) return bookings;
+    return bookings.filter(
+      (booking) =>
+        booking.bookingId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        booking.user?.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        booking.walkInUserDetails?.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        booking.eventDetails?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [bookings, searchTerm]);
+
+  const filteredReservations = React.useMemo(() => {
+    if (!searchTerm) return reservations;
+    return reservations.filter(
+      (reservation) =>
+        reservation.reservationId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        reservation.user?.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        reservation.walkInUserDetails?.fullName.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [reservations, searchTerm]);
 
   const handleCreateBooking = async (formData: any, type: string) => {
     Swal.fire({
@@ -259,7 +281,7 @@ const BookingsPage = () => {
               </tr>
             </thead>
             <tbody>
-              {bookings.length > 0 ? bookings.map((booking) => (
+              {filteredBookings.length > 0 ? filteredBookings.map((booking) => (
                 <React.Fragment key={booking._id}>
                   <tr onClick={() => setExpandedBookingId(expandedBookingId === booking._id ? null : booking._id)} className="cursor-pointer">
                     <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">
@@ -315,7 +337,9 @@ const BookingsPage = () => {
               )) : (
                 <tr>
                   <td colSpan={5} className="text-center py-4">
-                    {selectedHall ? 'No bookings found for this hall.' : 'Please select a hall to view bookings.'}
+                    {selectedHall
+                      ? (searchTerm ? `No bookings found matching "${searchTerm}"` : 'No bookings found for this hall.')
+                      : 'Please select a hall to view bookings.'}
                   </td>
                 </tr>
               )}
@@ -341,7 +365,7 @@ const BookingsPage = () => {
               </tr>
             </thead>
             <tbody>
-              {reservations.length > 0 ? reservations.map((reservation) => (
+              {filteredReservations.length > 0 ? filteredReservations.map((reservation) => (
                 <tr key={reservation._id}>
                   <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">
                     {reservation.user?.fullName || reservation.walkInUserDetails?.fullName}
@@ -381,7 +405,9 @@ const BookingsPage = () => {
               )) : (
                 <tr>
                   <td colSpan={5} className="text-center py-4">
-                    {selectedHall ? 'No reservations found for this hall.' : 'Please select a hall to view reservations.'}
+                    {selectedHall
+                      ? (searchTerm ? `No reservations found matching "${searchTerm}"` : 'No reservations found for this hall.')
+                      : 'Please select a hall to view reservations.'}
                   </td>
                 </tr>
               )}

@@ -1,6 +1,7 @@
 
 "use client";
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import withAuth from "@/components/auth/withAuth";
 import api from "@/services/api";
 import Swal from "sweetalert2";
@@ -17,9 +18,11 @@ interface User {
 const USERS_PER_PAGE = 10;
 
 const AllUsersTab = () => {
+  const searchParams = useSearchParams();
+  const initialSearch = searchParams.get("search") || "";
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState(initialSearch);
   const [roleFilter, setRoleFilter] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -286,7 +289,7 @@ const PendingApplicationsTab = () => {
   );
 };
 
-const UsersPage = () => {
+const UsersPageContent = () => {
   const [activeTab, setActiveTab] = useState("allUsers");
 
   return (
@@ -326,5 +329,11 @@ const UsersPage = () => {
     </div>
   );
 };
+
+const UsersPage = () => (
+  <Suspense fallback={<div>Loading...</div>}>
+    <UsersPageContent />
+  </Suspense>
+);
 
 export default withAuth(UsersPage, ["super-admin"]);

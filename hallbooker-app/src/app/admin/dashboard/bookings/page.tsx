@@ -60,6 +60,7 @@ interface Reservation {
 const BookingsPage = () => {
   const searchParams = useSearchParams();
   const hallIdFromQuery = searchParams.get('hallId');
+  const initialSearch = searchParams.get('search') || '';
   const [activeTab, setActiveTab] = useState('bookings');
   const [allBookings, setAllBookings] = useState<Booking[]>([]);
   const [reservations, setReservations] = useState<Reservation[]>([]);
@@ -67,7 +68,7 @@ const BookingsPage = () => {
   const [loading, setLoading] = useState(true);
 
   const [selectedHall, setSelectedHall] = useState(hallIdFromQuery || '');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(initialSearch);
   const [currentPage, setCurrentPage] = useState(1);
 
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
@@ -121,11 +122,14 @@ const BookingsPage = () => {
   }, [selectedHall, activeTab]);
 
   const filteredBookings = useMemo(() => {
-    return allBookings
-      .filter(booking =>
-        searchTerm ? (booking.eventDetails || '').toLowerCase().includes(searchTerm.toLowerCase()) : true
-      );
-  }, [allBookings, selectedHall, searchTerm]);
+    if (!searchTerm) return allBookings;
+    return allBookings.filter(
+      (booking) =>
+        booking.bookingId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (booking.eventDetails || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (typeof booking.user === "object" && booking.user?.fullName.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+  }, [allBookings, searchTerm]);
 
   const paginatedBookings = useMemo(() => {
     const startIndex = (currentPage - 1) * BOOKINGS_PER_PAGE;

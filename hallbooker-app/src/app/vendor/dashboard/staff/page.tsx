@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import api from '@/services/api';
 import StaffModal from '@/components/vendor/StaffModal';
 import { useUI } from '@/context/UIContext';
@@ -11,7 +12,9 @@ interface Staff {
   email: string;
 }
 
-const StaffPage = () => {
+const StaffContent = () => {
+  const searchParams = useSearchParams();
+  const searchTerm = searchParams.get('search') || '';
   const [staff, setStaff] = useState<Staff[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -73,6 +76,15 @@ const StaffPage = () => {
     openStaffModal();
   };
 
+  const filteredStaff = useMemo(() => {
+    if (!searchTerm) return staff;
+    return staff.filter(
+      (member) =>
+        member.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        member.email.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [staff, searchTerm]);
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-4">
@@ -100,8 +112,8 @@ const StaffPage = () => {
               </tr>
             </thead>
             <tbody>
-              {staff.length > 0 ? (
-                staff.map((member) => (
+              {filteredStaff.length > 0 ? (
+                filteredStaff.map((member) => (
                   <tr key={member.id}>
                     <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">{member.fullName}</td>
                     <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">{member.email}</td>
@@ -124,7 +136,7 @@ const StaffPage = () => {
               ) : (
                 <tr>
                   <td colSpan={3} className="text-center py-10 text-gray-600">
-                    {!error && "No staff members found. Add one to get started."}
+                    {!error && (searchTerm ? `No staff members found matching "${searchTerm}"` : "No staff members found. Add one to get started.")}
                   </td>
                 </tr>
               )}
@@ -145,5 +157,11 @@ const StaffPage = () => {
     </div>
   );
 };
+
+const StaffPage = () => (
+  <Suspense fallback={<div>Loading...</div>}>
+    <StaffContent />
+  </Suspense>
+);
 
 export default StaffPage;
