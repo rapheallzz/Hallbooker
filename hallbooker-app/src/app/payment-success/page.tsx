@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle } from "lucide-react";
@@ -93,8 +93,6 @@ const PaymentSuccessContent = () => {
   }
 
   const displayId = details.reservationId || details.bookingId;
-  const startTime = details.startTime || details.bookingDates?.[0]?.startTime;
-  const endTime = details.endTime || details.bookingDates?.[0]?.endTime;
   const hallName = details.hall?.name || 'Not Available';
   const hallLocation = details.hall?.location || 'Not Available';
 
@@ -131,18 +129,43 @@ const PaymentSuccessContent = () => {
                 {hallLocation}
               </dd>
             </div>
-            {startTime && (<div className="col-span-1">
-              <dt className="text-sm font-medium text-gray-500">Start Time</dt>
-              <dd className="mt-1 text-md text-gray-900">
-                {new Date(startTime).toLocaleString()}
-              </dd>
-            </div>)}
-            {endTime && (<div className="col-span-1">
-              <dt className="text-sm font-medium text-gray-500">End Time</dt>
-              <dd className="mt-1 text-md text-gray-900">
-                {new Date(endTime).toLocaleString()}
-              </dd>
-            </div>)}
+            {details.bookingDates && details.bookingDates.length > 0 ? (
+              details.bookingDates.map((date, index) => (
+                <React.Fragment key={index}>
+                  <div className="col-span-1">
+                    <dt className="text-sm font-medium text-gray-500">Start Time {details.bookingDates!.length > 1 ? `(${index + 1})` : ''}</dt>
+                    <dd className="mt-1 text-md text-gray-900">
+                      {new Date(date.startTime).toLocaleString()}
+                    </dd>
+                  </div>
+                  <div className="col-span-1">
+                    <dt className="text-sm font-medium text-gray-500">End Time {details.bookingDates!.length > 1 ? `(${index + 1})` : ''}</dt>
+                    <dd className="mt-1 text-md text-gray-900">
+                      {new Date(date.endTime).toLocaleString()}
+                    </dd>
+                  </div>
+                </React.Fragment>
+              ))
+            ) : (
+              <>
+                {details.startTime && (
+                  <div className="col-span-1">
+                    <dt className="text-sm font-medium text-gray-500">Start Time</dt>
+                    <dd className="mt-1 text-md text-gray-900">
+                      {new Date(details.startTime).toLocaleString()}
+                    </dd>
+                  </div>
+                )}
+                {details.endTime && (
+                  <div className="col-span-1">
+                    <dt className="text-sm font-medium text-gray-500">End Time</dt>
+                    <dd className="mt-1 text-md text-gray-900">
+                      {new Date(details.endTime).toLocaleString()}
+                    </dd>
+                  </div>
+                )}
+              </>
+            )}
           </dl>
 
           {details.selectedFacilities && details.selectedFacilities.length > 0 && (
