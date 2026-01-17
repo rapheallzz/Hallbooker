@@ -12,7 +12,7 @@ import HallDetailSkeleton from '@/components/HallDetailSkeleton';
 import Carousel from '@/components/Carousel';
 import MediaViewerModal from '@/components/MediaViewerModal';
 import { useBookingAvailability } from '@/hooks/useBookingAvailability';
-import { Hall } from '@/types';
+import { Hall, Review } from '@/types';
 import FacilityIcon from '@/components/FacilityIcon';
 import { CheckCircle, CircleDollarSign, Eye } from 'lucide-react';
 import Swal from 'sweetalert2';
@@ -20,7 +20,9 @@ import Swal from 'sweetalert2';
 const HallDetailPage = () => {
   const [hall, setHall] = useState<Hall | null>(null);
   const [recommendations, setRecommendations] = useState<Hall[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
   const [error, setError] = useState('');
   const [recommendationsUnavailable, setRecommendationsUnavailable] = useState(false);
   const { isBookingModalOpen, openBookingModal, closeBookingModal } = useUI();
@@ -80,6 +82,20 @@ const HallDetailPage = () => {
             setRecommendations([]);
           });
         }
+
+        // Fetch reviews
+        setReviewsLoading(true);
+        api.get<{ data: Review[] }>(`/reviews/hall/${id}`)
+          .then(reviewsResponse => {
+            setReviews(reviewsResponse.data.data || []);
+          })
+          .catch(revErr => {
+            console.error('Failed to fetch reviews:', revErr);
+          })
+          .finally(() => {
+            setReviewsLoading(false);
+          });
+
       } catch (err) {
         console.error(`Failed to fetch hall with id ${id}:`, err);
         setError(`Failed to fetch hall with id ${id}. See console for details.`);
@@ -305,20 +321,26 @@ const HallDetailPage = () => {
             {/* Reviews Section */}
             <div className="py-6 border-b">
               <h3 className="font-semibold text-xl text-gray-800 mb-4">Reviews</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <ReviewCard
-                  name="John Doe"
-                  date="October 2023"
-                  rating={5}
-                  comment="This hall was amazing! It was clean, spacious, and perfect for our event."
-                />
-                <ReviewCard
-                  name="Jane Smith"
-                  date="September 2023"
-                  rating={4}
-                  comment="Great location and amenities. The host was very responsive and helpful."
-                />
-              </div>
+              {reviewsLoading ? (
+                <p className="text-gray-500 italic">Loading reviews...</p>
+              ) : reviews.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {reviews.map((review) => (
+                    <ReviewCard
+                      key={review._id}
+                      name={review.user?.fullName || 'Anonymous'}
+                      date={new Date(review.createdAt).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long'
+                      })}
+                      rating={review.rating}
+                      comment={review.comment}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500 italic">No reviews yet for this hall.</p>
+              )}
             </div>
              {/* Recommendation Section */}
             <div className="py-6">

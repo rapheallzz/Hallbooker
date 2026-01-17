@@ -58,3 +58,15 @@ export interface Notification {
   read: boolean;
   createdAt: string;
 }
+
+export interface Review {
+  _id: string;
+  hall: string;
+  user: {
+    _id: string;
+    fullName: string;
+  };
+  rating: number;
+  comment: string;
+  createdAt: string;
+}
