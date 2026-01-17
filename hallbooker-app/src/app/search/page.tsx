@@ -63,7 +63,47 @@ const SearchContent = () => {
   };
 
   useEffect(() => {
-    fetchHalls();
+    const kw = searchParams.get('keyword') || '';
+    const cap = searchParams.get('minCapacity') || '';
+    const minP = Number(searchParams.get('minPrice')) || 0;
+    const maxP = Number(searchParams.get('maxPrice')) || 1000000;
+    const start = searchParams.get('startDate') || '';
+    const end = searchParams.get('endDate') || '';
+
+    setKeyword(kw);
+    setMinCapacity(cap);
+    setMinPrice(minP);
+    setMaxPrice(maxP);
+    setStartDate(start);
+    setEndDate(end);
+
+    const fetchWithParams = async () => {
+      setLoading(true);
+      try {
+        const response = await api.get('/halls', {
+          params: {
+            keyword: kw || undefined,
+            minCapacity: cap || undefined,
+            minPrice: minP,
+            maxPrice: maxP,
+            startDate: start || undefined,
+            endDate: end || undefined,
+          },
+        });
+        if (Array.isArray(response.data.data)) {
+          setHalls(response.data.data);
+        } else {
+          setHalls([]);
+        }
+      } catch (error) {
+        console.error('Error fetching halls:', error);
+        setHalls([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchWithParams();
   }, [searchParams]);
 
   const handleSearch = (e: React.FormEvent) => {

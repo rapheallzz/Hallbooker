@@ -54,7 +54,8 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
     '500+',
   ];
 
-  const handleSearch = () => {
+  const handleSearch = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     onSearch({
       location,
       dateRange,
@@ -64,7 +65,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
   };
 
   return (
-    <div className="bg-white rounded-full shadow-lg p-2 flex items-center w-full max-w-5xl mx-auto">
+    <form onSubmit={handleSearch} className="bg-white rounded-full shadow-lg p-2 flex items-center w-full max-w-5xl mx-auto">
       <div className="flex-1 relative group" ref={locationRef}>
         <div
           className="p-4 rounded-full hover:bg-gray-100 cursor-pointer"
@@ -226,7 +227,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
         )}
       </div>
 
-      <button onClick={handleSearch} className="bg-[#295FA7] hover:bg-blue-700 text-white rounded-full p-4 mr-2">
+      <button type="submit" className="bg-[#295FA7] hover:bg-blue-700 text-white rounded-full p-4 mr-2">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           className="h-6 w-6"
