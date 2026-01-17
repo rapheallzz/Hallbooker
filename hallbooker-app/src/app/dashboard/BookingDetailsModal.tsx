@@ -15,12 +15,13 @@ const BookingDetailsModal = ({ booking, onClose }) => {
     if (navigator.share) {
       navigator.share({
         title: 'Booking Details',
-        text: `Check out my booking details:\nBooking ID: ${booking.bookingId}\nEvent: ${booking.eventDetails}\nHall: ${booking.hall.name}`,
+        text: `Check out my booking details:\nBooking ID: ${
+          booking.bookingId
+        }\nEvent: ${booking.eventDetails}\nHall: ${booking.hall?.name || "N/A"}`,
         url: window.location.href,
-      })
-        .catch((error) => console.error('Error sharing', error));
+      }).catch((error) => console.error("Error sharing", error));
     } else {
-      alert('Sharing is not supported on this browser.');
+      alert("Sharing is not supported on this browser.");
     }
   };
 
@@ -43,11 +44,23 @@ const BookingDetailsModal = ({ booking, onClose }) => {
                 </div>
                 <div className="flex justify-between">
                   <span className="font-medium">Date:</span>
-                  <span>{new Date(booking.bookingDates[0].startTime).toLocaleDateString()}</span>
+                  <span>
+                    {booking.bookingDates?.[0]?.startTime
+                      ? new Date(booking.bookingDates[0].startTime).toLocaleDateString()
+                      : "N/A"}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="font-medium">Time:</span>
-                  <span>{new Date(booking.bookingDates[0].startTime).toLocaleTimeString()} - {new Date(booking.bookingDates[0].endTime).toLocaleTimeString()}</span>
+                  <span>
+                    {booking.bookingDates?.[0]
+                      ? `${new Date(
+                          booking.bookingDates[0].startTime
+                        ).toLocaleTimeString()} - ${new Date(
+                          booking.bookingDates[0].endTime
+                        ).toLocaleTimeString()}`
+                      : "N/A"}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="font-medium">Payment Status:</span>
@@ -56,15 +69,17 @@ const BookingDetailsModal = ({ booking, onClose }) => {
               </div>
             </div>
             <div>
-              <h3 className="text-xl font-semibold mb-3 border-b pb-2 text-primary">Hall Details</h3>
+              <h3 className="text-xl font-semibold mb-3 border-b pb-2 text-primary">
+                Hall Details
+              </h3>
               <div className="space-y-2 text-gray-700">
                 <div className="flex justify-between">
                   <span className="font-medium">Hall Name:</span>
-                  <span>{booking.hall.name}</span>
+                  <span>{booking.hall?.name || "N/A"}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="font-medium">Location:</span>
-                  <span>{booking.hall.location}</span>
+                  <span>{booking.hall?.location || "N/A"}</span>
                 </div>
               </div>
             </div>
