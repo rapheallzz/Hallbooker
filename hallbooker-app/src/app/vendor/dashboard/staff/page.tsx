@@ -6,6 +6,7 @@ import api from '@/services/api';
 import StaffModal from '@/components/vendor/StaffModal';
 import { useUI } from '@/context/UIContext';
 import withAuth from '@/components/auth/withAuth';
+import Swal from 'sweetalert2';
 
 interface Staff {
   id: string;
@@ -57,12 +58,35 @@ const StaffContent = () => {
   }
 
   const handleRemoveStaff = async (staffId: string) => {
-    if (window.confirm('Are you sure you want to remove this staff member?')) {
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: "You won't be able to revert this!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#4F46E5',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, remove them!',
+      cancelButtonText: 'No, cancel'
+    });
+
+    if (result.isConfirmed) {
       try {
         await api.delete(`/users/remove-staff/${staffId}`);
+        Swal.fire({
+          title: 'Removed!',
+          text: 'Staff member has been removed.',
+          icon: 'success',
+          confirmButtonColor: '#4F46E5',
+        });
         fetchStaff();
       } catch (error) {
         console.error('Failed to remove staff:', error);
+        Swal.fire({
+          title: 'Error!',
+          text: 'Failed to remove staff member. Please try again.',
+          icon: 'error',
+          confirmButtonColor: '#4F46E5',
+        });
       }
     }
   };
