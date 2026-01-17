@@ -243,7 +243,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
           />
         </svg>
       </button>
-    </div>
+    </form>
   );
 };
 
