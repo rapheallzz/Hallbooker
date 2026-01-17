@@ -1,16 +1,13 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { DateRangePicker } from 'react-date-range';
-import 'react-date-range/dist/styles.css';
-import 'react-date-range/dist/theme/default.css';
+import { DayPicker, DateRange } from 'react-day-picker';
+import 'react-day-picker/dist/style.css';
 import { format } from 'date-fns';
 import useOnClickOutside from '@/hooks/useOnClickOutside';
-import Slider from 'rc-slider';
-import 'rc-slider/assets/index.css';
 
 interface SearchBarProps {
-  onSearch: (filters: { location: string; dateRange: any; capacity: string; priceRange: [number, number] }) => void;
+  onSearch: (filters: { location: string; dateRange: DateRange | undefined; capacity: string; priceRange: [number, number] }) => void;
 }
 
 const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
@@ -19,15 +16,13 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
   const [showCalendar, setShowCalendar] = useState(false);
   const [showCapacity, setShowCapacity] = useState(false);
   const [showPrice, setShowPrice] = useState(false);
-  const [dateRange, setDateRange] = useState([
-    {
-      startDate: new Date(),
-      endDate: new Date(),
-      key: 'selection',
-    },
-  ]);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: new Date(),
+    to: new Date(),
+  });
   const [capacity, setCapacity] = useState('');
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 5000]);
+  const [minPrice, setMinPrice] = useState<number>(0);
+  const [maxPrice, setMaxPrice] = useState<number>(1000000);
 
   const locationRef = useRef<HTMLDivElement>(null);
   const calendarRef = useRef<HTMLDivElement>(null);
@@ -40,11 +35,14 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
   useOnClickOutside(priceRef, () => setShowPrice(false));
 
   const locations = [
-    'New York, NY',
-    'Los Angeles, CA',
-    'Chicago, IL',
-    'Houston, TX',
-    'Miami, FL',
+    'Lagos',
+    'Abuja',
+    'Port Harcourt',
+    'Kano',
+    'Ibadan',
+    'Enugu',
+    'Benin City',
+    'Kaduna',
   ];
 
   const capacities = [
@@ -56,21 +54,17 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
     '500+',
   ];
 
-  const handleDateChange = (ranges: any) => {
-    setDateRange([ranges.selection]);
-  };
-
   const handleSearch = () => {
     onSearch({
       location,
       dateRange,
       capacity,
-      priceRange,
+      priceRange: [minPrice, maxPrice],
     });
   };
 
   return (
-    <div className="bg-white rounded-full shadow-lg p-2 flex items-center w-full max-w-4xl mx-auto">
+    <div className="bg-white rounded-full shadow-lg p-2 flex items-center w-full max-w-5xl mx-auto">
       <div className="flex-1 relative group" ref={locationRef}>
         <div
           className="p-4 rounded-full hover:bg-gray-100 cursor-pointer"
@@ -88,11 +82,11 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
             value={location}
             onChange={(e) => setLocation(e.target.value)}
             placeholder="Where is your event?"
-            className="w-full bg-transparent border-none focus:ring-0 text-gray-600 placeholder-gray-400"
+            className="w-full bg-transparent border-none focus:ring-0 text-gray-600 placeholder-gray-400 text-sm"
           />
         </div>
         {showLocations && (
-          <div className="absolute z-10 w-full mt-1 bg-white rounded-xl shadow-lg">
+          <div className="absolute z-10 w-full mt-1 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
             <ul className="py-2">
               {locations.map((loc) => (
                 <li
@@ -120,22 +114,36 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
             htmlFor="price"
             className="block text-sm font-bold text-gray-800"
           >
-            Price
+            Price Range
           </label>
-          <div className="text-gray-600">
-            ${priceRange[0]} - ${priceRange[1]}
+          <div className="text-gray-600 truncate text-sm">
+            ₦{minPrice.toLocaleString()} - ₦{maxPrice.toLocaleString()}
           </div>
         </div>
         {showPrice && (
-          <div className="absolute z-10 w-full mt-1 p-4 bg-white rounded-xl shadow-lg">
-            <Slider
-              range
-              min={0}
-              max={10000}
-              value={priceRange}
-              onChange={(value) => setPriceRange(value as [number, number])}
-              step={100}
-            />
+          <div className="absolute z-10 w-64 mt-1 p-4 bg-white rounded-xl shadow-lg border border-gray-100">
+             <div className="space-y-4">
+               <div>
+                 <label className="block text-xs text-gray-500 mb-1">Min Price (₦)</label>
+                 <input
+                   type="number"
+                   value={minPrice}
+                   onChange={(e) => setMinPrice(Number(e.target.value))}
+                   className="w-full border rounded-md p-2 text-sm"
+                   placeholder="Min"
+                 />
+               </div>
+               <div>
+                 <label className="block text-xs text-gray-500 mb-1">Max Price (₦)</label>
+                 <input
+                   type="number"
+                   value={maxPrice}
+                   onChange={(e) => setMaxPrice(Number(e.target.value))}
+                   className="w-full border rounded-md p-2 text-sm"
+                   placeholder="Max"
+                 />
+               </div>
+             </div>
           </div>
         )}
       </div>
@@ -151,27 +159,30 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
           >
             Date
           </label>
-          <input
-            type="text"
-            readOnly
-            value={`${format(dateRange[0].startDate, 'MMM d')} - ${format(
-              dateRange[0].endDate,
-              'MMM d'
-            )}`}
-            className="w-full bg-transparent border-none focus:ring-0 text-gray-600 placeholder-gray-400"
-          />
+          <div className="w-full bg-transparent border-none focus:ring-0 text-gray-600 placeholder-gray-400 text-sm truncate">
+            {dateRange?.from ? (
+              dateRange.to ? `${format(dateRange.from, 'MMM d')} - ${format(dateRange.to, 'MMM d')}` : format(dateRange.from, 'MMM d')
+            ) : 'Select dates'}
+          </div>
         </div>
         {showCalendar && (
-          <div className="absolute z-10 mt-2 left-1/2 transform -translate-x-1/2">
-            <DateRangePicker
-              onChange={handleDateChange}
-              showSelectionPreview={true}
-              moveRangeOnFirstSelection={false}
-              months={2}
-              ranges={dateRange}
-              direction="horizontal"
-              className="rounded-xl shadow-lg"
-              minDate={new Date()}
+          <div className="absolute z-10 mt-2 left-1/2 transform -translate-x-1/2 bg-white rounded-xl shadow-lg border border-gray-100 p-2">
+            <style>{`
+              .rdp-day_selected, .rdp-day_selected:hover {
+                background-color: #295FA7 !important;
+                color: white !important;
+              }
+              .rdp-day_range_middle {
+                background-color: #EBF2FF !important;
+                color: #295FA7 !important;
+              }
+            `}</style>
+            <DayPicker
+              mode="range"
+              selected={dateRange}
+              onSelect={setDateRange}
+              disabled={{ before: new Date() }}
+              className="m-0"
             />
           </div>
         )}
@@ -192,11 +203,11 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
             type="text"
             readOnly
             value={capacity || 'number of Guest'}
-            className="w-full bg-transparent border-none focus:ring-0 text-gray-600"
+            className="w-full bg-transparent border-none focus:ring-0 text-gray-600 text-sm"
           />
         </div>
         {showCapacity && (
-          <div className="absolute z-10 w-full mt-1 bg-white rounded-xl shadow-lg">
+          <div className="absolute z-10 w-full mt-1 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
             <ul className="py-2">
               {capacities.map((cap) => (
                 <li
@@ -215,7 +226,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
         )}
       </div>
 
-      <button onClick={handleSearch} className="bg-[#295FA7] hover:bg-blue-700 text-white rounded-full p-4">
+      <button onClick={handleSearch} className="bg-[#295FA7] hover:bg-blue-700 text-white rounded-full p-4 mr-2">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           className="h-6 w-6"

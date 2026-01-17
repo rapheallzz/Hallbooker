@@ -54,17 +54,24 @@ const HomePage = () => {
   }, []);
 
   const handleSearch = (filters: { location: string; dateRange: any; capacity: string; priceRange: [number, number] }) => {
-    const { location, capacity, priceRange } = filters;
+    const { location, capacity, priceRange, dateRange } = filters;
     const [minPrice, maxPrice] = priceRange;
 
     const params = new URLSearchParams();
-    if (location) params.set('keyword', location.split(',')[0]);
+    if (location) params.set('keyword', location);
     if (capacity && capacity !== 'Any') {
       const match = capacity.match(/(\d+)/);
       if (match) params.set('minCapacity', match[0]);
     }
     params.set('minPrice', minPrice.toString());
     params.set('maxPrice', maxPrice.toString());
+
+    if (dateRange?.from) {
+      params.set('startDate', dateRange.from.toISOString().split('T')[0]);
+    }
+    if (dateRange?.to) {
+      params.set('endDate', dateRange.to.toISOString().split('T')[0]);
+    }
 
     router.push(`/search?${params.toString()}`);
   };

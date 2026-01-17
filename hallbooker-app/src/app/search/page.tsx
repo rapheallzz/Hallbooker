@@ -1,12 +1,11 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import HallCard from '@/components/HallCard';
 import api from '@/services/api';
 import { Hall } from '@/types/hall';
 import useIntersectionObserver from '@/hooks/useIntersectionObserver';
-import Slider from 'rc-slider';
-import 'rc-slider/assets/index.css';
 
 const AnimatedHallCard = ({ hall, index }: { hall: Hall; index: number }) => {
   const ref = useRef<HTMLDivElement>(null);
@@ -25,17 +24,19 @@ const AnimatedHallCard = ({ hall, index }: { hall: Hall; index: number }) => {
   );
 };
 
-
-const SearchPage = () => {
+const SearchContent = () => {
+  const searchParams = useSearchParams();
   const [halls, setHalls] = useState<Hall[]>([]);
   const [loading, setLoading] = useState(true);
-  const [keyword, setKeyword] = useState('');
-  const [minCapacity, setMinCapacity] = useState('');
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 5000]);
+  const [keyword, setKeyword] = useState(searchParams.get('keyword') || '');
+  const [minCapacity, setMinCapacity] = useState(searchParams.get('minCapacity') || '');
+  const [minPrice, setMinPrice] = useState<number>(Number(searchParams.get('minPrice')) || 0);
+  const [maxPrice, setMaxPrice] = useState<number>(Number(searchParams.get('maxPrice')) || 1000000);
+  const [startDate, setStartDate] = useState(searchParams.get('startDate') || '');
+  const [endDate, setEndDate] = useState(searchParams.get('endDate') || '');
 
   const fetchHalls = async () => {
     setLoading(true);
-    const [minPrice, maxPrice] = priceRange;
 
     try {
       const response = await api.get('/halls', {
@@ -44,6 +45,8 @@ const SearchPage = () => {
           minCapacity: minCapacity || undefined,
           minPrice,
           maxPrice,
+          startDate: startDate || undefined,
+          endDate: endDate || undefined,
         },
       });
       if (Array.isArray(response.data.data)) {
@@ -61,7 +64,7 @@ const SearchPage = () => {
 
   useEffect(() => {
     fetchHalls();
-  }, []);
+  }, [searchParams]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,7 +82,7 @@ const SearchPage = () => {
             <form onSubmit={handleSearch}>
               <div className="mb-4">
                 <label htmlFor="keyword" className="block text-sm font-medium text-gray-700">
-                  Keyword
+                  Keyword / Location
                 </label>
                 <input
                   type="text"
@@ -87,7 +90,31 @@ const SearchPage = () => {
                   value={keyword}
                   onChange={(e) => setKeyword(e.target.value)}
                   className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
-                  placeholder="e.g., Grand Hall"
+                  placeholder="e.g., Lagos"
+                />
+              </div>
+              <div className="mb-4">
+                <label htmlFor="startDate" className="block text-sm font-medium text-gray-700">
+                  Start Date
+                </label>
+                <input
+                  type="date"
+                  id="startDate"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
+                />
+              </div>
+              <div className="mb-4">
+                <label htmlFor="endDate" className="block text-sm font-medium text-gray-700">
+                  End Date
+                </label>
+                <input
+                  type="date"
+                  id="endDate"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
                 />
               </div>
               <div className="mb-4">
@@ -104,25 +131,29 @@ const SearchPage = () => {
                 />
               </div>
               <div className="mb-4">
-                <label htmlFor="price" className="block text-sm font-medium text-gray-700">
-                  Price Range
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Price Range (₦)
                 </label>
-                <Slider
-                  range
-                  min={0}
-                  max={10000}
-                  value={priceRange}
-                  onChange={(value) => setPriceRange(value as [number, number])}
-                  step={100}
-                />
-                <div className="flex justify-between text-sm text-gray-600 mt-2">
-                  <span>${priceRange[0]}</span>
-                  <span>${priceRange[1]}</span>
+                <div className="grid grid-cols-1 gap-2">
+                  <input
+                    type="number"
+                    value={minPrice}
+                    onChange={(e) => setMinPrice(Number(e.target.value))}
+                    className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
+                    placeholder="Min Price"
+                  />
+                  <input
+                    type="number"
+                    value={maxPrice}
+                    onChange={(e) => setMaxPrice(Number(e.target.value))}
+                    className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
+                    placeholder="Max Price"
+                  />
                 </div>
               </div>
               <button
                 type="submit"
-                className="w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                className="w-full bg-[#295FA7] text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
               >
                 Search
               </button>
@@ -132,17 +163,33 @@ const SearchPage = () => {
         <div className="col-span-3">
           {/* Search results */}
           {loading ? (
-            <p>Loading...</p>
+            <p className="text-center py-10">Loading halls...</p>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {halls.map((hall, index) => (
-                <AnimatedHallCard key={hall._id} hall={hall} index={index} />
-              ))}
-            </div>
+            <>
+              {halls.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {halls.map((hall, index) => (
+                    <AnimatedHallCard key={hall._id} hall={hall} index={index} />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-20">
+                  <p className="text-xl text-gray-500">No halls found matching your criteria.</p>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
     </div>
+  );
+};
+
+const SearchPage = () => {
+  return (
+    <Suspense fallback={<div className="pt-24 text-center">Loading search...</div>}>
+      <SearchContent />
+    </Suspense>
   );
 };
 

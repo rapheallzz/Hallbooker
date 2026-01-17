@@ -324,7 +324,7 @@ const BookingsPage = () => {
                     <tr>
                       <td colSpan={5} className="p-4 bg-gray-100">
                         <div>Event Details: {booking.eventDetails}</div>
-                        <div>Total Price: {booking.totalPrice}</div>
+                        <div>Total Price: ₦{booking.totalPrice?.toLocaleString()}</div>
                         <div>Payment Method: {booking.paymentMethod}</div>
                         <div>Payment Status: {booking.paymentStatus}</div>
                         <div>Booking Type: {booking.bookingType}</div>
