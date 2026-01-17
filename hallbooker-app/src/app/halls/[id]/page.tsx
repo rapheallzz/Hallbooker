@@ -326,7 +326,7 @@ const HallDetailPage = () => {
               {recommendationsUnavailable ? (
                 <p className="text-gray-500">Recommendations are temporarily unavailable</p>
               ) : recommendations.length > 0 ? (
-                <Carousel halls={recommendations} />
+                <Carousel halls={recommendations} slidesToShow={3} />
               ) : (
                 <p className="text-gray-500">No recommendation found</p>
               )}
