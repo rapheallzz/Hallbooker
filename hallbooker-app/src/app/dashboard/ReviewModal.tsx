@@ -48,8 +48,8 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ booking, existingReview, onCl
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
-      <div className="bg-white rounded-lg w-full max-w-lg shadow-xl overflow-hidden">
+    <div className="fixed inset-0 flex justify-center items-center z-50 p-4">
+      <div className="bg-white rounded-lg w-full max-w-lg shadow-xl overflow-hidden border border-gray-200">
         <div className="flex justify-between items-center p-4 border-b">
           <h2 className="text-xl font-bold text-gray-800">
             {existingReview ? 'Your Review' : `Rate & Review ${booking.hall?.name || 'Hall'}`}
