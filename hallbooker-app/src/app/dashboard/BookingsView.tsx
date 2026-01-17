@@ -10,6 +10,7 @@ const BookingsView = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("upcoming");
 
   useEffect(() => {
     const fetchBookings = async () => {
@@ -47,7 +48,7 @@ const BookingsView = () => {
     setSelectedBooking(null);
   };
 
-  const handleViewReceipt = async (bookingId) => {
+  const handleViewReceipt = async (bookingId: string) => {
     try {
       const response = await api.get(`/bookings/search/${bookingId}`);
       if (response.data.data) {
@@ -62,11 +63,44 @@ const BookingsView = () => {
     }
   };
 
+  const filteredBookings = bookings.filter((booking: { bookingDates: { endTime: string }[] }) => {
+    if (!booking.bookingDates || booking.bookingDates.length === 0) return activeTab === "upcoming";
+    const latestEndTime = new Date(
+      Math.max(...booking.bookingDates.map((d) => new Date(d.endTime).getTime()))
+    );
+    const now = new Date();
+    const isPast = latestEndTime < now;
+    return activeTab === "past" ? isPast : !isPast;
+  });
+
   return (
     <div>
       <h2 className="text-2xl font-bold text-gray-800 mb-4">My Bookings</h2>
-      <div className="flex justify-end mb-6">
-        <input
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+        <div className="flex border-b">
+          <button
+            className={`px-4 py-2 font-medium transition-colors duration-200 ${
+              activeTab === "upcoming"
+                ? "border-b-2 border-primary text-primary"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+            onClick={() => setActiveTab("upcoming")}
+          >
+            Upcoming
+          </button>
+          <button
+            className={`px-4 py-2 font-medium transition-colors duration-200 ${
+              activeTab === "past"
+                ? "border-b-2 border-primary text-primary"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+            onClick={() => setActiveTab("past")}
+          >
+            Past
+          </button>
+        </div>
+        <div className="flex flex-1 justify-end">
+          <input
           type="text"
           placeholder="Search by booking ID..."
           className="p-2 border border-gray-400 rounded-md w-1/2 md:w-1/3 text-gray-800"
@@ -80,15 +114,22 @@ const BookingsView = () => {
           Search
         </button>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {bookings.map((booking) => (
-          <BookingCard
-            key={booking._id}
-            booking={booking}
-            onViewReceipt={handleViewReceipt}
-          />
-        ))}
       </div>
+      {filteredBookings.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredBookings.map((booking: { _id: string }) => (
+            <BookingCard
+              key={booking._id}
+              booking={booking}
+              onViewReceipt={handleViewReceipt}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-10 bg-white rounded-lg shadow">
+          <p className="text-gray-500 text-lg">No {activeTab} bookings found.</p>
+        </div>
+      )}
       {isModalOpen && (
         <BookingDetailsModal
           booking={selectedBooking}
