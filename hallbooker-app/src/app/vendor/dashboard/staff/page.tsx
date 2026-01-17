@@ -9,7 +9,7 @@ import withAuth from '@/components/auth/withAuth';
 import Swal from 'sweetalert2';
 
 interface Staff {
-  id: string;
+  _id: string;
   fullName: string;
   email: string;
 }
@@ -139,7 +139,7 @@ const StaffContent = () => {
             <tbody>
               {filteredStaff.length > 0 ? (
                 filteredStaff.map((member) => (
-                  <tr key={member.id}>
+                  <tr key={member._id}>
                     <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">{member.fullName}</td>
                     <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">{member.email}</td>
                     <td className="px-6 py-4 whitespace-no-wrap text-right border-b border-gray-500 text-gray-900">
@@ -150,7 +150,7 @@ const StaffContent = () => {
                         Edit
                       </button>
                       <button
-                        onClick={() => handleRemoveStaff(member.id)}
+                        onClick={() => handleRemoveStaff(member._id)}
                         className="ml-2 px-5 py-2 border-red-500 border text-red-500 rounded transition duration-300 hover:bg-red-500 hover:text-white focus:outline-none"
                       >
                         Remove
