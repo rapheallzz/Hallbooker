@@ -7,6 +7,7 @@ import StaffModal from '@/components/vendor/StaffModal';
 import { useUI } from '@/context/UIContext';
 import withAuth from '@/components/auth/withAuth';
 import Swal from 'sweetalert2';
+import { Loader2, Trash2, Edit, Plus } from 'lucide-react';
 
 interface Staff {
   _id: string;
@@ -42,12 +43,32 @@ const StaffContent = () => {
   }, []);
 
   const handleAddStaff = async (formData: any) => {
+    Swal.fire({
+      title: 'Adding Staff Member...',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+    });
+
     try {
       await api.post('/users/add-staff', formData);
-      fetchStaff();
+      await fetchStaff();
       closeStaffModal();
+      Swal.fire({
+        title: 'Success!',
+        text: 'Staff member added successfully.',
+        icon: 'success',
+        confirmButtonColor: '#4F46E5',
+      });
     } catch (error) {
       console.error('Failed to add staff:', error);
+      Swal.fire({
+        title: 'Error!',
+        text: 'Failed to add staff member. Please try again.',
+        icon: 'error',
+        confirmButtonColor: '#4F46E5',
+      });
     }
   };
 
@@ -70,6 +91,14 @@ const StaffContent = () => {
     });
 
     if (result.isConfirmed) {
+      Swal.fire({
+        title: 'Removing...',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+
       try {
         await api.delete(`/users/remove-staff/${staffId}`);
         Swal.fire({
@@ -122,9 +151,14 @@ const StaffContent = () => {
         </button>
       </div>
 
-      {loading && <p>Loading staff...</p>}
+      {loading && (
+        <div className="flex flex-col items-center justify-center py-20 bg-white rounded-xl shadow-sm border border-gray-100">
+          <Loader2 className="w-10 h-10 text-primary animate-spin mb-4" />
+          <p className="text-gray-500 font-medium">Loading staff members...</p>
+        </div>
+      )}
 
-      {error && <p className="text-red-600 mb-4">{error}</p>}
+      {error && <p className="text-red-600 mb-4 bg-red-50 p-4 rounded-lg border border-red-100">{error}</p>}
 
       {!loading && (
          <div className="bg-white p-4 shadow-lg rounded-lg">
