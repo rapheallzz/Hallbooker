@@ -1,19 +1,7 @@
 "use client";
 import React from "react";
-import api from "../../services/api";
-import Swal from "sweetalert2";
 
 const BookingCard = ({ booking, onViewReceipt }) => {
-  const handleCancel = async () => {
-    try {
-      await api.patch(`/bookings/${booking._id}/cancel`);
-      Swal.fire("Cancelled!", "Your booking has been cancelled.", "success");
-    } catch (error) {
-      console.error("Error cancelling booking:", error);
-      Swal.fire("Oops...", "Something went wrong!", "error");
-    }
-  };
-
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden transform hover:scale-105 transition-transform duration-300">
       <div className="p-6">
@@ -27,7 +15,7 @@ const BookingCard = ({ booking, onViewReceipt }) => {
             ? new Date(booking.bookingDates[0].startTime).toLocaleDateString()
             : "N/A"}
         </p>
-        <div className="mt-4 flex justify-end space-x-2">
+        <div className="mt-4 flex justify-end">
           <button
             onClick={() => onViewReceipt(booking.bookingId)}
             disabled={!booking.hall}
@@ -38,17 +26,6 @@ const BookingCard = ({ booking, onViewReceipt }) => {
             }`}
           >
             View Receipt
-          </button>
-          <button
-            onClick={handleCancel}
-            disabled={!booking.hall}
-            className={`py-2 px-4 rounded-md transition-colors duration-300 ${
-              !booking.hall
-                ? "bg-red-300 text-white cursor-not-allowed"
-                : "bg-red-500 text-white hover:bg-red-600"
-            }`}
-          >
-            Cancel Booking
           </button>
         </div>
       </div>
