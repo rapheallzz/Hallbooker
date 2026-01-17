@@ -3,14 +3,22 @@ import React, { useState, useEffect } from "react";
 import api from "../../services/api";
 import BookingCard from "./BookingCard";
 import BookingDetailsModal from "./BookingDetailsModal";
+import ReviewModal from "./ReviewModal";
 import Swal from "sweetalert2";
+import { useAuth } from "@/context/AuthContext";
+import { Booking, Review } from "@/types";
 
 const BookingsView = () => {
-  const [bookings, setBookings] = useState([]);
+  const { user } = useAuth();
+  const [bookings, setBookings] = useState<Booking[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedBooking, setSelectedBooking] = useState(null);
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("upcoming");
+
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [selectedBookingForReview, setSelectedBookingForReview] = useState<Booking | null>(null);
+  const [existingReview, setExistingReview] = useState<Review | null>(null);
 
   useEffect(() => {
     const fetchBookings = async () => {
@@ -46,6 +54,39 @@ const BookingsView = () => {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedBooking(null);
+  };
+
+  const handleReviewClick = async (booking: Booking) => {
+    // Requirements: paid and completed (bookingStatus check anticipated)
+    if (booking.paymentStatus !== 'paid') {
+      Swal.fire('Ineligible', 'You can only review bookings that have been paid in full.', 'info');
+      return;
+    }
+
+    // Future-proofing for bookingStatus
+    if (booking.bookingStatus && booking.bookingStatus !== 'completed') {
+      Swal.fire('Ineligible', 'You can only review bookings that are completed.', 'info');
+      return;
+    }
+
+    try {
+      Swal.showLoading();
+      // Fetch all reviews for this hall to check if one exists for this booking
+      const response = await api.get(`/reviews/hall/${booking.hall._id}`);
+      const reviews = (response.data.data || []) as Review[];
+
+      const foundReview = reviews.find((r: Review) =>
+        r.booking === booking._id && r.user?._id === user?.id
+      );
+
+      setExistingReview(foundReview || null);
+      setSelectedBookingForReview(booking);
+      setIsReviewModalOpen(true);
+      Swal.close();
+    } catch (error) {
+      console.error("Error checking for existing review:", error);
+      Swal.fire("Error", "Failed to check review status.", "error");
+    }
   };
 
   const handleViewReceipt = async (bookingId: string) => {
@@ -117,11 +158,13 @@ const BookingsView = () => {
       </div>
       {filteredBookings.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredBookings.map((booking: { _id: string }) => (
+          {filteredBookings.map((booking: Booking) => (
             <BookingCard
               key={booking._id}
               booking={booking}
               onViewReceipt={handleViewReceipt}
+              onReview={handleReviewClick}
+              isPast={activeTab === "past"}
             />
           ))}
         </div>
@@ -134,6 +177,17 @@ const BookingsView = () => {
         <BookingDetailsModal
           booking={selectedBooking}
           onClose={handleCloseModal}
+        />
+      )}
+      {isReviewModalOpen && (
+        <ReviewModal
+          booking={selectedBookingForReview}
+          existingReview={existingReview}
+          onClose={() => setIsReviewModalOpen(false)}
+          onReviewSubmitted={() => {
+            // No need to do much as existingReview logic handles it,
+            // but we could refresh bookings if needed.
+          }}
         />
       )}
     </div>

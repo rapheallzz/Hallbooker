@@ -15,10 +15,18 @@ export interface Facility {
 
 export interface Booking {
   _id: string;
+  bookingId: string;
+  hall: Hall;
+  user: string;
   bookingDates: {
     startTime: string;
     endTime: string;
   }[];
+  totalPrice: number;
+  paymentStatus: string;
+  bookingStatus?: string;
+  eventDetails?: string;
+  createdAt: string;
 }
 
 export interface Hall {
@@ -62,6 +70,7 @@ export interface Notification {
 export interface Review {
   _id: string;
   hall: string;
+  booking?: string;
   user: {
     _id: string;
     fullName: string;

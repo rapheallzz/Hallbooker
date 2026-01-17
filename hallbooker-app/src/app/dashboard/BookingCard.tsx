@@ -1,7 +1,15 @@
 "use client";
 import React from "react";
+import { Booking } from "@/types";
 
-const BookingCard = ({ booking, onViewReceipt }) => {
+interface BookingCardProps {
+  booking: Booking;
+  onViewReceipt: (id: string) => void;
+  onReview: (booking: Booking) => void;
+  isPast: boolean;
+}
+
+const BookingCard: React.FC<BookingCardProps> = ({ booking, onViewReceipt, onReview, isPast }) => {
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden transform hover:scale-105 transition-transform duration-300">
       <div className="p-6">
@@ -15,7 +23,20 @@ const BookingCard = ({ booking, onViewReceipt }) => {
             ? new Date(booking.bookingDates[0].startTime).toLocaleDateString()
             : "N/A"}
         </p>
-        <div className="mt-4 flex justify-end">
+        <div className="mt-4 flex justify-end space-x-2">
+          {isPast && (
+            <button
+              onClick={() => onReview(booking)}
+              disabled={!booking.hall}
+              className={`py-2 px-4 rounded-md transition-colors duration-300 text-center flex-1 ${
+                !booking.hall
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  : "bg-primary text-white hover:bg-opacity-90"
+              }`}
+            >
+              Review Hall
+            </button>
+          )}
           <button
             onClick={() => onViewReceipt(booking.bookingId)}
             disabled={!booking.hall}
