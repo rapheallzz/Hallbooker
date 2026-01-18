@@ -6,7 +6,7 @@ import withAuth from "@/components/auth/withAuth";
 import api from "@/services/api";
 import Swal from "sweetalert2";
 import LoadingSpinner from "@/components/admin/LoadingSpinner";
-import { Search, Trash, Edit, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Trash, Edit } from "lucide-react";
 
 interface User {
   _id: string;
@@ -341,21 +341,43 @@ const DeletionRequestsTab = () => {
   };
 
   const handleDecline = async (userId: string) => {
-    Swal.fire({
-      title: "Declining...",
-      text: "Please wait...",
-      allowOutsideClick: false,
-      didOpen: () => {
-        Swal.showLoading();
+    const { value: reason } = await Swal.fire({
+      title: "Decline Deletion Request",
+      input: "textarea",
+      inputLabel: "Reason for declining",
+      inputPlaceholder: "Enter the reason here...",
+      inputAttributes: {
+        "aria-label": "Enter the reason here",
+      },
+      showCancelButton: true,
+      inputValidator: (value) => {
+        if (!value) {
+          return "You need to provide a reason!";
+        }
       },
     });
-    try {
-      await api.patch(`/admin/deletion-requests/${userId}/decline`);
-      Swal.fire("Declined!", "The deletion request has been declined.", "success");
-      fetchRequests();
-    } catch (error) {
-      console.error("Error declining deletion request:", error);
-      Swal.fire("Error", "Could not decline the deletion request.", "error");
+
+    if (reason) {
+      Swal.fire({
+        title: "Declining...",
+        text: "Please wait...",
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+      try {
+        await api.patch(`/admin/deletion-requests/${userId}/decline`, { reason });
+        Swal.fire(
+          "Declined!",
+          "The deletion request has been declined.",
+          "success"
+        );
+        fetchRequests();
+      } catch (error) {
+        console.error("Error declining deletion request:", error);
+        Swal.fire("Error", "Could not decline the deletion request.", "error");
+      }
     }
   };
 
