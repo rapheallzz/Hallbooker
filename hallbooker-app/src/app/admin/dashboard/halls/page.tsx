@@ -237,7 +237,7 @@ const HallManagementContent = () => {
   const fetchFacilities = () => {
     return api.get("/facilities")
       .then(response => {
-        setFacilities(response.data.data);
+        setFacilities(response.data.data.facilities || []);
       })
       .catch(error => {
         console.error("Error fetching facilities:", error);
@@ -477,7 +477,7 @@ const HallManagementContent = () => {
                     </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                    {facilities.map((facility) => (
+                    {Array.isArray(facilities) && facilities.map((facility) => (
                         <tr key={facility._id}>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{facility.name}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
