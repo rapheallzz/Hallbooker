@@ -22,6 +22,11 @@ interface APIFacility {
   name: string;
 }
 
+interface APISuitability {
+  _id: string;
+  name: string;
+}
+
 interface HallModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -34,6 +39,7 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
   const [hallId, setHallId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [availableFacilities, setAvailableFacilities] = useState<APIFacility[]>([]);
+  const [availableSuitabilities, setAvailableSuitabilities] = useState<APISuitability[]>([]);
   const [chargeMethods, setChargeMethods] = useState<string[]>([]);
   const [countries, setCountries] = useState([]);
   const [states, setStates] = useState([]);
@@ -51,6 +57,7 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
     hourlyRate: 0,
     dailyRate: 0,
     facilities: [] as Facility[],
+    suitableFor: [] as string[],
     carParkCapacity: 0,
     hallSize: '',
     rules: '',
@@ -69,6 +76,10 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
           const facilitiesResponse = await api.get('/facilities');
           setAvailableFacilities(facilitiesResponse.data.data.facilities);
           setChargeMethods(facilitiesResponse.data.data.chargeMethods);
+
+          // Fetch suitabilities
+          const suitabilitiesResponse = await api.get('/suitabilities');
+          setAvailableSuitabilities(suitabilitiesResponse.data.data);
 
           // Fetch countries
           const countriesResponse = await api.get('/locations/countries');
@@ -146,6 +157,7 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
         hourlyRate: hall.pricing?.hourlyRate || hall.pricing?.perHour || 0,
         dailyRate: hall.pricing?.dailyRate || hall.pricing?.perDay || 0,
         facilities: mappedFacilities,
+        suitableFor: hall.suitableFor ? hall.suitableFor.map((s: any) => typeof s === 'string' ? s : s._id) : [],
         carParkCapacity: hall.carParkCapacity || 0,
         hallSize: hall.hallSize || '',
         rules: Array.isArray(hall.rules) ? hall.rules.join('\n') : '',
@@ -158,7 +170,7 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
           minBookings: hall.recurringBookingDiscount?.minBookings || 0,
         },
       });
-      setHallId(hall._id);
+      setHallId(hall._id || hall.id);
     } else {
       setFormData({
         name: '',
@@ -170,6 +182,7 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
         hourlyRate: 0,
         dailyRate: 0,
         facilities: [],
+        suitableFor: [],
         carParkCapacity: 0,
         hallSize: '',
         rules: '',
@@ -324,6 +337,14 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
       if (state) payload.state = state;
       if (localGovernment) payload.localGovernment = localGovernment;
 
+      // Call suitability update separately as requested
+      const actualHallId = hall._id || hall.id;
+      try {
+        await api.patch(`/halls/${actualHallId}/suitability`, { suitableFor: formData.suitableFor });
+      } catch (error) {
+        console.error('Failed to update suitabilities:', error);
+      }
+
       onSubmit(payload);
       return;
     }
@@ -360,6 +381,7 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
         carParkCapacity: Number(formData.carParkCapacity),
         hallSize: formData.hallSize,
         rules: rulesArray,
+        suitableFor: formData.suitableFor,
         allowRecurringBookings: formData.allowRecurringBookings,
       };
 
@@ -548,6 +570,28 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
                   </div>
                 </div>
               )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-800 mb-2">Suitable For</label>
+                <div className="grid grid-cols-2 gap-2 p-3 border rounded-md border-gray-300 max-h-40 overflow-y-auto mb-4">
+                  {availableSuitabilities.map((suitability) => (
+                    <label key={suitability._id} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={formData.suitableFor.includes(suitability._id)}
+                        onChange={(e) => {
+                          const newSuitabilities = e.target.checked
+                            ? [...formData.suitableFor, suitability._id]
+                            : formData.suitableFor.filter(id => id !== suitability._id);
+                          setFormData(prev => ({ ...prev, suitableFor: newSuitabilities }));
+                        }}
+                        className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                      />
+                      <span className="text-sm text-gray-700">{suitability.name}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
 
               <div>
                 <div className="flex justify-between items-center mb-2">
@@ -780,6 +824,28 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
                       </div>
                     </div>
                   )}
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-800 mb-2">Suitable For</label>
+                    <div className="grid grid-cols-2 gap-2 p-3 border rounded-md border-gray-300 max-h-40 overflow-y-auto mb-4">
+                      {availableSuitabilities.map((suitability) => (
+                        <label key={suitability._id} className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            checked={formData.suitableFor.includes(suitability._id)}
+                            onChange={(e) => {
+                              const newSuitabilities = e.target.checked
+                                ? [...formData.suitableFor, suitability._id]
+                                : formData.suitableFor.filter(id => id !== suitability._id);
+                              setFormData(prev => ({ ...prev, suitableFor: newSuitabilities }));
+                            }}
+                            className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                          />
+                          <span className="text-sm text-gray-700">{suitability.name}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
 
                   <div>
                     <div className="flex justify-between items-center mb-2">
