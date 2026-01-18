@@ -34,7 +34,7 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, onViewReceipt, onRev
                   : "bg-primary text-white hover:bg-opacity-90"
               }`}
             >
-              {booking.review ? `View Review (${booking.review.rating})` : "Review Hall"}
+              {booking.review ? "View Review" : "Review Hall"}
             </button>
           )}
           <button

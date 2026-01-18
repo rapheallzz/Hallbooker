@@ -62,17 +62,22 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ booking, existingReview, onCl
         <div className="p-6">
           {existingReview ? (
             <div className="space-y-4">
-              <div className="flex items-center space-x-1">
-                {[...Array(5)].map((_, index) => {
-                  const ratingValue = index + 1;
-                  return (
-                    <Star
-                      key={index}
-                      size={24}
-                      className={ratingValue <= existingReview.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}
-                    />
-                  );
-                })}
+              <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-1">
+                  {[...Array(5)].map((_, index) => {
+                    const ratingValue = index + 1;
+                    return (
+                      <Star
+                        key={index}
+                        size={24}
+                        className={ratingValue <= existingReview.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}
+                      />
+                    );
+                  })}
+                </div>
+                <span className="text-lg font-semibold text-gray-700">
+                  {existingReview.rating.toFixed(1)}
+                </span>
               </div>
               <p className="text-gray-700 italic">&quot;{existingReview.comment}&quot;</p>
               {existingReview.createdAt && (
@@ -85,27 +90,34 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ booking, existingReview, onCl
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Rating</label>
-                <div className="flex items-center space-x-1">
-                  {[...Array(5)].map((_, index) => {
-                    const ratingValue = index + 1;
-                    return (
-                      <button
-                        type="button"
-                        key={index}
-                        className="focus:outline-none"
-                        onClick={() => setRating(ratingValue)}
-                        onMouseEnter={() => setHover(ratingValue)}
-                        onMouseLeave={() => setHover(0)}
-                      >
-                        <Star
-                          size={32}
-                          className={`${
-                            ratingValue <= (hover || rating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
-                          } transition-colors duration-200`}
-                        />
-                      </button>
-                    );
-                  })}
+                <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-1">
+                    {[...Array(5)].map((_, index) => {
+                      const ratingValue = index + 1;
+                      return (
+                        <button
+                          type="button"
+                          key={index}
+                          className="focus:outline-none"
+                          onClick={() => setRating(ratingValue)}
+                          onMouseEnter={() => setHover(ratingValue)}
+                          onMouseLeave={() => setHover(0)}
+                        >
+                          <Star
+                            size={32}
+                            className={`${
+                              ratingValue <= (hover || rating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
+                            } transition-colors duration-200`}
+                          />
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {(hover || rating) > 0 && (
+                    <span className="text-xl font-bold text-gray-700">
+                      {(hover || rating).toFixed(1)}
+                    </span>
+                  )}
                 </div>
               </div>
 
