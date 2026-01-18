@@ -69,9 +69,16 @@ const MediaUpload: React.FC<MediaUploadProps> = ({ hallId, onUploadSuccess }) =>
         // Append all parameters from the signature response (timestamp, api_key, folder, etc.)
         Object.entries(params).forEach(([key, value]) => {
           if (value !== undefined && value !== null) {
+            const valStr = String(value);
+            // Skip parameters that look like JSON objects/arrays (starting with { or [).
+            // These cause 400 errors (e.g. "Invalid transformation parameter") because
+            // Cloudinary's REST API expects its own custom string format for complex params.
+            if (valStr.startsWith('{') || valStr.startsWith('[')) {
+              return;
+            }
             // Cloudinary expects api_key, handle both apikey and api_key from backend
             const formDataKey = key === 'apikey' ? 'api_key' : key;
-            formData.append(formDataKey, String(value));
+            formData.append(formDataKey, valStr);
           }
         });
 
