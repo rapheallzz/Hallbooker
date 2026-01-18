@@ -25,4 +25,5 @@ export interface Hall {
   views?: number;
   createdAt?: string;
   distance?: number;
+  isListed?: boolean;
 }

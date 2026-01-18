@@ -53,6 +53,7 @@ export interface Hall {
   openingHour?: number;
   closingHour?: number;
   bookingBufferInHours?: number;
+  isListed?: boolean;
   geoLocation?: {
     type: string;
     coordinates: number[];
