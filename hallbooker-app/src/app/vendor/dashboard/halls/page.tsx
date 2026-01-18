@@ -146,37 +146,6 @@ const HallsContent = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    const result = await Swal.fire({
-      title: 'Are you sure?',
-      text: "You won't be able to revert this!",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Yes, delete it!'
-    });
-
-    if (result.isConfirmed) {
-      try {
-        await api.delete(`/halls/${id}`);
-        Swal.fire(
-          'Deleted!',
-          'The hall has been deleted.',
-          'success'
-        );
-        fetchHalls();
-      } catch (error) {
-        console.error('Failed to delete hall:', error);
-        Swal.fire(
-          'Error!',
-          'Failed to delete the hall. Please try again.',
-          'error'
-        );
-      }
-    }
-  };
-
   const handleCreateReservation = async (reservationData: any) => {
     Swal.fire({
       title: 'Creating Reservation...',
@@ -302,9 +271,6 @@ const HallsContent = () => {
                         >
                           <CalendarIcon size={18} />
                         </button>
-                        {user?.activeRole === "hall-owner" && (
-                          <button onClick={() => handleDelete(hall.id)} className="ml-2 px-5 py-2 border-red-500 border text-red-500 rounded transition duration-300 hover:bg-red-500 hover:text-white focus:outline-none">Delete</button>
-                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-no-wrap text-center border-b border-gray-500">
                         <button onClick={() => handleToggle(hall.id)} className="focus:outline-none">
