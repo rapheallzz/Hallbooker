@@ -29,6 +29,12 @@ interface Facility {
   name: string;
 }
 
+// Suitability Interface
+interface Suitability {
+  _id: string;
+  name: string;
+}
+
 const HallManagementContent = () => {
   // Common State
   const searchParams = useSearchParams();
@@ -48,11 +54,14 @@ const HallManagementContent = () => {
   // Facilities State
   const [facilities, setFacilities] = useState<Facility[]>([]);
 
+  // Suitabilities State
+  const [suitabilities, setSuitabilities] = useState<Suitability[]>([]);
+
   useEffect(() => {
     const fetchData = async () => {
         setLoading(true);
         try {
-            await Promise.all([fetchHalls(), fetchFacilities()]);
+            await Promise.all([fetchHalls(), fetchFacilities(), fetchSuitabilities()]);
         } catch (error) {
             console.error("Error fetching data:", error);
             Swal.fire("Error", "Could not fetch all necessary data.", "error");
@@ -314,6 +323,87 @@ const HallManagementContent = () => {
     }
   };
 
+  // Suitabilities Functions
+  const fetchSuitabilities = () => {
+    return api.get("/suitabilities")
+      .then(response => {
+        setSuitabilities(response.data.data || []);
+      })
+      .catch(error => {
+        console.error("Error fetching suitabilities:", error);
+        throw error;
+      });
+  };
+
+  const handleAddSuitability = async () => {
+    const { value: name } = await Swal.fire({
+      title: 'Add a new suitability',
+      input: 'text',
+      inputLabel: 'Suitability Name',
+      inputPlaceholder: 'e.g., Wedding',
+      showCancelButton: true,
+      inputValidator: (value) => {
+        if (!value) return 'You need to write something!'
+      }
+    });
+
+    if (name) {
+      try {
+        await api.post('/suitabilities', { name });
+        Swal.fire('Success!', 'Suitability added successfully.', 'success');
+        fetchSuitabilities();
+      } catch (error) {
+        console.error("Error adding suitability:", error);
+        Swal.fire('Error', 'Could not add the suitability.', 'error');
+      }
+    }
+  };
+
+  const handleEditSuitability = async (suitability: Suitability) => {
+    const { value: name } = await Swal.fire({
+      title: 'Edit suitability',
+      input: 'text',
+      inputValue: suitability.name,
+      inputLabel: 'Suitability Name',
+      showCancelButton: true,
+      inputValidator: (value) => {
+        if (!value) return 'You need to write something!'
+      }
+    });
+
+    if (name && name !== suitability.name) {
+      try {
+        await api.patch(`/suitabilities/${suitability._id}`, { name });
+        Swal.fire('Success!', 'Suitability updated successfully.', 'success');
+        fetchSuitabilities();
+      } catch (error) {
+        console.error("Error updating suitability:", error);
+        Swal.fire('Error', 'Could not update the suitability.', 'error');
+      }
+    }
+  };
+
+  const handleDeleteSuitability = async (suitabilityId: string) => {
+    const result = await Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, delete it!'
+    });
+
+    if (result.isConfirmed) {
+        try {
+            await api.delete(`/suitabilities/${suitabilityId}`);
+            Swal.fire('Deleted!', 'The suitability has been deleted.', 'success');
+            fetchSuitabilities();
+        } catch (error) {
+            console.error("Error deleting suitability:", error);
+            Swal.fire('Error', 'Could not delete the suitability.', 'error');
+        }
+    }
+  };
+
   if (loading) {
     return <LoadingSpinner />;
   }
@@ -321,6 +411,7 @@ const HallManagementContent = () => {
   const tabs = [
       { label: "Halls", value: "halls" },
       { label: "Facilities", value: "facilities" },
+      { label: "Suitabilities", value: "suitabilities" },
   ];
 
   return (
@@ -365,6 +456,15 @@ const HallManagementContent = () => {
             >
                 <PlusCircle size={20} />
                 <span>Add Facility</span>
+            </button>
+        )}
+        {activeTab === 'suitabilities' && (
+            <button
+                onClick={handleAddSuitability}
+                className="bg-primary text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-opacity-90"
+            >
+                <PlusCircle size={20} />
+                <span>Add Suitability</span>
             </button>
         )}
       </div>
@@ -495,6 +595,40 @@ const HallManagementContent = () => {
                 {facilities.length === 0 && (
                     <div className="text-center py-8 text-gray-500">
                         No facilities found. Click &quot;Add Facility&quot; to create one.
+                    </div>
+                )}
+                </div>
+            </div>
+        )}
+        {activeTab === 'suitabilities' && (
+             <div className="bg-white p-6 shadow-lg rounded-lg">
+                <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                    <tr>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                        <th scope="col" className="relative px-6 py-3"><span className="sr-only">Actions</span></th>
+                    </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                    {Array.isArray(suitabilities) && suitabilities.map((suitability) => (
+                        <tr key={suitability._id}>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{suitability.name}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button onClick={() => handleEditSuitability(suitability)} className="text-indigo-600 hover:text-indigo-900 mr-4">
+                                <Edit size={18} />
+                            </button>
+                            <button onClick={() => handleDeleteSuitability(suitability._id)} className="text-red-600 hover:text-red-900">
+                                <Trash size={18} />
+                            </button>
+                        </td>
+                        </tr>
+                    ))}
+                    </tbody>
+                </table>
+                {suitabilities.length === 0 && (
+                    <div className="text-center py-8 text-gray-500">
+                        No suitabilities found. Click &quot;Add Suitability&quot; to create one.
                     </div>
                 )}
                 </div>
