@@ -75,9 +75,11 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ booking, existingReview, onCl
                 })}
               </div>
               <p className="text-gray-700 italic">&quot;{existingReview.comment}&quot;</p>
-              <div className="text-sm text-gray-500">
-                Submitted on {new Date(existingReview.createdAt).toLocaleDateString()}
-              </div>
+              {existingReview.createdAt && (
+                <div className="text-sm text-gray-500">
+                  Submitted on {new Date(existingReview.createdAt).toLocaleDateString()}
+                </div>
+              )}
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-6">

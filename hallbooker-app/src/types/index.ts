@@ -27,6 +27,7 @@ export interface Booking {
   bookingStatus?: string;
   eventDetails?: string;
   createdAt: string;
+  review?: Review;
 }
 
 export interface Hall {
@@ -69,14 +70,14 @@ export interface Notification {
 }
 
 export interface Review {
-  _id: string;
-  hall: string;
+  _id?: string;
+  hall?: string;
   booking?: string;
-  user: {
+  user?: {
     _id: string;
     fullName: string;
   };
   rating: number;
   comment: string;
-  createdAt: string;
+  createdAt?: string;
 }

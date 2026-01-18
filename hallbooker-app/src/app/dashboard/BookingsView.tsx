@@ -69,9 +69,16 @@ const BookingsView = () => {
       return;
     }
 
+    if (booking.review) {
+      setExistingReview(booking.review);
+      setSelectedBookingForReview(booking);
+      setIsReviewModalOpen(true);
+      return;
+    }
+
     try {
       Swal.showLoading();
-      // Fetch all reviews for this hall to check if one exists for this booking
+      // Fetch all reviews for this hall to check if one exists for this booking (fallback)
       const response = await api.get(`/reviews/hall/${booking.hall._id}`);
       const reviews = (response.data.data || []) as Review[];
 
