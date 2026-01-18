@@ -289,6 +289,119 @@ const PendingApplicationsTab = () => {
   );
 };
 
+const DeletionRequestsTab = () => {
+  const [requests, setRequests] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchRequests();
+  }, []);
+
+  const fetchRequests = async () => {
+    setLoading(true);
+    try {
+      const response = await api.get("/admin/deletion-requests");
+      setRequests(response.data.data);
+    } catch (error) {
+      console.error("Error fetching deletion requests:", error);
+      Swal.fire("Error", "Could not fetch deletion requests.", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleApprove = async (userId: string) => {
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "This will deactivate the account for deletion.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      confirmButtonText: "Yes, approve it!",
+    });
+
+    if (result.isConfirmed) {
+      Swal.fire({
+        title: "Approving...",
+        text: "Please wait...",
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+      try {
+        await api.patch(`/admin/deletion-requests/${userId}/approve`);
+        Swal.fire("Approved!", "The deletion request has been approved.", "success");
+        fetchRequests();
+      } catch (error) {
+        console.error("Error approving deletion request:", error);
+        Swal.fire("Error", "Could not approve the deletion request.", "error");
+      }
+    }
+  };
+
+  const handleDecline = async (userId: string) => {
+    Swal.fire({
+      title: "Declining...",
+      text: "Please wait...",
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+    });
+    try {
+      await api.patch(`/admin/deletion-requests/${userId}/decline`);
+      Swal.fire("Declined!", "The deletion request has been declined.", "success");
+      fetchRequests();
+    } catch (error) {
+      console.error("Error declining deletion request:", error);
+      Swal.fire("Error", "Could not decline the deletion request.", "error");
+    }
+  };
+
+  if (loading) return <LoadingSpinner />;
+
+  return (
+    <div className="overflow-x-auto shadow-sm border rounded-lg">
+      <table className="min-w-full bg-white">
+        <thead className="bg-gray-50">
+          <tr>
+            <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Name</th>
+            <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Email</th>
+            <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Roles</th>
+            <th className="py-3 px-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-200">
+          {requests.length > 0 ? (
+            requests.map((request) => (
+              <tr key={request._id} className="hover:bg-gray-50">
+                <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{request.fullName}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{request.email}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{request.role?.join(", ") || 'N/A'}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <button onClick={() => handleApprove(request._id)} className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded mr-2">
+                    Approve
+                  </button>
+                  <button onClick={() => handleDecline(request._id)} className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded">
+                    Decline
+                  </button>
+                </td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan={4} className="text-center py-8 text-gray-800">
+                No account deletion requests found.
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
 const UsersPageContent = () => {
   const [activeTab, setActiveTab] = useState("allUsers");
 
@@ -318,12 +431,23 @@ const UsersPageContent = () => {
             >
               Pending Applications
             </button>
+            <button
+              onClick={() => setActiveTab("deletions")}
+              className={`${
+                activeTab === "deletions"
+                  ? "border-primary text-primary"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+            >
+              Deletion Requests
+            </button>
           </nav>
         </div>
 
         <div className="mt-8">
           {activeTab === "allUsers" && <AllUsersTab />}
           {activeTab === "pending" && <PendingApplicationsTab />}
+          {activeTab === "deletions" && <DeletionRequestsTab />}
         </div>
       </div>
     </div>
