@@ -30,6 +30,12 @@ export interface Booking {
   review?: Review;
 }
 
+export interface Suitability {
+  _id: string;
+  name: string;
+  id: string;
+}
+
 export interface Hall {
   id: string; // id is used in some places, _id in others
   _id: string;
@@ -60,6 +66,8 @@ export interface Hall {
     coordinates: number[];
     address?: string;
   };
+  suitableFor?: Suitability[];
+  rules?: string[];
 }
 
 export interface Notification {

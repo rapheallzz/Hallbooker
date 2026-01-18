@@ -26,4 +26,10 @@ export interface Hall {
   createdAt?: string;
   distance?: number;
   isListed?: boolean;
+  suitableFor?: {
+    _id: string;
+    name: string;
+    id: string;
+  }[];
+  rules?: string[];
 }

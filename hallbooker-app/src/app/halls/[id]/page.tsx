@@ -14,7 +14,17 @@ import MediaViewerModal from '@/components/MediaViewerModal';
 import { useBookingAvailability } from '@/hooks/useBookingAvailability';
 import { Hall, Review } from '@/types';
 import FacilityIcon from '@/components/FacilityIcon';
-import { CheckCircle, CircleDollarSign, Eye } from 'lucide-react';
+import {
+  CheckCircle,
+  CircleDollarSign,
+  Eye,
+  AlertTriangle,
+  Sparkles,
+  Gift,
+  Church,
+  Heart,
+  Users
+} from 'lucide-react';
 import Swal from 'sweetalert2';
 
 const HallDetailPage = () => {
@@ -221,7 +231,34 @@ const HallDetailPage = () => {
               </p>
             </div>
 
-            <div className="py-6">
+            {hall.suitableFor && hall.suitableFor.length > 0 && (
+              <div className="py-6 border-b">
+                <h3 className="font-semibold text-xl text-gray-800 mb-4">Suitable For</h3>
+                <div className="flex flex-wrap gap-3">
+                  {hall.suitableFor.map((suitability) => (
+                    <div
+                      key={suitability._id}
+                      className="flex items-center space-x-2 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full text-sm font-medium border border-blue-100"
+                    >
+                      {suitability.name.toLowerCase().includes('birthday') ? (
+                        <Gift className="h-4 w-4" />
+                      ) : suitability.name.toLowerCase().includes('church') ? (
+                        <Church className="h-4 w-4" />
+                      ) : suitability.name.toLowerCase().includes('wedding') ? (
+                        <Heart className="h-4 w-4" />
+                      ) : suitability.name.toLowerCase().includes('conference') || suitability.name.toLowerCase().includes('conferrence') || suitability.name.toLowerCase().includes('meeting') ? (
+                        <Users className="h-4 w-4" />
+                      ) : (
+                        <Sparkles className="h-4 w-4" />
+                      )}
+                      <span>{suitability.name}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="py-6 border-b">
               <h3 className="font-semibold text-xl text-gray-800 mb-4">What this place offers</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                 {hall.facilities?.length > 0 ? (
@@ -251,6 +288,25 @@ const HallDetailPage = () => {
                 )}
               </div>
             </div>
+
+            {hall.rules && hall.rules.length > 0 && (
+              <div className="py-6 border-b">
+                <div className="flex items-center space-x-2 mb-4">
+                  <AlertTriangle className="h-6 w-6 text-amber-500 animate-pulse" />
+                  <h3 className="font-semibold text-xl text-gray-800">Hall Rules</h3>
+                </div>
+                <div className="bg-amber-50 border border-amber-100 rounded-lg p-5">
+                  <ul className="space-y-3">
+                    {hall.rules.map((rule, index) => (
+                      <li key={index} className="flex items-start space-x-3 text-gray-700">
+                        <div className="mt-1.5 h-1.5 w-1.5 rounded-full bg-amber-400 flex-shrink-0" />
+                        <span className="text-sm font-medium leading-relaxed">{rule}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            )}
 
             {/* Availability Section */}
             <div className="py-6 border-b">
