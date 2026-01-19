@@ -28,6 +28,7 @@ export interface Booking {
   eventDetails?: string;
   createdAt: string;
   review?: Review;
+  isRecurring?: boolean;
 }
 
 export interface Suitability {

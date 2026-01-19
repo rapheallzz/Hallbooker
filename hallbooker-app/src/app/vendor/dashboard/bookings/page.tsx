@@ -28,6 +28,7 @@ interface Booking {
   paymentMethod?: string;
   paymentStatus?: string;
   bookingType?: string;
+  isRecurring?: boolean;
 }
 
 interface Reservation {
@@ -242,7 +243,7 @@ const BookingsPage = () => {
     }
     if (bookingTypeFilter !== 'all') {
       result = result.filter(booking => {
-        const isRecurring = booking.bookingType?.toLowerCase() === 'recurring';
+        const isRecurring = !!booking.isRecurring;
         return bookingTypeFilter === 'recurring' ? isRecurring : !isRecurring;
       });
     }
@@ -457,7 +458,14 @@ const BookingsPage = () => {
                 <React.Fragment key={booking._id}>
                   <tr onClick={() => setExpandedBookingId(expandedBookingId === booking._id ? null : booking._id)} className="cursor-pointer">
                     <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">
-                      {booking.bookingId}
+                      <div className="flex items-center space-x-2">
+                        <span>{booking.bookingId}</span>
+                        {booking.isRecurring && (
+                          <span className="px-2 inline-flex text-[10px] leading-4 font-semibold rounded-full bg-blue-100 text-blue-800">
+                            Recurring
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">
                       {booking.user?.fullName || booking.walkInUserDetails?.fullName}
