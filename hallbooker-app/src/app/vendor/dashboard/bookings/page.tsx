@@ -131,12 +131,18 @@ const BookingsPage = () => {
     }
     try {
       setLoading(true);
+      setError('');
       const response = await api.get(`/halls/${hallId}/bookings?page=${page}&limit=${LIMIT}`);
       setBookings(response.data.data.bookings);
-      setBookingsTotalPages(response.data.data.pagination.totalPages);
-    } catch (error) {
+      setBookingsTotalPages(response.data.data.pagination.totalPages || 1);
+    } catch (error: any) {
       console.error("Error fetching bookings:", error);
-      setError('Failed to fetch bookings.');
+      if (error.response?.status === 404) {
+        setBookings([]);
+        setBookingsTotalPages(1);
+      } else {
+        setError('Failed to fetch bookings.');
+      }
     } finally {
       setLoading(false);
     }
@@ -149,12 +155,18 @@ const BookingsPage = () => {
     }
     try {
       setLoading(true);
+      setError('');
       const response = await api.get(`/reservations/halls/${hallId}?page=${page}&limit=${LIMIT}`);
       setReservations(response.data.data.reservations);
-      setReservationsTotalPages(response.data.data.pagination.totalPages);
-    } catch (error) {
+      setReservationsTotalPages(response.data.data.pagination.totalPages || 1);
+    } catch (error: any) {
       console.error("Error fetching reservations:", error);
-      setError('Failed to fetch reservations.');
+      if (error.response?.status === 404) {
+        setReservations([]);
+        setReservationsTotalPages(1);
+      } else {
+        setError('Failed to fetch reservations.');
+      }
     } finally {
       setLoading(false);
     }
