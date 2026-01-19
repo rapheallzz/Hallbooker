@@ -16,7 +16,6 @@ interface CarouselProps {
 }
 
 const DEFAULT_SLIDES_TO_SHOW = 7;
-const DEFAULT_GRID_THRESHOLD = 2;
 
 const Carousel = ({
   halls,
@@ -84,9 +83,9 @@ const Carousel = ({
   };
 
 
-  // Use provided gridThreshold, or default to 4 for Home Page (7 slides),
-  // or slidesToShow + 1 for other cases (to show carousel only when there's more than one page of slides)
-  const actualGridThreshold = gridThreshold ?? (slidesToShow === DEFAULT_SLIDES_TO_SHOW ? DEFAULT_GRID_THRESHOLD : slidesToShow + 1);
+  // Use provided gridThreshold, or default to slidesToShow + 1.
+  // This ensures that if the items fit in one row, we use a left-aligned grid instead of a carousel.
+  const actualGridThreshold = gridThreshold ?? (slidesToShow + 1);
 
   if (halls.length < actualGridThreshold) {
     // Maintain item size by using a grid that matches the carousel's visible slots at different breakpoints
