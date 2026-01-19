@@ -18,6 +18,7 @@ import {
   CheckCircle,
   CircleDollarSign,
   Eye,
+  Star,
   AlertTriangle,
   Sparkles,
   Gift,
@@ -142,11 +143,13 @@ const HallDetailPage = () => {
         <div className="mb-4">
           <h1 className="text-3xl font-bold tracking-tight text-gray-900">{hall.name}</h1>
           <div className="flex items-center mt-2">
-            <p className="text-sm text-gray-600">
+            <div className="text-sm text-gray-600 flex items-center">
               {hall.averageRating > 0 ? (
-                <span className="font-semibold">{hall.averageRating.toFixed(1)} ★</span>
+                <span className="font-semibold flex items-center">
+                  {hall.averageRating.toFixed(1)} <Star className="h-4 w-4 ml-1 text-gray-400 fill-gray-400" />
+                </span>
               ) : (
-                <span className="font-semibold">New</span>
+                <span className="font-semibold text-gray-400">New</span>
               )}
               {hall.numReviews > 0 && (
                 <span className="ml-1">
@@ -160,7 +163,7 @@ const HallDetailPage = () => {
                 <Eye className="h-4 w-4 mr-1" />
                 {hall.views || 0} views
               </span>
-            </p>
+            </div>
           </div>
         </div>
 

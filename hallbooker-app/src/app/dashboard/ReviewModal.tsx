@@ -70,7 +70,7 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ booking, existingReview, onCl
                       <Star
                         key={index}
                         size={24}
-                        className={ratingValue <= existingReview.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}
+                        className={ratingValue <= existingReview.rating ? 'fill-gray-400 text-gray-400' : 'text-gray-300'}
                       />
                     );
                   })}
@@ -106,7 +106,7 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ booking, existingReview, onCl
                           <Star
                             size={32}
                             className={`${
-                              ratingValue <= (hover || rating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
+                              ratingValue <= (hover || rating) ? 'fill-gray-400 text-gray-400' : 'text-gray-300'
                             } transition-colors duration-200`}
                           />
                         </button>
