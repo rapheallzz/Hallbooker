@@ -52,6 +52,40 @@ interface Hall {
   name: string;
 }
 
+const Pagination = ({
+  currentPage,
+  totalPages,
+  onPageChange,
+}: {
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+}) => {
+  if (totalPages <= 1) return null;
+
+  return (
+    <div className="mt-4 flex justify-between items-center">
+      <button
+        onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+        disabled={currentPage === 1}
+        className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md disabled:opacity-50"
+      >
+        Previous
+      </button>
+      <span className="text-sm text-gray-800">
+        Page {currentPage} of {totalPages}
+      </span>
+      <button
+        onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+        disabled={currentPage === totalPages}
+        className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md disabled:opacity-50"
+      >
+        Next
+      </button>
+    </div>
+  );
+};
+
 const BookingsPage = () => {
   const { user } = useAuth();
   const searchParams = useSearchParams();
@@ -68,6 +102,11 @@ const BookingsPage = () => {
   const [isConversionModalOpen, setIsConversionModalOpen] = useState(false);
   const [selectedReservationId, setSelectedReservationId] = useState<string | null>(null);
   const [expandedBookingId, setExpandedBookingId] = useState<string | null>(null);
+  const [bookingsPage, setBookingsPage] = useState(1);
+  const [bookingsTotalPages, setBookingsTotalPages] = useState(1);
+  const [reservationsPage, setReservationsPage] = useState(1);
+  const [reservationsTotalPages, setReservationsTotalPages] = useState(1);
+  const LIMIT = 20;
 
   const fetchHalls = async () => {
     try {
@@ -85,15 +124,16 @@ const BookingsPage = () => {
     }
   };
 
-  const fetchBookings = async (hallId: string) => {
+  const fetchBookings = async (hallId: string, page: number = 1) => {
     if (!hallId) {
       setBookings([]);
       return;
     }
     try {
       setLoading(true);
-      const response = await api.get(`/halls/${hallId}/bookings`);
+      const response = await api.get(`/halls/${hallId}/bookings?page=${page}&limit=${LIMIT}`);
       setBookings(response.data.data.bookings);
+      setBookingsTotalPages(response.data.data.pagination.totalPages);
     } catch (error) {
       console.error("Error fetching bookings:", error);
       setError('Failed to fetch bookings.');
@@ -102,15 +142,16 @@ const BookingsPage = () => {
     }
   };
 
-  const fetchReservations = async (hallId: string) => {
+  const fetchReservations = async (hallId: string, page: number = 1) => {
     if (!hallId) {
       setReservations([]);
       return;
     }
     try {
       setLoading(true);
-      const response = await api.get(`/reservations/halls/${hallId}`);
+      const response = await api.get(`/reservations/halls/${hallId}?page=${page}&limit=${LIMIT}`);
       setReservations(response.data.data.reservations);
+      setReservationsTotalPages(response.data.data.pagination.totalPages);
     } catch (error) {
       console.error("Error fetching reservations:", error);
       setError('Failed to fetch reservations.');
@@ -126,19 +167,31 @@ const BookingsPage = () => {
   useEffect(() => {
     if (selectedHall) {
       if (activeTab === 'bookings') {
-        fetchBookings(selectedHall);
+        fetchBookings(selectedHall, bookingsPage);
       } else {
-        fetchReservations(selectedHall);
+        fetchReservations(selectedHall, reservationsPage);
       }
     }
-  }, [selectedHall, activeTab]);
+  }, [selectedHall, activeTab, bookingsPage, reservationsPage]);
+
+  const handleHallChange = (hallId: string) => {
+    setSelectedHall(hallId);
+    setBookingsPage(1);
+    setReservationsPage(1);
+  };
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    setBookingsPage(1);
+    setReservationsPage(1);
+  };
 
   const handleCancel = async (bookingId: string) => {
     if (window.confirm('Are you sure you want to cancel this booking?')) {
       try {
         await api.put(`/bookings/${bookingId}`);
         if (selectedHall) {
-          fetchBookings(selectedHall); // Refresh the list
+          fetchBookings(selectedHall, bookingsPage); // Refresh the list
         }
       } catch (error) {
         console.error('Failed to cancel booking:', error);
@@ -202,9 +255,10 @@ const BookingsPage = () => {
       if (selectedHall) {
         if (type === 'reservation') {
           setActiveTab('reservations');
-          fetchReservations(selectedHall);
+          // fetchReservations will be triggered by effect when activeTab changes
         } else {
-          fetchBookings(selectedHall);
+          fetchBookings(selectedHall, 1);
+          setBookingsPage(1);
         }
       }
       setIsModalOpen(false);
@@ -236,7 +290,7 @@ const BookingsPage = () => {
         <select
           id="hall-select"
           value={selectedHall}
-          onChange={(e) => setSelectedHall(e.target.value)}
+          onChange={(e) => handleHallChange(e.target.value)}
           className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
         >
           <option value="">--Please choose a hall--</option>
@@ -250,13 +304,13 @@ const BookingsPage = () => {
       <div className="flex border-b mb-4">
         <button
           className={`px-4 py-2 ${activeTab === 'bookings' ? 'border-b-2 border-primary text-primary' : 'text-gray-500'}`}
-          onClick={() => setActiveTab('bookings')}
+          onClick={() => handleTabChange('bookings')}
         >
           Bookings
         </button>
         <button
           className={`px-4 py-2 ${activeTab === 'reservations' ? 'border-b-2 border-primary text-primary' : 'text-gray-500'}`}
-          onClick={() => setActiveTab('reservations')}
+          onClick={() => handleTabChange('reservations')}
         >
           Reservations
         </button>
@@ -266,6 +320,7 @@ const BookingsPage = () => {
         {loading ? (
           <div>Loading...</div>
         ) : activeTab === 'bookings' ? (
+          <>
           <table className="min-w-full">
             <thead>
               <tr>
@@ -349,7 +404,14 @@ const BookingsPage = () => {
               )}
             </tbody>
           </table>
+          <Pagination
+            currentPage={bookingsPage}
+            totalPages={bookingsTotalPages}
+            onPageChange={setBookingsPage}
+          />
+          </>
         ) : (
+          <>
           <table className="min-w-full">
             <thead>
               <tr>
@@ -417,6 +479,12 @@ const BookingsPage = () => {
               )}
             </tbody>
           </table>
+          <Pagination
+            currentPage={reservationsPage}
+            totalPages={reservationsTotalPages}
+            onPageChange={setReservationsPage}
+          />
+          </>
         )}
       </div>
       <BookingModal
@@ -429,7 +497,7 @@ const BookingsPage = () => {
           isOpen={isConversionModalOpen}
           onClose={() => setIsConversionModalOpen(false)}
           reservationId={selectedReservationId}
-          onSuccess={() => fetchReservations(selectedHall)}
+          onSuccess={() => fetchReservations(selectedHall, reservationsPage)}
         />
       )}
     </div>
