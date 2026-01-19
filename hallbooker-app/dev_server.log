@@ -1,0 +1,23 @@
+
+> hallbooker-app@0.1.0 dev
+> next dev
+
+   ▲ Next.js 15.5.4
+   - Local:        http://localhost:3005
+   - Network:      http://192.168.0.2:3005
+
+ ✓ Starting...
+ ✓ Ready in 2.2s
+ ○ Compiling / ...
+ ✓ Compiled / in 6.8s (2798 modules)
+ GET / 200 in 8933ms
+ GET / 200 in 121ms
+ ✓ Compiled in 2.1s (2812 modules)
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 582ms (2803 modules)
+ GET / 404 in 1085ms
+ GET / 200 in 221ms
+ GET / 200 in 114ms
+ GET / 200 in 107ms
+ GET / 200 in 98ms
+ GET / 200 in 112ms

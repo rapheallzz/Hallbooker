@@ -16,7 +16,7 @@ interface CarouselProps {
 }
 
 const DEFAULT_SLIDES_TO_SHOW = 7;
-const DEFAULT_GRID_THRESHOLD = 4;
+const DEFAULT_GRID_THRESHOLD = 2;
 
 const Carousel = ({
   halls,
@@ -26,42 +26,50 @@ const Carousel = ({
 }: CarouselProps) => {
   const sliderRef = useRef<Slider>(null);
 
-  // Determine how many slides to show, ensuring we don't try to show more than we have
-  const actualSlidesToShow = Math.min(slidesToShow, halls.length);
+  // Use the intended slidesToShow instead of limiting by halls.length to maintain item size
+  const baseSlidesToShow = slidesToShow;
 
   const defaultResponsive = [
     {
-      breakpoint: 1024,
+      breakpoint: 1279, // Match Tailwind xl breakpoint (below 1280px)
       settings: {
-        slidesToShow: Math.min(actualSlidesToShow, 5),
+        slidesToShow: 5,
         slidesToScroll: 1,
-        infinite: halls.length > Math.min(actualSlidesToShow, 5),
+        infinite: halls.length > 5,
         dots: false,
       },
     },
     {
-      breakpoint: 768,
+      breakpoint: 1023, // Match Tailwind lg breakpoint (below 1024px)
       settings: {
-        slidesToShow: Math.min(actualSlidesToShow, 4),
+        slidesToShow: 4,
         slidesToScroll: 1,
-        infinite: halls.length > Math.min(actualSlidesToShow, 4),
+        infinite: halls.length > 4,
       },
     },
     {
-      breakpoint: 600,
+      breakpoint: 767, // Match Tailwind md breakpoint (below 768px)
       settings: {
-        slidesToShow: Math.min(actualSlidesToShow, 3),
+        slidesToShow: 2,
         slidesToScroll: 1,
-        infinite: halls.length > Math.min(actualSlidesToShow, 3),
+        infinite: halls.length > 2,
+      },
+    },
+    {
+      breakpoint: 639, // Match Tailwind sm breakpoint (below 640px)
+      settings: {
+        slidesToShow: 1,
+        slidesToScroll: 1,
+        infinite: halls.length > 1,
       },
     },
   ];
 
   const settings = {
     dots: false,
-    infinite: halls.length > actualSlidesToShow,
+    infinite: halls.length > baseSlidesToShow,
     speed: 500,
-    slidesToShow: actualSlidesToShow,
+    slidesToShow: baseSlidesToShow,
     slidesToScroll: 1,
     arrows: false, // We are using custom arrows outside the slider
     responsive: responsive || defaultResponsive,
@@ -81,14 +89,14 @@ const Carousel = ({
   const actualGridThreshold = gridThreshold ?? (slidesToShow === DEFAULT_SLIDES_TO_SHOW ? DEFAULT_GRID_THRESHOLD : slidesToShow + 1);
 
   if (halls.length < actualGridThreshold) {
+    // Maintain item size by using a grid that matches the carousel's visible slots at different breakpoints
     const gridColsClass =
-      halls.length === 1 ? 'grid-cols-1' :
-      halls.length === 2 ? 'grid-cols-1 sm:grid-cols-2' :
-      halls.length === 3 ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3' :
-      'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4';
+      slidesToShow === DEFAULT_SLIDES_TO_SHOW
+        ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7'
+        : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3';
 
     return (
-      <div className={`grid ${gridColsClass} gap-4`}>
+      <div className={`grid ${gridColsClass} gap-4 overflow-hidden`}>
         {halls.map((hall) => (
           <HallCard key={hall._id} hall={hall} />
         ))}
