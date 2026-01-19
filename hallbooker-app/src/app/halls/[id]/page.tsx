@@ -32,7 +32,7 @@ import Swal from 'sweetalert2';
 
 const HallDetailPage = () => {
   const { user } = useAuth();
-  const canSeeViews = user && ['super-admin', 'hall-owner', 'staff'].includes(user.activeRole);
+  const canSeeViews = user && VIEW_COUNT_ROLES.includes(user.activeRole);
   const [hall, setHall] = useState<Hall | null>(null);
   const [recommendations, setRecommendations] = useState<Hall[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
