@@ -1,10 +1,21 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { X } from 'lucide-react';
 import api from '@/services/api';
 import Calendar from '../Calendar';
+import {
+  format,
+  addDays,
+  addMonths,
+  eachDayOfInterval,
+  getDay,
+  getDate,
+  startOfMonth,
+  endOfMonth,
+  parseISO
+} from 'date-fns';
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -24,13 +35,16 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
   const [usePerDateTimes, setUsePerDateTimes] = useState(false);
   const [dateTimes, setDateTimes] = useState<Record<string, { startTime: string; endTime: string }>>({});
   const [paymentOptions, setPaymentOptions] = useState({ paymentMethods: [], paymentStatuses: [] });
+  const [displayedMonth, setDisplayedMonth] = useState(new Date());
+  const [unavailableDates, setUnavailableDates] = useState<Date[]>([]);
+  const [recurrencePattern, setRecurrencePattern] = useState<'none' | 'weekly' | 'monthly-fixed' | 'monthly-relative'>('none');
   const [formData, setFormData] = useState({
     hall: '',
     startTime: '',
     endTime: '',
     eventDetails: '',
     startDate: '',
-    recurrenceType: 'weekly', // 'weekly', 'monthly', 'specific-dates'
+    recurrenceType: 'specific-dates', // Changed default to specific-dates to use our new generator
     daysOfWeek: [] as number[],
     dayOfMonth: null as number | null,
     dates: [] as string[],
@@ -42,6 +56,28 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
     paymentStatus: 'pending',
     selectedFacilities: [],
   });
+
+  useEffect(() => {
+    const fetchUnavailableDates = async () => {
+      if (!formData.hall) {
+        setUnavailableDates([]);
+        return;
+      }
+      try {
+        const startDate = format(startOfMonth(displayedMonth), 'yyyy-MM-dd');
+        const endDate = format(endOfMonth(displayedMonth), 'yyyy-MM-dd');
+        const response = await api.get(`/halls/${formData.hall}/unavailable-dates`, {
+          params: { startDate, endDate },
+        });
+        const dates = (response.data.data || []).map((ud: any) => parseISO(ud.bufferTime.startTime));
+        setUnavailableDates(dates);
+      } catch (error) {
+        console.error('Failed to fetch unavailable dates:', error);
+        setUnavailableDates([]);
+      }
+    };
+    fetchUnavailableDates();
+  }, [formData.hall, displayedMonth]);
 
   useEffect(() => {
     if (isOpen) {
@@ -159,6 +195,64 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
 
     calculateTotalPrice();
   }, [formData.hall, formData.startTime, formData.endTime, formData.dates, formData.selectedFacilities, halls, facilities, activeTab, usePerDateTimes, dateTimes]);
+
+  const generateRecurringDates = useCallback((startDate: Date, endDate: Date, pattern: string) => {
+    if (!startDate || !endDate || endDate < startDate || pattern === 'none') return [startDate];
+
+    const dates: Date[] = [];
+    let current = startDate;
+
+    if (pattern === 'weekly') {
+      const targetDay = getDay(startDate);
+      const interval = eachDayOfInterval({ start: startDate, end: endDate });
+      return interval.filter(d => getDay(d) === targetDay);
+    } else if (pattern === 'monthly-fixed') {
+      let n = 0;
+      while (current <= endDate) {
+        dates.push(current);
+        n++;
+        current = addMonths(startDate, n);
+        if (current > endDate) break;
+      }
+    } else if (pattern === 'monthly-relative') {
+      const targetDay = getDay(startDate);
+      const targetNth = Math.floor((getDate(startDate) - 1) / 7) + 1;
+
+      while (current <= endDate) {
+        dates.push(current);
+        let nextMonth = startOfMonth(addMonths(current, 1));
+        let found = false;
+        let count = 0;
+        for (let i = 0; i < 31; i++) {
+          let d = addDays(nextMonth, i);
+          if (d.getMonth() !== nextMonth.getMonth()) break;
+          if (getDay(d) === targetDay) {
+            count++;
+            if (count === targetNth) {
+              current = d;
+              found = true;
+              break;
+            }
+          }
+        }
+        if (!found || current > endDate) break;
+      }
+    }
+    return dates;
+  }, []);
+
+  const applyRecurrence = useCallback(() => {
+    if (formData.dates.length === 0 || recurrencePattern === 'none' || !formData.recurringEndDate) return;
+
+    const startDate = parseLocalDate(formData.dates[0]);
+    const endDate = parseLocalDate(formData.recurringEndDate);
+
+    const newDates = generateRecurringDates(startDate, endDate, recurrencePattern);
+    setFormData(prev => ({
+      ...prev,
+      dates: newDates.map(d => format(d, 'yyyy-MM-dd'))
+    }));
+  }, [formData.dates, formData.recurringEndDate, recurrencePattern, generateRecurringDates]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -422,17 +516,15 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
               <div>
                 <label className="block text-sm font-medium text-gray-800">Select Dates</label>
                 <Calendar
+                  unavailableDates={unavailableDates}
                   selectedDates={formData.dates.map(date => parseLocalDate(date))}
+                  displayedMonth={displayedMonth}
+                  onMonthChange={setDisplayedMonth}
                   onChange={(dates) => {
                     if (dates) {
                       setFormData(prev => ({
                         ...prev,
-                        dates: dates.map(d => {
-                          const year = d.getFullYear();
-                          const month = String(d.getMonth() + 1).padStart(2, '0');
-                          const day = String(d.getDate()).padStart(2, '0');
-                          return `${year}-${month}-${day}`;
-                        })
+                        dates: dates.map(d => format(d, 'yyyy-MM-dd'))
                       }));
                     }
                   }}
@@ -596,76 +688,54 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-800">Recurrence Type</label>
-                <select
-                  name="recurrenceType"
-                  value={formData.recurrenceType}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900"
-                >
-                  <option value="weekly">Weekly</option>
-                  <option value="monthly">Monthly</option>
-                  <option value="specific-dates">Specific Dates</option>
-                </select>
+                <label className="block text-sm font-medium text-gray-800">Select Dates</label>
+                <p className="text-xs text-gray-500 mb-2">Select the starting date first, then apply a repeat pattern if needed.</p>
+                <Calendar
+                  unavailableDates={unavailableDates}
+                  selectedDates={formData.dates.map(date => parseLocalDate(date))}
+                  displayedMonth={displayedMonth}
+                  onMonthChange={setDisplayedMonth}
+                  onChange={(dates) => {
+                    if (dates) {
+                      setFormData(prev => ({
+                        ...prev,
+                        dates: dates.map(d => format(d, 'yyyy-MM-dd'))
+                      }));
+                    }
+                  }}
+                />
               </div>
 
-              {formData.recurrenceType === 'weekly' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-800">Days of the Week</label>
-                  <div className="flex space-x-2">
-                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, index) => (
-                      <label key={day} className="flex items-center space-x-1">
+              {formData.dates.length > 0 && (
+                <div className="p-4 border rounded-md bg-blue-50 space-y-3">
+                   <label className="block text-sm font-bold text-gray-800">Repeat this booking?</label>
+                   <div className="grid grid-cols-2 gap-2">
+                      <button type="button" onClick={() => setRecurrencePattern('none')} className={`px-3 py-2 text-sm rounded transition-colors ${recurrencePattern === 'none' ? 'bg-primary text-white font-semibold' : 'bg-white border text-gray-700 hover:bg-gray-50'}`}>No Repeat</button>
+                      <button type="button" onClick={() => setRecurrencePattern('weekly')} className={`px-3 py-2 text-sm rounded transition-colors ${recurrencePattern === 'weekly' ? 'bg-primary text-white font-semibold' : 'bg-white border text-gray-700 hover:bg-gray-50'}`}>Weekly</button>
+                      <button type="button" onClick={() => setRecurrencePattern('monthly-fixed')} className={`px-3 py-2 text-sm rounded transition-colors ${recurrencePattern === 'monthly-fixed' ? 'bg-primary text-white font-semibold' : 'bg-white border text-gray-700 hover:bg-gray-50'}`}>Monthly (Fixed Date)</button>
+                      <button type="button" onClick={() => setRecurrencePattern('monthly-relative')} className={`px-3 py-2 text-sm rounded transition-colors ${recurrencePattern === 'monthly-relative' ? 'bg-primary text-white font-semibold' : 'bg-white border text-gray-700 hover:bg-gray-50'}`}>Monthly (Relative Day)</button>
+                   </div>
+
+                   {recurrencePattern !== 'none' && (
+                     <div className="mt-2 space-y-2">
+                        <label className="block text-sm font-medium text-gray-800">Repeat Until</label>
                         <input
-                          type="checkbox"
-                          checked={formData.daysOfWeek.includes(index)}
-                          onChange={() => handleDayOfWeekChange(index)}
-                          className="rounded border-gray-300 text-primary focus:ring-primary"
+                          type="date"
+                          name="recurringEndDate"
+                          value={formData.recurringEndDate}
+                          onChange={handleChange}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900"
                         />
-                        <span>{day}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {formData.recurrenceType === 'monthly' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-800">Day of the Month</label>
-                  <Calendar
-                    selectedDates={formData.dayOfMonth ? [new Date(new Date().getFullYear(), new Date().getMonth(), formData.dayOfMonth)] : []}
-                    onChange={(dates) => {
-                      if (dates && dates.length > 0) {
-                        setFormData(prev => ({ ...prev, dayOfMonth: dates[0].getDate() }));
-                      }
-                    }}
-                  />
-                </div>
-              )}
-
-              {formData.recurrenceType === 'specific-dates' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-800">Select Dates</label>
-                  <Calendar
-                    selectedDates={formData.dates.map(date => new Date(date))}
-                    onChange={(dates) => {
-                      if (dates) {
-                        setFormData(prev => ({ ...prev, dates: dates.map(d => d.toISOString().split('T')[0]) }));
-                      }
-                    }}
-                  />
-                </div>
-              )}
-
-              {(formData.recurrenceType === 'weekly' || formData.recurrenceType === 'monthly') && (
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-800">Start Date</label>
-                    <input type="date" name="startDate" value={formData.startDate} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900" />
-                  </div>
-                  <div>
-                      <label className="block text-sm font-medium text-gray-800">End Date</label>
-                      <input type="date" name="recurringEndDate" value={formData.recurringEndDate} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900" />
-                  </div>
+                        <button
+                          type="button"
+                          onClick={applyRecurrence}
+                          className="w-full px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-bold shadow-sm transition-colors"
+                        >
+                          Generate & Apply Pattern
+                        </button>
+                        <p className="text-[10px] text-gray-500 italic">This will populate the calendar based on the first selected date.</p>
+                     </div>
+                   )}
                 </div>
               )}
 
@@ -783,17 +853,15 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
               <div>
                 <label className="block text-sm font-medium text-gray-800">Select Dates</label>
                 <Calendar
+                  unavailableDates={unavailableDates}
                   selectedDates={formData.dates.map(date => parseLocalDate(date))}
+                  displayedMonth={displayedMonth}
+                  onMonthChange={setDisplayedMonth}
                   onChange={(dates) => {
                     if (dates) {
                       setFormData(prev => ({
                         ...prev,
-                        dates: dates.map(d => {
-                          const year = d.getFullYear();
-                          const month = String(d.getMonth() + 1).padStart(2, '0');
-                          const day = String(d.getDate()).padStart(2, '0');
-                          return `${year}-${month}-${day}`;
-                        })
+                        dates: dates.map(d => format(d, 'yyyy-MM-dd'))
                       }));
                     }
                   }}
