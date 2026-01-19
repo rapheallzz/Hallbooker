@@ -465,6 +465,16 @@ const BookingsPage = () => {
                             Recurring
                           </span>
                         )}
+                        {booking.bookingType?.toLowerCase() === 'online' && (
+                          <span className="px-2 inline-flex text-[10px] leading-4 font-semibold rounded-full bg-green-100 text-green-800">
+                            Online
+                          </span>
+                        )}
+                        {booking.bookingType?.toLowerCase() === 'walk-in' && (
+                          <span className="px-2 inline-flex text-[10px] leading-4 font-semibold rounded-full bg-purple-100 text-purple-800">
+                            Walk-in
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">
