@@ -79,13 +79,13 @@ const HallCard = ({ hall }: HallCardProps) => {
             </div>
             <div className="flex flex-col items-end text-[10px] space-y-0.5 pb-1">
               <div className="flex items-center">
-                <Star className="h-3 w-3 text-gray-400" />
+                <Star className="h-3 w-3 text-gray-400 fill-gray-400" />
                 {hall.averageRating > 0 ? (
-                  <span className="ml-1 text-gray-600 font-semibold">
+                  <span className="ml-1 text-gray-400 font-semibold">
                     {hall.averageRating.toFixed(1)}
                   </span>
                 ) : (
-                  <span className="ml-1 text-gray-500">New</span>
+                  <span className="ml-1 text-gray-400">New</span>
                 )}
               </div>
               <div className="flex items-center text-gray-500">
