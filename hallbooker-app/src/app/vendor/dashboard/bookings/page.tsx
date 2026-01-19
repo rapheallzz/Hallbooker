@@ -133,8 +133,9 @@ const BookingsPage = () => {
       setLoading(true);
       setError('');
       const response = await api.get(`/halls/${hallId}/bookings?page=${page}&limit=${LIMIT}`);
-      setBookings(response.data.data.bookings);
-      setBookingsTotalPages(response.data.data.pagination.totalPages || 1);
+      const data = response.data.data;
+      setBookings(data.bookings || []);
+      setBookingsTotalPages(data.pagination?.totalPages || data.totalPages || 1);
     } catch (error: any) {
       console.error("Error fetching bookings:", error);
       if (error.response?.status === 404) {
@@ -157,8 +158,9 @@ const BookingsPage = () => {
       setLoading(true);
       setError('');
       const response = await api.get(`/reservations/halls/${hallId}?page=${page}&limit=${LIMIT}`);
-      setReservations(response.data.data.reservations);
-      setReservationsTotalPages(response.data.data.pagination.totalPages || 1);
+      const data = response.data.data;
+      setReservations(data.reservations || []);
+      setReservationsTotalPages(data.pagination?.totalPages || data.totalPages || 1);
     } catch (error: any) {
       console.error("Error fetching reservations:", error);
       if (error.response?.status === 404) {
