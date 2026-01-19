@@ -1,3 +1,4 @@
+'use client';
 import Link from "next/link";
 import { Star, Eye } from "lucide-react";
 import Slider from "react-slick";
@@ -5,12 +6,16 @@ import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
 import { Hall } from "@/types/hall";
+import { useAuth } from "@/context/AuthContext";
+import { VIEW_COUNT_ROLES } from '@/constants/auth';
 
 interface HallCardProps {
   hall: Hall;
 }
 
 const HallCard = ({ hall }: HallCardProps) => {
+  const { user } = useAuth();
+  const canSeeViews = user && VIEW_COUNT_ROLES.includes(user.activeRole);
   const { dailyRate, hourlyRate } = hall.pricing || {};
 
   const settings = {
@@ -88,10 +93,12 @@ const HallCard = ({ hall }: HallCardProps) => {
                   <span className="ml-1 text-gray-400">New</span>
                 )}
               </div>
-              <div className="flex items-center text-gray-500">
-                <Eye className="h-3 w-3 mr-1" />
-                <span>{hall.views || 0}</span>
-              </div>
+              {canSeeViews && (
+                <div className="flex items-center text-gray-500">
+                  <Eye className="h-3 w-3 mr-1" />
+                  <span>{hall.views || 0}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>

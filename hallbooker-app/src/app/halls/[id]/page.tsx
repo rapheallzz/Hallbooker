@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
+import { VIEW_COUNT_ROLES } from '@/constants/auth';
 import api from '@/services/api';
 import BookingModal from '@/components/BookingModal';
 import DemoModal from '@/components/DemoModal';
@@ -29,6 +31,8 @@ import {
 import Swal from 'sweetalert2';
 
 const HallDetailPage = () => {
+  const { user } = useAuth();
+  const canSeeViews = user && ['super-admin', 'hall-owner', 'staff'].includes(user.activeRole);
   const [hall, setHall] = useState<Hall | null>(null);
   const [recommendations, setRecommendations] = useState<Hall[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -158,11 +162,15 @@ const HallDetailPage = () => {
               )}
               <span className="mx-2">·</span>
               <span>{hall.location}</span>
-              <span className="mx-2">·</span>
-              <span className="flex items-center inline-flex">
-                <Eye className="h-4 w-4 mr-1" />
-                {hall.views || 0} views
-              </span>
+              {canSeeViews && (
+                <>
+                  <span className="mx-2">·</span>
+                  <span className="flex items-center inline-flex">
+                    <Eye className="h-4 w-4 mr-1" />
+                    {hall.views || 0} views
+                  </span>
+                </>
+              )}
             </div>
           </div>
         </div>
