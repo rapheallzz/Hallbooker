@@ -106,6 +106,12 @@ const BookingsPage = () => {
   const [bookingsTotalPages, setBookingsTotalPages] = useState(1);
   const [reservationsPage, setReservationsPage] = useState(1);
   const [reservationsTotalPages, setReservationsTotalPages] = useState(1);
+  const [status, setStatus] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [sortBy, setSortBy] = useState('createdAt');
+  const [sortOrder, setSortOrder] = useState('desc');
+  const [bookingTypeFilter, setBookingTypeFilter] = useState('all');
   const LIMIT = 20;
 
   const fetchHalls = async () => {
@@ -132,13 +138,21 @@ const BookingsPage = () => {
     try {
       setLoading(true);
       setError('');
-      const response = await api.get(`/halls/${hallId}/bookings?page=${page}&limit=${LIMIT}`);
+      let url = `/halls/${hallId}/bookings?page=${page}&limit=${LIMIT}`;
+      if (status) url += `&status=${status}`;
+      if (startDate) url += `&startDate=${startDate}`;
+      if (endDate) url += `&endDate=${endDate}`;
+      if (sortBy) url += `&sortBy=${sortBy}`;
+      if (sortOrder) url += `&sortOrder=${sortOrder}`;
+
+      const response = await api.get(url);
       const data = response.data.data;
       setBookings(data.bookings || []);
       setBookingsTotalPages(data.pagination?.totalPages || data.totalPages || 1);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error fetching bookings:", error);
-      if (error.response?.status === 404) {
+      const err = error as { response?: { status: number } };
+      if (err.response?.status === 404) {
         setBookings([]);
         setBookingsTotalPages(1);
       } else {
@@ -161,9 +175,10 @@ const BookingsPage = () => {
       const data = response.data.data;
       setReservations(data.reservations || []);
       setReservationsTotalPages(data.pagination?.totalPages || data.totalPages || 1);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error fetching reservations:", error);
-      if (error.response?.status === 404) {
+      const err = error as { response?: { status: number } };
+      if (err.response?.status === 404) {
         setReservations([]);
         setReservationsTotalPages(1);
       } else {
@@ -186,7 +201,7 @@ const BookingsPage = () => {
         fetchReservations(selectedHall, reservationsPage);
       }
     }
-  }, [selectedHall, activeTab, bookingsPage, reservationsPage]);
+  }, [selectedHall, activeTab, bookingsPage, reservationsPage, status, startDate, endDate, sortBy, sortOrder]);
 
   const handleHallChange = (hallId: string) => {
     setSelectedHall(hallId);
@@ -215,15 +230,24 @@ const BookingsPage = () => {
   };
 
   const filteredBookings = React.useMemo(() => {
-    if (!searchTerm) return bookings;
-    return bookings.filter(
-      (booking) =>
-        booking.bookingId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        booking.user?.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        booking.walkInUserDetails?.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        booking.eventDetails?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [bookings, searchTerm]);
+    let result = bookings;
+    if (searchTerm) {
+      result = result.filter(
+        (booking) =>
+          booking.bookingId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          booking.user?.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          booking.walkInUserDetails?.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          booking.eventDetails?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    if (bookingTypeFilter !== 'all') {
+      result = result.filter(booking => {
+        const isRecurring = booking.bookingType?.toLowerCase() === 'recurring';
+        return bookingTypeFilter === 'recurring' ? isRecurring : !isRecurring;
+      });
+    }
+    return result;
+  }, [bookings, searchTerm, bookingTypeFilter]);
 
   const filteredReservations = React.useMemo(() => {
     if (!searchTerm) return reservations;
@@ -235,7 +259,8 @@ const BookingsPage = () => {
     );
   }, [reservations, searchTerm]);
 
-  const handleCreateBooking = async (formData: any, type: string) => {
+  const handleCreateBooking = async (formData: unknown, type: string) => {
+    const data = formData as { paymentMethod?: string };
     Swal.fire({
       title: 'Creating Booking...',
       text: 'Please wait while we create the booking.',
@@ -256,7 +281,7 @@ const BookingsPage = () => {
       }
       const response = await api.post(endpoint, formData);
 
-      if (formData.paymentMethod === 'online' && type === 'recurring') {
+      if (data.paymentMethod === 'online' && type === 'recurring') {
         const recurringBookingId = response.data.data.recurringBookingId;
         await api.post(`/payments/initialize/recurring/${recurringBookingId}`);
       }
@@ -276,12 +301,13 @@ const BookingsPage = () => {
         }
       }
       setIsModalOpen(false);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to create booking:', error);
+      const err = error as { response?: { data?: { message?: string } } };
       Swal.fire({
         icon: 'error',
         title: 'Booking Failed',
-        text: error.response?.data?.message || 'An unexpected error occurred.',
+        text: err.response?.data?.message || 'An unexpected error occurred.',
       });
     }
   };
@@ -315,6 +341,79 @@ const BookingsPage = () => {
           ))}
         </select>
       </div>
+
+      {activeTab === 'bookings' && (
+        <div className="bg-gray-50 p-4 rounded-lg mb-6 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Status</label>
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              className="w-full border-gray-300 rounded-md text-sm focus:ring-primary focus:border-primary"
+            >
+              <option value="">All Statuses</option>
+              <option value="pending">Pending</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Type</label>
+            <select
+              value={bookingTypeFilter}
+              onChange={(e) => setBookingTypeFilter(e.target.value)}
+              className="w-full border-gray-300 rounded-md text-sm focus:ring-primary focus:border-primary"
+            >
+              <option value="all">All Types</option>
+              <option value="normal">Normal</option>
+              <option value="recurring">Recurring</option>
+            </select>
+            <p className="text-[10px] text-gray-400 mt-1">* Filters current page</p>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Start Date</label>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="w-full border-gray-300 rounded-md text-sm focus:ring-primary focus:border-primary"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">End Date</label>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="w-full border-gray-300 rounded-md text-sm focus:ring-primary focus:border-primary"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Sort By</label>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="w-full border-gray-300 rounded-md text-sm focus:ring-primary focus:border-primary"
+            >
+              <option value="createdAt">Date Created</option>
+              <option value="totalPrice">Price</option>
+              <option value="status">Status</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Order</label>
+            <select
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value)}
+              className="w-full border-gray-300 rounded-md text-sm focus:ring-primary focus:border-primary"
+            >
+              <option value="desc">Descending</option>
+              <option value="asc">Ascending</option>
+            </select>
+          </div>
+        </div>
+      )}
+
       <div className="flex border-b mb-4">
         <button
           className={`px-4 py-2 ${activeTab === 'bookings' ? 'border-b-2 border-primary text-primary' : 'text-gray-500'}`}

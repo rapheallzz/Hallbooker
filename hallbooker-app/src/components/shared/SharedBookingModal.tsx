@@ -20,9 +20,21 @@ import {
 interface BookingModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (formData: any, type: string) => void;
+  onSubmit: (formData: unknown, type: string) => void;
   userRole: 'admin' | 'vendor';
 }
+
+const parseLocalDate = (dateStr: string) => {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day);
+};
+
+const formatLabel = (label: string) => {
+  if (label === 'POS') return 'POS';
+  return label
+    .replace(/_/g, ' ')
+    .replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+};
 
 const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSubmit, userRole }) => {
   const [activeTab, setActiveTab] = useState('reservation');
@@ -220,11 +232,11 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
 
       while (current <= endDate) {
         dates.push(current);
-        let nextMonth = startOfMonth(addMonths(current, 1));
+        const nextMonth = startOfMonth(addMonths(current, 1));
         let found = false;
         let count = 0;
         for (let i = 0; i < 31; i++) {
-          let d = addDays(nextMonth, i);
+          const d = addDays(nextMonth, i);
           if (d.getMonth() !== nextMonth.getMonth()) break;
           if (getDay(d) === targetDay) {
             count++;
@@ -259,15 +271,6 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleDayOfWeekChange = (dayIndex: number) => {
-    setFormData(prev => {
-      const daysOfWeek = prev.daysOfWeek.includes(dayIndex)
-        ? prev.daysOfWeek.filter(d => d !== dayIndex)
-        : [...prev.daysOfWeek, dayIndex];
-      return { ...prev, daysOfWeek };
-    });
-  };
-
   const handleDateTimeChange = (dateStr: string, field: 'startTime' | 'endTime', value: string) => {
     setDateTimes(prev => ({
       ...prev,
@@ -300,7 +303,18 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
     } = formData;
 
     const walkInUserDetails = { fullName, email, phone };
-    let bookingPayload: any = {
+    const bookingPayload: {
+      hallId: string;
+      eventDetails: string;
+      walkInUserDetails: { fullName: string; email: string; phone: string };
+      paymentMethod: string;
+      paymentStatus: string;
+      selectedFacilities: { facilityId: string; quantity: number }[];
+      startTime?: string;
+      endTime?: string;
+      recurrenceRule?: { frequency: string; daysOfWeek?: number[]; dayOfMonth?: number | null; endDate: string };
+      dates?: string[];
+    } = {
       hallId: hall,
       eventDetails,
       walkInUserDetails,
@@ -341,7 +355,7 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
     onSubmit(bookingPayload, 'recurring');
   };
 
-  const handleFacilityChange = (facility: any) => {
+  const handleFacilityChange = (facility: { facility?: { _id: string }; _id: string; name: string; cost: number; chargeMethod: string }) => {
     setFormData((prev) => {
       const selectedFacilities = prev.selectedFacilities as { facilityId: string, quantity: number }[];
       const facilityIdToUse = facility.facility?._id;
@@ -456,17 +470,6 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
     onSubmit({ hallId: hall, bookingDates, eventDetails, walkInUserDetails, paymentMethod, selectedFacilities }, 'reservation');
   };
 
-  const formatLabel = (label: string) => {
-    if (label === 'POS') return 'POS';
-    return label
-      .replace(/_/g, ' ')
-      .replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
-  };
-
-  const parseLocalDate = (dateStr: string) => {
-    const [year, month, day] = dateStr.split('-').map(Number);
-    return new Date(year, month - 1, day);
-  };
 
   if (!isOpen) return null;
 
@@ -505,7 +508,7 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
                 <label className="block text-sm font-medium text-gray-800">Hall</label>
                 <select name="hall" value={formData.hall} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900">
                   <option value="">Select a hall</option>
-                  {halls.map((hall: any) => (
+                  {halls.map((hall: { _id: string; name: string }) => (
                     <option key={hall._id} value={hall._id}>
                       {hall.name}
                     </option>
@@ -611,7 +614,7 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
                 <label className="block text-sm font-medium text-gray-800">Facilities</label>
                 <div className="max-h-48 overflow-y-auto pr-2">
                   <div className="grid grid-cols-1 gap-y-3">
-                    {(facilities as any[]).map((facility) => {
+                    {(facilities as { _id: string; facility?: { _id: string; name: string }; name: string; cost: number; chargeMethod: string }[]).map((facility) => {
                       const facilityIdToUse = facility.facility?._id;
                       if (!facilityIdToUse) return null;
                       const isSelected = (formData.selectedFacilities as { facilityId: string }[]).some(f => f.facilityId === facilityIdToUse);
@@ -770,7 +773,7 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
                 <label className="block text-sm font-medium text-gray-800">Facilities</label>
                 <div className="max-h-48 overflow-y-auto pr-2">
                   <div className="grid grid-cols-1 gap-y-3">
-                    {(facilities as any[]).map((facility) => {
+                    {(facilities as { _id: string; facility?: { _id: string; name: string }; name: string; cost: number; chargeMethod: string }[]).map((facility) => {
                       const facilityIdToUse = facility.facility?._id;
                       if (!facilityIdToUse) return null;
                       const isSelected = (formData.selectedFacilities as { facilityId: string }[]).some(f => f.facilityId === facilityIdToUse);
@@ -948,7 +951,7 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
                 <label className="block text-sm font-medium text-gray-800">Facilities</label>
                 <div className="max-h-48 overflow-y-auto pr-2">
                   <div className="grid grid-cols-1 gap-y-3">
-                    {(facilities as any[]).map((facility) => {
+                    {(facilities as { _id: string; facility?: { _id: string; name: string }; name: string; cost: number; chargeMethod: string }[]).map((facility) => {
                       const facilityIdToUse = facility.facility?._id;
                       if (!facilityIdToUse) return null;
                       const isSelected = (formData.selectedFacilities as { facilityId: string }[]).some(f => f.facilityId === facilityIdToUse);
