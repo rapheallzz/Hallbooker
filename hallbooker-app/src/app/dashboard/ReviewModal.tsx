@@ -75,7 +75,7 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ booking, existingReview, onCl
                     );
                   })}
                 </div>
-                <span className="text-lg font-semibold text-gray-700">
+                <span className="text-lg font-semibold text-gray-400">
                   {existingReview.rating.toFixed(1)}
                 </span>
               </div>
@@ -114,7 +114,7 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ booking, existingReview, onCl
                     })}
                   </div>
                   {(hover || rating) > 0 && (
-                    <span className="text-xl font-bold text-gray-700">
+                    <span className="text-xl font-bold text-gray-400">
                       {(hover || rating).toFixed(1)}
                     </span>
                   )}

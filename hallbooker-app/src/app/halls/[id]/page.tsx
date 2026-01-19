@@ -145,8 +145,8 @@ const HallDetailPage = () => {
           <div className="flex items-center mt-2">
             <div className="text-sm text-gray-600 flex items-center">
               {hall.averageRating > 0 ? (
-                <span className="font-semibold flex items-center">
-                  {hall.averageRating.toFixed(1)} <Star className="h-4 w-4 ml-1 text-gray-400 fill-gray-400" />
+                <span className="font-semibold flex items-center text-gray-400">
+                  {hall.averageRating.toFixed(1)} <Star className="h-4 w-4 ml-1 fill-gray-400" />
                 </span>
               ) : (
                 <span className="font-semibold text-gray-400">New</span>

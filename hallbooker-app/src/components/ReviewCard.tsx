@@ -27,6 +27,9 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ name, date, rating, comment }) 
             />
           ))}
         </div>
+        <span className="ml-2 text-gray-400 font-semibold text-sm">
+          {rating.toFixed(1)}
+        </span>
       </div>
       <p className="text-gray-700">{comment}</p>
     </div>
