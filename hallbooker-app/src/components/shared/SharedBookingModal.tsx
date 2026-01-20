@@ -329,11 +329,7 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
       startTime,
       endTime,
       eventDetails,
-      recurrenceType,
-      daysOfWeek,
-      dayOfMonth,
       dates,
-      recurringEndDate,
       fullName,
       email,
       phone,
@@ -361,18 +357,7 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
     }
 
     const walkInUserDetails = { fullName, email, phone };
-    const bookingPayload: {
-      hallId: string;
-      eventDetails: string;
-      walkInUserDetails: { fullName: string; email: string; phone: string };
-      paymentMethod: string;
-      paymentStatus: string;
-      selectedFacilities: { facilityId: string; quantity: number }[];
-      recurrenceRule?: { frequency: string; daysOfWeek?: number[]; dayOfMonth?: number | null; endDate: string };
-      dates?: string[];
-      bookingDates: { startTime: string; endTime: string }[];
-      recurrenceType: string;
-    } = {
+    const bookingPayload = {
       hallId: hall,
       eventDetails,
       walkInUserDetails,
@@ -392,26 +377,9 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
           endTime: end.toISOString(),
         };
       }),
-      recurrenceType
+      recurrenceType: 'specific-dates',
+      dates: dates,
     };
-
-    if (recurrenceType === 'weekly' || recurrenceType === 'monthly') {
-      if (recurrenceType === 'weekly') {
-        bookingPayload.recurrenceRule = {
-          frequency: 'weekly',
-          daysOfWeek,
-          endDate: recurringEndDate,
-        };
-      } else { // monthly
-        bookingPayload.recurrenceRule = {
-          frequency: 'monthly',
-          dayOfMonth,
-          endDate: recurringEndDate,
-        };
-      }
-    } else if (recurrenceType === 'specific-dates') {
-      bookingPayload.dates = dates;
-    }
 
     setError('');
     onSubmit(bookingPayload, 'recurring');
