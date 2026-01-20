@@ -29,6 +29,7 @@ interface Booking {
   paymentStatus?: string;
   bookingType?: string;
   isRecurring?: boolean;
+  recurringBookingId?: string;
 }
 
 interface Reservation {
@@ -236,6 +237,7 @@ const BookingsPage = () => {
       result = result.filter(
         (booking) =>
           booking.bookingId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (booking.recurringBookingId && booking.recurringBookingId.toLowerCase().includes(searchTerm.toLowerCase())) ||
           booking.user?.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
           booking.walkInUserDetails?.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
           booking.eventDetails?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -249,6 +251,55 @@ const BookingsPage = () => {
     }
     return result;
   }, [bookings, searchTerm, bookingTypeFilter]);
+
+  const groupedBookings = React.useMemo(() => {
+    const groups: Record<string, Booking[]> = {};
+    const result: (Booking & { isGroup?: boolean; groupBookings?: Booking[] })[] = [];
+
+    filteredBookings.forEach(booking => {
+      if (booking.isRecurring && booking.recurringBookingId) {
+        if (!groups[booking.recurringBookingId]) {
+          groups[booking.recurringBookingId] = [];
+        }
+        groups[booking.recurringBookingId].push(booking);
+      } else {
+        result.push({ ...booking, isGroup: false });
+      }
+    });
+
+    Object.entries(groups).forEach(([recurringId, groupBookings]) => {
+      groupBookings.sort((a, b) => new Date(a.bookingDates[0].startTime).getTime() - new Date(b.bookingDates[0].startTime).getTime());
+
+      const first = groupBookings[0];
+      const last = groupBookings[groupBookings.length - 1];
+      const totalSum = groupBookings.reduce((sum, b) => sum + (b.totalPrice || 0), 0);
+
+      result.push({
+        ...first,
+        isGroup: true,
+        bookingId: recurringId,
+        totalPrice: totalSum,
+        bookingDates: [
+          {
+            startTime: first.bookingDates[0].startTime,
+            endTime: last.bookingDates[groupBookings.length === 1 ? 0 : 0].endTime // Use last one's end time
+          }
+        ],
+        // Override the date display logic to show the range properly in the row
+        groupBookings: groupBookings
+      });
+      // Note: we use last.bookingDates[0].endTime for the range end
+      result[result.length - 1].bookingDates[0].endTime = last.bookingDates[0].endTime;
+    });
+
+    result.sort((a, b) => {
+      const dateA = new Date(a.bookingDates[0].startTime).getTime();
+      const dateB = new Date(b.bookingDates[0].startTime).getTime();
+      return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
+    });
+
+    return result;
+  }, [filteredBookings, sortOrder]);
 
   const filteredReservations = React.useMemo(() => {
     if (!searchTerm) return reservations;
@@ -454,12 +505,12 @@ const BookingsPage = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredBookings.length > 0 ? filteredBookings.map((booking) => (
+              {groupedBookings.length > 0 ? groupedBookings.map((booking) => (
                 <React.Fragment key={booking._id}>
-                  <tr onClick={() => setExpandedBookingId(expandedBookingId === booking._id ? null : booking._id)} className="cursor-pointer">
+                  <tr onClick={() => setExpandedBookingId(expandedBookingId === booking._id ? null : booking._id)} className="cursor-pointer hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">
                       <div className="flex items-center space-x-2">
-                        <span>{booking.bookingId}</span>
+                        <span className="font-mono text-xs">{booking.bookingId}</span>
                         {booking.isRecurring && (
                           <span className="px-2 inline-flex text-[10px] leading-4 font-semibold rounded-full bg-blue-100 text-blue-800">
                             Recurring
@@ -480,9 +531,19 @@ const BookingsPage = () => {
                     <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">
                       {booking.user?.fullName || booking.walkInUserDetails?.fullName}
                     </td>
-                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">
-                      <div><span className="font-semibold">From:</span> {new Date(booking.bookingDates[0].startTime).toLocaleString()}</div>
-                      <div><span className="font-semibold">To:</span> {new Date(booking.bookingDates[0].endTime).toLocaleString()}</div>
+                    <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900 text-sm">
+                      {booking.isGroup ? (
+                        <>
+                          <div><span className="font-semibold">Start:</span> {new Date(booking.bookingDates[0].startTime).toLocaleDateString()}</div>
+                          <div><span className="font-semibold">End:</span> {new Date(booking.bookingDates[0].endTime).toLocaleDateString()}</div>
+                          <div className="text-[10px] text-blue-600 font-medium">({booking.groupBookings?.length} bookings)</div>
+                        </>
+                      ) : (
+                        <>
+                          <div><span className="font-semibold">From:</span> {new Date(booking.bookingDates[0].startTime).toLocaleString()}</div>
+                          <div><span className="font-semibold">To:</span> {new Date(booking.bookingDates[0].endTime).toLocaleString()}</div>
+                        </>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">
                       <span
@@ -498,7 +559,10 @@ const BookingsPage = () => {
                     <td className="px-6 py-4 whitespace-no-wrap text-right border-b border-gray-500 text-gray-900">
                       {booking.status.toLowerCase() !== 'cancelled' && (
                         <button
-                          onClick={() => handleCancel(booking._id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCancel(booking._id);
+                          }}
                           className="px-5 py-2 border-red-500 border text-red-500 rounded transition duration-300 hover:bg-red-500 hover:text-white focus:outline-none"
                         >
                           Cancel
@@ -508,18 +572,50 @@ const BookingsPage = () => {
                   </tr>
                   {expandedBookingId === booking._id && (
                     <tr>
-                      <td colSpan={5} className="p-4 bg-gray-100">
-                        <div>Event Details: {booking.eventDetails}</div>
-                        <div>Total Price: ₦{booking.totalPrice?.toLocaleString()}</div>
-                        <div>Payment Method: {booking.paymentMethod}</div>
-                        <div>Payment Status: {booking.paymentStatus}</div>
-                        <div>Booking Type: {booking.bookingType}</div>
-                        {booking.walkInUserDetails && (
+                      <td colSpan={5} className="p-4 bg-gray-100 shadow-inner">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
-                            <div>Customer Email: {booking.walkInUserDetails.email}</div>
-                            <div>Customer Phone: {booking.walkInUserDetails.phone}</div>
+                            <h4 className="font-bold text-gray-700 mb-2">Booking Details</h4>
+                            <div className="space-y-1 text-sm text-gray-600">
+                              <div><span className="font-semibold">Event Details:</span> {booking.eventDetails}</div>
+                              <div><span className="font-semibold">Total Price:</span> ₦{booking.totalPrice?.toLocaleString()}</div>
+                              <div><span className="font-semibold">Payment Method:</span> {booking.paymentMethod}</div>
+                              <div><span className="font-semibold">Payment Status:</span> {booking.paymentStatus}</div>
+                              <div><span className="font-semibold">Booking Type:</span> {booking.bookingType}</div>
+                              {booking.walkInUserDetails && (
+                                <>
+                                  <div><span className="font-semibold">Customer Email:</span> {booking.walkInUserDetails.email}</div>
+                                  <div><span className="font-semibold">Customer Phone:</span> {booking.walkInUserDetails.phone}</div>
+                                </>
+                              )}
+                            </div>
                           </div>
-                        )}
+                          {booking.isGroup && (
+                            <div>
+                              <h4 className="font-bold text-gray-700 mb-2">Recurring Schedule</h4>
+                              <div className="max-h-40 overflow-y-auto border rounded bg-white p-2">
+                                <table className="min-w-full text-xs">
+                                  <thead>
+                                    <tr className="border-b">
+                                      <th className="text-left pb-1">Booking ID</th>
+                                      <th className="text-left pb-1">Date & Time</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {booking.groupBookings?.map((gb) => (
+                                      <tr key={gb._id} className="border-b last:border-0">
+                                        <td className="py-1 font-mono">{gb.bookingId}</td>
+                                        <td className="py-1">
+                                          {new Date(gb.bookingDates[0].startTime).toLocaleString()}
+                                        </td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   )}

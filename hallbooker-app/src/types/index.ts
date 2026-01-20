@@ -29,6 +29,7 @@ export interface Booking {
   createdAt: string;
   review?: Review;
   isRecurring?: boolean;
+  recurringBookingId?: string;
 }
 
 export interface Suitability {

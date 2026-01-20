@@ -27,6 +27,8 @@ interface Booking {
   paymentMethod?: string;
   paymentStatus?: string;
   bookingType?: string;
+  isRecurring?: boolean;
+  recurringBookingId?: string;
   walkInUserDetails?: {
     email: string;
     phone: string;
@@ -85,7 +87,7 @@ const BookingsPage = () => {
         let bookingsRes;
         if (selectedHall) {
           bookingsRes = await api.get(`/halls/${selectedHall}/bookings`);
-          const normalizedBookings = bookingsRes.data.data.bookings.map((booking: any) => ({
+          const normalizedBookings = bookingsRes.data.data.bookings.map((booking: Booking) => ({
             ...booking,
             hall: booking.hall,
           }));
@@ -126,17 +128,61 @@ const BookingsPage = () => {
     return allBookings.filter(
       (booking) =>
         booking.bookingId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (booking.recurringBookingId && booking.recurringBookingId.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (booking.eventDetails || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
         (typeof booking.user === "object" && booking.user?.fullName.toLowerCase().includes(searchTerm.toLowerCase()))
     );
   }, [allBookings, searchTerm]);
 
+  const groupedBookings = useMemo(() => {
+    const groups: Record<string, Booking[]> = {};
+    const result: (Booking & { isGroup?: boolean; groupBookings?: Booking[] })[] = [];
+
+    filteredBookings.forEach(booking => {
+      if (booking.isRecurring && booking.recurringBookingId) {
+        if (!groups[booking.recurringBookingId]) {
+          groups[booking.recurringBookingId] = [];
+        }
+        groups[booking.recurringBookingId].push(booking);
+      } else {
+        result.push({ ...booking, isGroup: false });
+      }
+    });
+
+    Object.entries(groups).forEach(([recurringId, groupBookings]) => {
+      groupBookings.sort((a, b) => new Date(a.bookingDates[0].startTime).getTime() - new Date(b.bookingDates[0].startTime).getTime());
+
+      const first = groupBookings[0];
+      const last = groupBookings[groupBookings.length - 1];
+      const totalSum = groupBookings.reduce((sum, b) => sum + (b.totalPrice || 0), 0);
+
+      result.push({
+        ...first,
+        isGroup: true,
+        bookingId: recurringId,
+        totalPrice: totalSum,
+        bookingDates: [
+          {
+            startTime: first.bookingDates[0].startTime,
+            endTime: last.bookingDates[0].endTime
+          }
+        ],
+        groupBookings: groupBookings
+      });
+    });
+
+    // Keep consistent sorting if any
+    result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+    return result;
+  }, [filteredBookings]);
+
   const paginatedBookings = useMemo(() => {
     const startIndex = (currentPage - 1) * BOOKINGS_PER_PAGE;
-    return filteredBookings.slice(startIndex, startIndex + BOOKINGS_PER_PAGE);
-  }, [filteredBookings, currentPage]);
+    return groupedBookings.slice(startIndex, startIndex + BOOKINGS_PER_PAGE);
+  }, [groupedBookings, currentPage]);
 
-  const totalPages = Math.ceil(filteredBookings.length / BOOKINGS_PER_PAGE);
+  const totalPages = Math.ceil(groupedBookings.length / BOOKINGS_PER_PAGE);
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
@@ -157,11 +203,13 @@ const BookingsPage = () => {
     }
   };
 
-  const getHallName = (hallId: string) => {
-    return halls.find(h => h._id === hallId)?.name || 'N/A';
+  const getHallName = (hallId: string | { _id: string }) => {
+    const id = typeof hallId === 'string' ? hallId : hallId._id;
+    return halls.find(h => h._id === id)?.name || 'N/A';
   };
 
-  const handleCreateBooking = async (formData: any, type: string) => {
+  const handleCreateBooking = async (formData: unknown, type: string) => {
+    const data = formData as { paymentMethod?: string };
     Swal.fire({
       title: 'Creating Booking...',
       text: 'Please wait while we create the booking.',
@@ -182,7 +230,7 @@ const BookingsPage = () => {
       }
       const response = await api.post(endpoint, formData);
 
-      if (formData.paymentMethod === 'online' && type === 'recurring') {
+      if (data.paymentMethod === 'online' && type === 'recurring') {
         const recurringBookingId = response.data.data.recurringBookingId;
         await api.post(`/payments/initialize/recurring/${recurringBookingId}`);
       }
@@ -197,12 +245,13 @@ const BookingsPage = () => {
       }
       fetchAllData();
       setIsCreateModalOpen(false);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to create booking:', error);
+      const err = error as { response?: { data?: { message?: string } } };
       Swal.fire({
         icon: 'error',
         title: 'Booking Failed',
-        text: error.response?.data?.message || 'An unexpected error occurred.',
+        text: err.response?.data?.message || 'An unexpected error occurred.',
       });
     }
   };
@@ -281,12 +330,31 @@ const BookingsPage = () => {
                     paginatedBookings.map((booking) => (
                       <React.Fragment key={booking._id}>
                         <tr onClick={() => setExpandedBookingId(expandedBookingId === booking._id ? null : booking._id)} className="cursor-pointer hover:bg-gray-50">
-                          <td className="py-3 px-4 text-sm text-gray-900 font-mono text-xs">{booking.bookingId}</td>
+                          <td className="py-3 px-4 text-sm text-gray-900 font-mono text-xs">
+                            <div className="flex flex-col gap-1">
+                              <span>{booking.bookingId}</span>
+                              {booking.isRecurring && (
+                                <span className="px-2 w-fit inline-flex text-[10px] leading-4 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                  Recurring
+                                </span>
+                              )}
+                            </div>
+                          </td>
                           <td className="py-3 px-4 text-sm text-gray-900">{getHallName(booking.hall)}</td>
                           <td className="py-3 px-4 text-sm text-gray-900">{booking.eventDetails || 'N/A'}</td>
                           <td className="py-3 px-4 text-sm text-gray-900">
-                            <div><span className="font-semibold">From:</span> {new Date(booking.bookingDates[0].startTime).toLocaleString()}</div>
-                            <div><span className="font-semibold">To:</span> {new Date(booking.bookingDates[0].endTime).toLocaleString()}</div>
+                            {booking.isGroup ? (
+                              <>
+                                <div><span className="font-semibold text-xs text-gray-500 uppercase">Start:</span> {new Date(booking.bookingDates[0].startTime).toLocaleDateString()}</div>
+                                <div><span className="font-semibold text-xs text-gray-500 uppercase">End:</span> {new Date(booking.bookingDates[0].endTime).toLocaleDateString()}</div>
+                                <div className="text-[10px] text-blue-600 font-medium mt-1">({booking.groupBookings?.length} bookings)</div>
+                              </>
+                            ) : (
+                              <>
+                                <div><span className="font-semibold">From:</span> {new Date(booking.bookingDates[0].startTime).toLocaleString()}</div>
+                                <div><span className="font-semibold">To:</span> {new Date(booking.bookingDates[0].endTime).toLocaleString()}</div>
+                              </>
+                            )}
                           </td>
                           <td className="py-3 px-4 text-sm text-gray-900">
                             <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
@@ -302,16 +370,48 @@ const BookingsPage = () => {
                         </tr>
                         {expandedBookingId === booking._id && (
                           <tr>
-                            <td colSpan={7} className="p-4 bg-gray-100">
-                              <div>Payment Method: {booking.paymentMethod}</div>
-                              <div>Payment Status: {booking.paymentStatus}</div>
-                              <div>Booking Type: {booking.bookingType}</div>
-                              {booking.walkInUserDetails && (
+                            <td colSpan={7} className="p-4 bg-gray-100 shadow-inner">
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                  <div>Customer Email: {booking.walkInUserDetails.email}</div>
-                                  <div>Customer Phone: {booking.walkInUserDetails.phone}</div>
+                                  <h4 className="font-bold text-gray-700 mb-2">Detailed Info</h4>
+                                  <div className="space-y-1 text-sm text-gray-600">
+                                    <div><span className="font-semibold">Payment Method:</span> {booking.paymentMethod}</div>
+                                    <div><span className="font-semibold">Payment Status:</span> {booking.paymentStatus}</div>
+                                    <div><span className="font-semibold">Booking Type:</span> {booking.bookingType}</div>
+                                    {booking.walkInUserDetails && (
+                                      <>
+                                        <div><span className="font-semibold">Customer Email:</span> {booking.walkInUserDetails.email}</div>
+                                        <div><span className="font-semibold">Customer Phone:</span> {booking.walkInUserDetails.phone}</div>
+                                      </>
+                                    )}
+                                  </div>
                                 </div>
-                              )}
+                                {booking.isGroup && (
+                                  <div>
+                                    <h4 className="font-bold text-gray-700 mb-2">Recurring Schedule</h4>
+                                    <div className="max-h-40 overflow-y-auto border rounded bg-white p-2">
+                                      <table className="min-w-full text-xs">
+                                        <thead>
+                                          <tr className="border-b">
+                                            <th className="text-left pb-1">Booking ID</th>
+                                            <th className="text-left pb-1">Date & Time</th>
+                                          </tr>
+                                        </thead>
+                                        <tbody>
+                                          {booking.groupBookings?.map((gb) => (
+                                            <tr key={gb._id} className="border-b last:border-0">
+                                              <td className="py-1 font-mono">{gb.bookingId}</td>
+                                              <td className="py-1">
+                                                {new Date(gb.bookingDates[0].startTime).toLocaleString()}
+                                              </td>
+                                            </tr>
+                                          ))}
+                                        </tbody>
+                                      </table>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
                             </td>
                           </tr>
                         )}
