@@ -2,8 +2,9 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { X } from 'lucide-react';
+import { X, Trash2 } from 'lucide-react';
 import api from '@/services/api';
+import Swal from 'sweetalert2';
 import Calendar from '../Calendar';
 import {
   format,
@@ -128,6 +129,14 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
       }
     }
   }, [formData.hall, halls]);
+
+  useEffect(() => {
+    let type = 'specific-dates';
+    if (recurrencePattern === 'weekly') type = 'weekly';
+    else if (recurrencePattern === 'monthly-fixed' || recurrencePattern === 'monthly-relative') type = 'monthly';
+
+    setFormData(prev => ({ ...prev, recurrenceType: type }));
+  }, [recurrencePattern]);
 
   useEffect(() => {
     const calculateTotalPrice = () => {
@@ -260,15 +269,47 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
     const endDate = parseLocalDate(formData.recurringEndDate);
 
     const newDates = generateRecurringDates(startDate, endDate, recurrencePattern);
+
+    let daysOfWeek = formData.daysOfWeek;
+    let dayOfMonth = formData.dayOfMonth;
+
+    if (recurrencePattern === 'weekly') {
+      daysOfWeek = [getDay(startDate)];
+    } else if (recurrencePattern === 'monthly-fixed') {
+      dayOfMonth = getDate(startDate);
+    }
+
     setFormData(prev => ({
       ...prev,
-      dates: newDates.map(d => format(d, 'yyyy-MM-dd'))
+      dates: newDates.map(d => format(d, 'yyyy-MM-dd')),
+      daysOfWeek,
+      dayOfMonth
     }));
-  }, [formData.dates, formData.recurringEndDate, recurrencePattern, generateRecurringDates]);
+
+    Swal.fire({
+      icon: 'success',
+      title: 'Pattern Applied',
+      text: `${newDates.length} dates have been generated.`,
+      toast: true,
+      position: 'top-end',
+      showConfirmButton: false,
+      timer: 3000
+    });
+  }, [formData.dates, formData.recurringEndDate, recurrencePattern, generateRecurringDates, formData.daysOfWeek, formData.dayOfMonth]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const removeDate = (dateToRemove: string) => {
+    setFormData(prev => ({
+      ...prev,
+      dates: prev.dates.filter(d => d !== dateToRemove)
+    }));
+    const newDateTimes = { ...dateTimes };
+    delete newDateTimes[dateToRemove];
+    setDateTimes(newDateTimes);
   };
 
   const handleDateTimeChange = (dateStr: string, field: 'startTime' | 'endTime', value: string) => {
@@ -285,7 +326,6 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
     e.preventDefault();
     const {
       hall,
-      startDate,
       startTime,
       endTime,
       eventDetails,
@@ -302,6 +342,24 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
       selectedFacilities,
     } = formData;
 
+    if (dates.length === 0) {
+      setError('Please select at least one date for recurring booking.');
+      return;
+    }
+
+    if (usePerDateTimes) {
+      for (const dateStr of dates) {
+        const times = dateTimes[dateStr];
+        if (!times || !times.startTime || !times.endTime) {
+          setError(`Please select start and end times for ${dateStr}.`);
+          return;
+        }
+      }
+    } else if (!startTime || !endTime) {
+      setError('Please select start and end times.');
+      return;
+    }
+
     const walkInUserDetails = { fullName, email, phone };
     const bookingPayload: {
       hallId: string;
@@ -310,10 +368,10 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
       paymentMethod: string;
       paymentStatus: string;
       selectedFacilities: { facilityId: string; quantity: number }[];
-      startTime?: string;
-      endTime?: string;
       recurrenceRule?: { frequency: string; daysOfWeek?: number[]; dayOfMonth?: number | null; endDate: string };
       dates?: string[];
+      bookingDates: { startTime: string; endTime: string }[];
+      recurrenceType: string;
     } = {
       hallId: hall,
       eventDetails,
@@ -321,12 +379,23 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
       paymentMethod,
       paymentStatus,
       selectedFacilities,
+      bookingDates: dates.map(dateStr => {
+        const times = usePerDateTimes && dateTimes[dateStr] ? dateTimes[dateStr] : { startTime, endTime };
+        const [startH, startM] = times.startTime.split(':').map(Number);
+        const [endH, endM] = times.endTime.split(':').map(Number);
+        const start = parseLocalDate(dateStr);
+        start.setHours(startH, startM, 0, 0);
+        const end = parseLocalDate(dateStr);
+        end.setHours(endH, endM, 0, 0);
+        return {
+          startTime: start.toISOString(),
+          endTime: end.toISOString(),
+        };
+      }),
+      recurrenceType
     };
 
     if (recurrenceType === 'weekly' || recurrenceType === 'monthly') {
-      bookingPayload.startTime = `${startDate}T${startTime}:00.000Z`;
-      bookingPayload.endTime = `${startDate}T${endTime}:00.000Z`;
-
       if (recurrenceType === 'weekly') {
         bookingPayload.recurrenceRule = {
           frequency: 'weekly',
@@ -341,13 +410,6 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
         };
       }
     } else if (recurrenceType === 'specific-dates') {
-      if (dates.length === 0) {
-        setError('Please select at least one date for specific dates booking.');
-        return;
-      }
-      const referenceDate = dates[0];
-      bookingPayload.startTime = `${referenceDate}T${startTime}:00.000Z`;
-      bookingPayload.endTime = `${referenceDate}T${endTime}:00.000Z`;
       bookingPayload.dates = dates;
     }
 
@@ -742,16 +804,77 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-4">
+              {!usePerDateTimes && (
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                      <label className="block text-sm font-medium text-gray-800">Start Time</label>
-                      <input type="time" name="startTime" value={formData.startTime} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900" />
+                    <label className="block text-sm font-medium text-gray-800">Start Time</label>
+                    <input type="time" name="startTime" value={formData.startTime} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900" />
                   </div>
                   <div>
-                      <label className="block text-sm font-medium text-gray-800">End Time</label>
-                      <input type="time" name="endTime" value={formData.endTime} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900" />
+                    <label className="block text-sm font-medium text-gray-800">End Time</label>
+                    <input type="time" name="endTime" value={formData.endTime} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900" />
                   </div>
-              </div>
+                </div>
+              )}
+
+              {formData.dates.length > 1 && (
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="usePerDateTimesRec"
+                    checked={usePerDateTimes}
+                    onChange={(e) => setUsePerDateTimes(e.target.checked)}
+                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                  />
+                  <label htmlFor="usePerDateTimesRec" className="text-sm font-medium text-gray-800">
+                    Set different times for each date
+                  </label>
+                </div>
+              )}
+
+              {formData.dates.length > 0 && (
+                <div className="space-y-4 p-4 border rounded-md bg-gray-50 max-h-60 overflow-y-auto">
+                  <h4 className="text-sm font-semibold text-gray-800">Selected Dates & Times</h4>
+                  {formData.dates.map((dateStr) => {
+                    const times = dateTimes[dateStr] || { startTime: formData.startTime, endTime: formData.endTime };
+                    return (
+                      <div key={dateStr} className="flex flex-col space-y-2 border-b pb-2 last:border-b-0">
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs font-medium text-gray-600">{dateStr}</span>
+                          <button
+                            type="button"
+                            onClick={() => removeDate(dateStr)}
+                            className="text-red-500 hover:text-red-700 p-1"
+                            title="Remove date"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                        {usePerDateTimes && (
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <input
+                                type="time"
+                                value={times.startTime}
+                                onChange={(e) => handleDateTimeChange(dateStr, 'startTime', e.target.value)}
+                                className="w-full px-3 py-1 border border-gray-300 rounded-md text-sm text-gray-900"
+                              />
+                            </div>
+                            <div>
+                              <input
+                                type="time"
+                                value={times.endTime}
+                                onChange={(e) => handleDateTimeChange(dateStr, 'endTime', e.target.value)}
+                                className="w-full px-3 py-1 border border-gray-300 rounded-md text-sm text-gray-900"
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
 
               <fieldset className="border p-4 rounded-md">
                 <legend className="text-lg font-medium text-gray-800">User Details</legend>
