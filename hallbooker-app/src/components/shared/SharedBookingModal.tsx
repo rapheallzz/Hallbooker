@@ -57,7 +57,7 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
     endTime: '',
     eventDetails: '',
     startDate: '',
-    recurrenceType: 'specific-dates', // Changed default to specific-dates to use our new generator
+    recurrenceType: 'specific-dates',
     daysOfWeek: [] as number[],
     dayOfMonth: null as number | null,
     dates: [] as string[],
@@ -151,7 +151,7 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
       let durationInHours = 0;
       let durationInDays = 0;
 
-      if ((activeTab === 'reservation' || activeTab === 'walk-in') && formData.dates.length > 0) {
+      if ((activeTab === 'reservation' || activeTab === 'walk-in' || activeTab === 'recurring') && formData.dates.length > 0) {
         durationInDays = formData.dates.length;
         formData.dates.forEach(date => {
           const times = usePerDateTimes && dateTimes[date] ? dateTimes[date] : { startTime: formData.startTime, endTime: formData.endTime };
@@ -176,7 +176,6 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
         return;
       }
 
-      // Calculate hall price
       const dailyRate = (selectedHall as any).pricing.dailyRate || 0;
       const hourlyRate = (selectedHall as any).pricing.hourlyRate || 0;
 
@@ -188,30 +187,27 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
       }
       setHallPrice(calculatedHallPrice);
 
-      // Calculate facilities price
-      let facilitiesPrice = 0;
+      let currentFacilitiesPrice = 0;
       (formData.selectedFacilities as { facilityId: string, quantity: number }[]).forEach(sf => {
         const facility = (facilities as any[]).find(f => (f.facility?._id || f._id) === sf.facilityId);
         if (facility) {
           switch (facility.chargeMethod) {
             case 'flat':
-              facilitiesPrice += facility.cost * sf.quantity;
+              currentFacilitiesPrice += facility.cost * sf.quantity;
               break;
             case 'per_hour':
-              facilitiesPrice += facility.cost * sf.quantity * durationInHours;
+              currentFacilitiesPrice += facility.cost * sf.quantity * durationInHours;
               break;
             case 'per_day':
-              facilitiesPrice += facility.cost * sf.quantity * durationInDays;
+              currentFacilitiesPrice += facility.cost * sf.quantity * durationInDays;
               break;
             default:
               break;
           }
         }
       });
-      setFacilitiesPrice(facilitiesPrice);
-
-      // Calculate total price
-      setTotalPrice(hallPrice + facilitiesPrice);
+      setFacilitiesPrice(currentFacilitiesPrice);
+      setTotalPrice(calculatedHallPrice + currentFacilitiesPrice);
     };
 
     calculateTotalPrice();
@@ -322,6 +318,29 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
     }));
   };
 
+  const generateBookingDates = (dates: string[], usePerDateTimes: boolean, dateTimes: Record<string, { startTime: string; endTime: string }>, globalStartTime: string, globalEndTime: string) => {
+    const bookingDates = [];
+    for (const dateStr of dates) {
+      const times = usePerDateTimes && dateTimes[dateStr] ? dateTimes[dateStr] : { startTime: globalStartTime, endTime: globalEndTime };
+      const [startH, startM] = times.startTime.split(':').map(Number);
+      const [endH, endM] = times.endTime.split(':').map(Number);
+      const start = parseLocalDate(dateStr);
+      start.setHours(startH, startM, 0, 0);
+      const end = parseLocalDate(dateStr);
+      end.setHours(endH, endM, 0, 0);
+
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        throw new Error(`Invalid date or time selection for ${dateStr}.`);
+      }
+
+      bookingDates.push({
+        startTime: start.toISOString(),
+        endTime: end.toISOString(),
+      });
+    }
+    return bookingDates;
+  };
+
   const handleRecurringSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const {
@@ -329,7 +348,11 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
       startTime,
       endTime,
       eventDetails,
+      recurrenceType,
+      daysOfWeek,
+      dayOfMonth,
       dates,
+      recurringEndDate,
       fullName,
       email,
       phone,
@@ -357,29 +380,43 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
     }
 
     const walkInUserDetails = { fullName, email, phone };
-    const bookingPayload = {
+    let bookingDates;
+    try {
+      bookingDates = generateBookingDates(dates, usePerDateTimes, dateTimes, startTime, endTime);
+    } catch (err: any) {
+      setError(err.message);
+      return;
+    }
+
+    const bookingPayload: any = {
       hallId: hall,
       eventDetails,
       walkInUserDetails,
       paymentMethod,
       paymentStatus,
       selectedFacilities,
-      bookingDates: dates.map(dateStr => {
-        const times = usePerDateTimes && dateTimes[dateStr] ? dateTimes[dateStr] : { startTime, endTime };
-        const [startH, startM] = times.startTime.split(':').map(Number);
-        const [endH, endM] = times.endTime.split(':').map(Number);
-        const start = parseLocalDate(dateStr);
-        start.setHours(startH, startM, 0, 0);
-        const end = parseLocalDate(dateStr);
-        end.setHours(endH, endM, 0, 0);
-        return {
-          startTime: start.toISOString(),
-          endTime: end.toISOString(),
-        };
-      }),
+      bookingDates,
+      startTime: bookingDates[0].startTime,
+      endTime: bookingDates[0].endTime,
       recurrenceType: 'specific-dates',
       dates: dates,
     };
+
+    if (recurrenceType === 'weekly' || recurrenceType === 'monthly') {
+      if (recurrenceType === 'weekly') {
+        bookingPayload.recurrenceRule = {
+          frequency: 'weekly',
+          daysOfWeek,
+          endDate: recurringEndDate,
+        };
+      } else { // monthly
+        bookingPayload.recurrenceRule = {
+          frequency: 'monthly',
+          dayOfMonth,
+          endDate: recurringEndDate,
+        };
+      }
+    }
 
     setError('');
     onSubmit(bookingPayload, 'recurring');
@@ -420,7 +457,12 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
     e.preventDefault();
     const { hall, startTime, endTime, dates, eventDetails, fullName, email, phone, paymentMethod, paymentStatus, selectedFacilities } = formData;
 
-    if (usePerDateTimes && dates.length > 0) {
+    if (dates.length === 0) {
+      setError('Please select at least one date.');
+      return;
+    }
+
+    if (usePerDateTimes) {
       for (const dateStr of dates) {
         const times = dateTimes[dateStr];
         if (!times || !times.startTime || !times.endTime) {
@@ -435,34 +477,37 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
     setError('');
 
     const walkInUserDetails = { fullName, email, phone };
-
     let bookingDates;
-    if (dates.length > 0) {
-      bookingDates = dates.map(dateStr => {
-        const times = usePerDateTimes && dateTimes[dateStr] ? dateTimes[dateStr] : { startTime, endTime };
-        const [startH, startM] = times.startTime.split(':').map(Number);
-        const [endH, endM] = times.endTime.split(':').map(Number);
-        const start = parseLocalDate(dateStr);
-        start.setHours(startH, startM, 0, 0);
-        const end = parseLocalDate(dateStr);
-        end.setHours(endH, endM, 0, 0);
-        return {
-          startTime: start.toISOString(),
-          endTime: end.toISOString(),
-        };
-      });
-    } else {
-      bookingDates = [{ startTime, endTime }];
+    try {
+      bookingDates = generateBookingDates(dates, usePerDateTimes, dateTimes, startTime, endTime);
+    } catch (err: any) {
+      setError(err.message);
+      return;
     }
 
-    onSubmit({ hallId: hall, bookingDates, eventDetails, walkInUserDetails, paymentMethod, paymentStatus, selectedFacilities }, 'walk-in');
+    onSubmit({
+      hallId: hall,
+      bookingDates,
+      startTime: bookingDates[0].startTime,
+      endTime: bookingDates[0].endTime,
+      eventDetails,
+      walkInUserDetails,
+      paymentMethod,
+      paymentStatus,
+      selectedFacilities
+    }, 'walk-in');
   };
 
   const handleReservationSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const { hall, startTime, endTime, dates, eventDetails, fullName, email, phone, paymentMethod, selectedFacilities } = formData;
 
-    if (usePerDateTimes && dates.length > 0) {
+    if (dates.length === 0) {
+      setError('Please select at least one date.');
+      return;
+    }
+
+    if (usePerDateTimes) {
       for (const dateStr of dates) {
         const times = dateTimes[dateStr];
         if (!times || !times.startTime || !times.endTime) {
@@ -477,29 +522,25 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
     setError('');
 
     const walkInUserDetails = { fullName, email, phone };
-
     let bookingDates;
-    if (dates.length > 0) {
-      bookingDates = dates.map(dateStr => {
-        const times = usePerDateTimes && dateTimes[dateStr] ? dateTimes[dateStr] : { startTime, endTime };
-        const [startH, startM] = times.startTime.split(':').map(Number);
-        const [endH, endM] = times.endTime.split(':').map(Number);
-        const start = parseLocalDate(dateStr);
-        start.setHours(startH, startM, 0, 0);
-        const end = parseLocalDate(dateStr);
-        end.setHours(endH, endM, 0, 0);
-        return {
-          startTime: start.toISOString(),
-          endTime: end.toISOString(),
-        };
-      });
-    } else {
-      bookingDates = [{ startTime, endTime }];
+    try {
+      bookingDates = generateBookingDates(dates, usePerDateTimes, dateTimes, startTime, endTime);
+    } catch (err: any) {
+      setError(err.message);
+      return;
     }
 
-    onSubmit({ hallId: hall, bookingDates, eventDetails, walkInUserDetails, paymentMethod, selectedFacilities }, 'reservation');
+    onSubmit({
+      hallId: hall,
+      bookingDates,
+      startTime: bookingDates[0].startTime,
+      endTime: bookingDates[0].endTime,
+      eventDetails,
+      walkInUserDetails,
+      paymentMethod,
+      selectedFacilities
+    }, 'reservation');
   };
-
 
   if (!isOpen) return null;
 
