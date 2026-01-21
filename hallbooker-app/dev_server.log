@@ -19,3 +19,11 @@
  ✓ Compiled in 988ms (2893 modules)
  ✓ Compiled in 1956ms (2893 modules)
  GET /halls/hall123 200 in 832ms
+ ✓ Compiled in 5.1s (1336 modules)
+ ✓ Compiled in 1628ms (2879 modules)
+ ○ Compiling /test-modal ...
+ ✓ Compiled /test-modal in 8.3s (2894 modules)
+ GET /test-modal 200 in 10380ms
+ GET /test-modal 200 in 200ms
+ ✓ Compiled in 1200ms (2893 modules)
+[?25h
