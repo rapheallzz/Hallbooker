@@ -1,6 +1,6 @@
 'use client';
 import { useRef, useState, useEffect } from 'react';
-import Slider, { ResponsiveObject } from 'react-slick';
+import Slider from 'react-slick';
 import HallCard from './HallCard';
 import NextArrow from './NextArrow';
 import PrevArrow from './PrevArrow';
@@ -9,24 +9,32 @@ import { Hall } from '@/types/hall';
 interface CarouselProps {
   halls: Hall[];
   slidesToShow?: number;
-  responsive?: ResponsiveObject[];
-  gridThreshold?: number;
 }
 
 const Carousel = ({
   halls,
-  slidesToShow: propSlidesToShow,
-  responsive: propResponsive,
+  slidesToShow: propSlidesToShow = 7,
 }: CarouselProps) => {
   const sliderRef = useRef<Slider>(null);
-  const [isMounted, setIsMounted] = useState(false);
+  const [currentSlidesToShow, setCurrentSlidesToShow] = useState<number | null>(null);
 
   useEffect(() => {
-    setIsMounted(true);
-  }, []);
+    const handleResize = () => {
+      const width = window.innerWidth;
+      if (width < 768) {
+        setCurrentSlidesToShow(2);
+      } else if (width < 1024) {
+        setCurrentSlidesToShow(4);
+      } else {
+        setCurrentSlidesToShow(propSlidesToShow);
+      }
+    };
 
-  // Default settings: 2 slides for mobile, 7 for desktop (>=1024px)
-  // We use mobileFirst: false (default) which uses max-width breakpoints.
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [propSlidesToShow]);
+
   const settings = {
     dots: false,
     speed: 500,
@@ -34,18 +42,8 @@ const Carousel = ({
     arrows: false,
     draggable: true,
     swipeToSlide: true,
-    slidesToShow: propSlidesToShow || 7,
-    infinite: halls.length > (propSlidesToShow || 7),
-    responsive: propResponsive || [
-      {
-        breakpoint: 1023, // Matches 0px to 1023px
-        settings: {
-          slidesToShow: 2,
-          slidesToScroll: 1,
-          infinite: halls.length > 2,
-        },
-      },
-    ],
+    slidesToShow: currentSlidesToShow || propSlidesToShow,
+    infinite: halls.length > (currentSlidesToShow || propSlidesToShow),
   };
 
   const goToNext = () => {
@@ -56,32 +54,33 @@ const Carousel = ({
     sliderRef.current?.slickPrev();
   };
 
-  // Threshold for showing a grid instead of a slider
-  // If we have very few halls, a grid looks better.
-  // On desktop, we want 7. On mobile, 2.
-  // To keep it simple, we only show grid if halls.length is extremely small.
   if (halls.length === 0) return null;
 
   return (
     <div className="relative group" data-testid="carousel-container">
-      {/* Show arrows if we have more halls than can be shown */}
-      <div
-        className={`absolute top-[-50px] right-0 space-x-2 z-10 ${
-          halls.length <= 2
-            ? 'hidden'
-            : halls.length <= 7
-              ? 'flex lg:hidden'
-              : 'flex'
-        }`}
-      >
-         <PrevArrow onClick={goToPrev} />
-         <NextArrow onClick={goToNext} />
+      {/* Arrows: Controlled by CSS visibility and length-based logic */}
+      <div className="absolute top-[-50px] right-0 space-x-2 z-10 flex">
+        {/* Desktop Arrows: show only if length > propSlidesToShow on large screens */}
+        <div className={halls.length > propSlidesToShow ? 'hidden lg:flex space-x-2' : 'hidden'}>
+           <PrevArrow onClick={goToPrev} />
+           <NextArrow onClick={goToNext} />
+        </div>
+        {/* Tablet/Large Mobile Arrows: show if length > 4 on medium screens */}
+        <div className={halls.length > 4 ? 'hidden md:flex lg:hidden space-x-2' : 'hidden'}>
+           <PrevArrow onClick={goToPrev} />
+           <NextArrow onClick={goToNext} />
+        </div>
+        {/* Mobile Arrows: show if length > 2 on small screens */}
+        <div className={halls.length > 2 ? 'flex md:hidden space-x-2' : 'hidden'}>
+           <PrevArrow onClick={goToPrev} />
+           <NextArrow onClick={goToNext} />
+        </div>
       </div>
 
       <div className="mx-[-8px]">
-        {!isMounted ? (
-          /* SSR Fallback: Grid that matches the expected slidesToShow */
-          <div className="grid grid-cols-2 lg:grid-cols-7 gap-4 px-2">
+        {!currentSlidesToShow ? (
+          /* SSR & Initial Client Fallback: Grid that matches the responsive expected slidesToShow */
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 px-2">
             {halls.slice(0, 7).map((hall) => (
               <div key={hall._id} className="w-full">
                 <HallCard hall={hall} />
@@ -89,8 +88,8 @@ const Carousel = ({
             ))}
           </div>
         ) : (
-          /* Client-side: React Slick Slider */
-          <Slider key={halls.length} ref={sliderRef} {...settings}>
+          /* Client-side: React Slick Slider - key depends on slidesToShow to force recalculation */
+          <Slider key={`${halls.length}-${currentSlidesToShow}`} ref={sliderRef} {...settings}>
             {halls.map((hall) => (
               <div key={hall._id} className="px-2 pb-4">
                 <HallCard hall={hall} />
