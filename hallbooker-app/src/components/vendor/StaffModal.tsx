@@ -1,18 +1,27 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import api from '@/services/api'; // Assuming you have an API service to fetch halls
+import api from '@/services/api';
+import { Loader2 } from 'lucide-react';
 
 interface Hall {
   _id: string;
   name: string;
 }
 
+interface StaffMember {
+  _id?: string;
+  fullName: string;
+  email: string;
+  phone?: string;
+  hallIds?: string[];
+}
+
 interface StaffModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (formData: any) => void;
-  staff?: any; // For editing existing staff
+  onSubmit: (formData: Record<string, unknown>) => void;
+  staff?: StaffMember; // For editing existing staff
 }
 
 const StaffModal: React.FC<StaffModalProps> = ({ isOpen, onClose, onSubmit, staff }) => {
@@ -24,15 +33,19 @@ const StaffModal: React.FC<StaffModalProps> = ({ isOpen, onClose, onSubmit, staf
     hallIds: [] as string[],
   });
   const [allHalls, setAllHalls] = useState<Hall[]>([]);
+  const [hallsLoading, setHallsLoading] = useState(false);
 
   useEffect(() => {
     // Fetch all halls to populate the multi-select dropdown
     const fetchHalls = async () => {
+      setHallsLoading(true);
       try {
         const response = await api.get('/halls/by-owner');
-        setAllHalls(response.data.data);
+        setAllHalls(response.data.data || []);
       } catch (error) {
         console.error('Failed to fetch halls:', error);
+      } finally {
+        setHallsLoading(false);
       }
     };
     if (isOpen) {
@@ -73,7 +86,7 @@ const StaffModal: React.FC<StaffModalProps> = ({ isOpen, onClose, onSubmit, staf
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Omit password if it's empty (for editing without changing password)
-    const dataToSubmit: any = { ...formData };
+    const dataToSubmit: Record<string, unknown> = { ...formData };
     if (!dataToSubmit.password) {
       delete dataToSubmit.password;
     }
@@ -104,14 +117,18 @@ const StaffModal: React.FC<StaffModalProps> = ({ isOpen, onClose, onSubmit, staf
             <input type="password" name="password" placeholder={staff ? 'New Password (leave blank to keep current)' : 'Password'} value={formData.password} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500" />
           </div>
           <div>
-            <label htmlFor="hallIds" className="block text-sm font-medium text-gray-800">Assign Halls</label>
+            <label htmlFor="hallIds" className="block text-sm font-medium text-gray-800 flex justify-between">
+              Assign Halls
+              {hallsLoading && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
+            </label>
             <select
               id="hallIds"
               name="hallIds"
               multiple
+              disabled={hallsLoading}
               value={formData.hallIds}
               onChange={handleHallSelection}
-              className="w-full h-32 px-4 py-2 border border-gray-300 rounded-md text-gray-900"
+              className="w-full h-32 px-4 py-2 border border-gray-300 rounded-md text-gray-900 disabled:bg-gray-50 disabled:cursor-wait"
             >
               {allHalls.map((hall) => (
                 <option key={hall._id} value={hall._id} className="text-gray-900">
@@ -119,6 +136,7 @@ const StaffModal: React.FC<StaffModalProps> = ({ isOpen, onClose, onSubmit, staf
                 </option>
               ))}
             </select>
+            <p className="text-xs text-gray-500 mt-1">Hold Ctrl (Cmd on Mac) to select multiple halls.</p>
           </div>
           <div className="flex justify-end mt-8 space-x-4">
             <button type="button" onClick={onClose} className="px-4 py-2 rounded-md text-gray-600 bg-gray-100 hover:bg-gray-200">Cancel</button>

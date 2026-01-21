@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import api from '@/services/api';
 
 const VerifyEmailPage = () => {
@@ -28,8 +27,9 @@ const VerifyEmailPage = () => {
       setTimeout(() => {
         router.push('/auth/login');
       }, 3000);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'An error occurred during verification.');
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string } } };
+      setError(e.response?.data?.message || 'An error occurred during verification.');
     }
   };
 
@@ -39,8 +39,9 @@ const VerifyEmailPage = () => {
     try {
       await api.post('/auth/resend-verify-email');
       setResendStatus('A new verification token has been sent to your email.');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'An error occurred while resending the token.');
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string } } };
+      setError(e.response?.data?.message || 'An error occurred while resending the token.');
       setResendStatus('');
     }
   };
@@ -84,7 +85,7 @@ const VerifyEmailPage = () => {
           </form>
           <div className="text-center">
             <p className="text-sm text-gray-600">
-              Didn't receive the token?{' '}
+              Didn&apos;t receive the token?{' '}
               <button
                 onClick={handleResendToken}
                 className="font-medium text-indigo-600 hover:text-indigo-500 disabled:opacity-50"

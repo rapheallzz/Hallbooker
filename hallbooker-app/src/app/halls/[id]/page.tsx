@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
+import { VIEW_COUNT_ROLES } from '@/constants/auth';
 import api from '@/services/api';
 import BookingModal from '@/components/BookingModal';
 import DemoModal from '@/components/DemoModal';
@@ -9,21 +11,48 @@ import { useUI } from '@/context/UIContext';
 import ReviewCard from '@/components/ReviewCard';
 import Calendar from '@/components/Calendar';
 import HallDetailSkeleton from '@/components/HallDetailSkeleton';
-import { Range } from 'react-date-range';
+import Carousel from '@/components/Carousel';
 import MediaViewerModal from '@/components/MediaViewerModal';
-import { Hall } from '@/types';
+import { useBookingAvailability } from '@/hooks/useBookingAvailability';
+import { Hall, Review, Suitability } from '@/types';
+import FacilityIcon from '@/components/FacilityIcon';
+import {
+  CheckCircle,
+  CircleDollarSign,
+  Eye,
+  Star,
+  AlertTriangle,
+  Sparkles,
+  Gift,
+  Church,
+  Heart,
+  Users
+} from 'lucide-react';
+import Swal from 'sweetalert2';
 
 const HallDetailPage = () => {
+  const { user } = useAuth();
+  const canSeeViews = user && VIEW_COUNT_ROLES.includes(user.activeRole);
   const [hall, setHall] = useState<Hall | null>(null);
+  const [recommendations, setRecommendations] = useState<Hall[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [recommendationsUnavailable, setRecommendationsUnavailable] = useState(false);
   const { isBookingModalOpen, openBookingModal, closeBookingModal } = useUI();
+  const [bookingMode, setBookingMode] = useState('book');
+  const [initialSelectedDates, setInitialSelectedDates] = useState<Date[] | undefined>(undefined);
+  const [initialStep, setInitialStep] = useState(1);
+  const [displayedMonth, setDisplayedMonth] = useState<Date>(new Date());
   const [isDemoModalOpen, setDemoModalOpen] = useState(false);
   const [ownerContact, setOwnerContact] = useState({ phone: '', whatsappNumber: '' });
   const [isMediaViewerOpen, setMediaViewerOpen] = useState(false);
   const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);
   const params = useParams();
   const { id } = params;
+
+  const { getDateAvailability } = useBookingAvailability(hall, undefined, displayedMonth);
 
   const handleBookDemo = async () => {
     try {
@@ -37,23 +66,60 @@ const HallDetailPage = () => {
   };
 
   useEffect(() => {
-    if (id) {
-      const fetchHall = async () => {
-        try {
-          const response = await api.get<{ data: Hall }>(`/halls/${id}`);
-          setHall(response.data.data);
-        } catch (err)
-        {
-          console.error(`Failed to fetch hall with id ${id}:`, err);
-          setError(`Failed to fetch hall with id ${id}. See console for details.`);
-        } finally
-        {
-          setLoading(false);
-        }
-      };
+    const fetchHallAndRecommendations = async () => {
+      if (!id) return;
 
-      fetchHall();
-    }
+      setLoading(true);
+      setError('');
+      setRecommendations([]);
+
+      try {
+        const hallResponse = await api.get<{ data: Hall }>(`/halls/${id}`);
+        const currentHall = hallResponse.data.data;
+        setHall(currentHall);
+
+        // Fetch recommendations only if geoLocation data is available
+        if (currentHall.geoLocation?.coordinates && currentHall.geoLocation.coordinates.length === 2) {
+          const longitude = currentHall.geoLocation.coordinates[0];
+          const latitude = currentHall.geoLocation.coordinates[1];
+          api.get<{ data: Hall[] }>(
+            `/halls/recommendations`,
+            {
+              params: { latitude, longitude },
+            }
+          ).then(recommendationsResponse => {
+            setRecommendations(recommendationsResponse.data.data || []);
+          }).catch(recErr => {
+            if (recErr.response?.status === 500) {
+              setRecommendationsUnavailable(true);
+            }
+            console.error('Failed to fetch recommendations:', recErr);
+            setRecommendations([]);
+          });
+        }
+
+        // Fetch reviews
+        setReviewsLoading(true);
+        api.get<{ data: Review[] }>(`/reviews/hall/${id}`)
+          .then(reviewsResponse => {
+            setReviews(reviewsResponse.data.data || []);
+          })
+          .catch(revErr => {
+            console.error('Failed to fetch reviews:', revErr);
+          })
+          .finally(() => {
+            setReviewsLoading(false);
+          });
+
+      } catch (err) {
+        console.error(`Failed to fetch hall with id ${id}:`, err);
+        setError(`Failed to fetch hall with id ${id}. See console for details.`);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchHallAndRecommendations();
   }, [id]);
 
   if (loading) {
@@ -81,11 +147,13 @@ const HallDetailPage = () => {
         <div className="mb-4">
           <h1 className="text-3xl font-bold tracking-tight text-gray-900">{hall.name}</h1>
           <div className="flex items-center mt-2">
-            <p className="text-sm text-gray-600">
+            <div className="text-sm text-gray-600 flex items-center">
               {hall.averageRating > 0 ? (
-                <span className="font-semibold">{hall.averageRating.toFixed(1)} ★</span>
+                <span className="font-semibold flex items-center text-gray-400">
+                  {hall.averageRating.toFixed(1)} <Star className="h-4 w-4 ml-1 fill-gray-400" />
+                </span>
               ) : (
-                <span className="font-semibold">New</span>
+                <span className="font-semibold text-gray-400">New</span>
               )}
               {hall.numReviews > 0 && (
                 <span className="ml-1">
@@ -94,7 +162,16 @@ const HallDetailPage = () => {
               )}
               <span className="mx-2">·</span>
               <span>{hall.location}</span>
-            </p>
+              {canSeeViews && (
+                <>
+                  <span className="mx-2">·</span>
+                  <span className="flex items-center inline-flex">
+                    <Eye className="h-4 w-4 mr-1" />
+                    {hall.views || 0} views
+                  </span>
+                </>
+              )}
+            </div>
           </div>
         </div>
 
@@ -148,7 +225,7 @@ const HallDetailPage = () => {
 
         {/* Main content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-x-12 mt-8">
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 order-2 lg:order-1">
             <div className="pb-6 border-b">
               <h2 className="text-2xl font-semibold text-gray-800">
                 Capacity
@@ -165,13 +242,59 @@ const HallDetailPage = () => {
               </p>
             </div>
 
-            <div className="py-6">
+            {hall.suitableFor && hall.suitableFor.length > 0 && (
+              <div className="py-6 border-b">
+                <h3 className="font-semibold text-xl text-gray-800 mb-4">Suitable For</h3>
+                <div className="flex flex-wrap gap-3">
+                  {hall.suitableFor.map((s) => {
+                    const suitability = typeof s === 'string' ? { _id: s, name: s } as Suitability : s;
+                    return (
+                      <div
+                        key={suitability._id}
+                        className="flex items-center space-x-2 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full text-sm font-medium border border-blue-100"
+                      >
+                        {suitability.name.toLowerCase().includes('birthday') ? (
+                          <Gift className="h-4 w-4" />
+                        ) : suitability.name.toLowerCase().includes('church') ? (
+                          <Church className="h-4 w-4" />
+                        ) : suitability.name.toLowerCase().includes('wedding') ? (
+                          <Heart className="h-4 w-4" />
+                        ) : suitability.name.toLowerCase().includes('conference') || suitability.name.toLowerCase().includes('conferrence') || suitability.name.toLowerCase().includes('meeting') ? (
+                          <Users className="h-4 w-4" />
+                        ) : (
+                          <Sparkles className="h-4 w-4" />
+                        )}
+                        <span>{suitability.name}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            <div className="py-6 border-b">
               <h3 className="font-semibold text-xl text-gray-800 mb-4">What this place offers</h3>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                 {hall.facilities?.length > 0 ? (
                   hall.facilities.map((facility, index) => (
-                    <div key={index} className="flex items-center">
-                      <span className="text-gray-700">{facility.facility?.name || facility.name}</span>
+                    <div key={index} className="flex items-center space-x-4">
+                      <FacilityIcon name={facility.facility?.name || facility.name || ''} />
+                      <div className="flex-grow">
+                        <p className="text-gray-800 font-medium">{facility.facility?.name || facility.name}</p>
+                        <div className="flex items-center text-sm text-gray-500">
+                          {facility.chargeMethod === 'free' ? (
+                            <>
+                              <CheckCircle className="h-4 w-4 text-green-500 mr-1.5" />
+                              <span>Free</span>
+                            </>
+                          ) : (
+                            <>
+                              <CircleDollarSign className="h-4 w-4 text-yellow-600 mr-1.5" />
+                              <span>Paid</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   ))
                 ) : (
@@ -180,58 +303,194 @@ const HallDetailPage = () => {
               </div>
             </div>
 
+            {hall.rules && (Array.isArray(hall.rules) ? hall.rules.length > 0 : (hall.rules as string).length > 0) && (
+              <div className="py-6 border-b">
+                <div className="flex items-center space-x-2 mb-4">
+                  <AlertTriangle className="h-6 w-6 text-amber-500 animate-pulse" />
+                  <h3 className="font-semibold text-xl text-gray-800">Hall Rules</h3>
+                </div>
+                <div className="bg-amber-50 border border-amber-100 rounded-lg p-5">
+                  <ul className="space-y-3">
+                    {(Array.isArray(hall.rules) ? hall.rules : (hall.rules as string).split('\n')).map((rule, index) => (
+                      <li key={index} className="flex items-start space-x-3 text-gray-700">
+                        <div className="mt-1.5 h-1.5 w-1.5 rounded-full bg-amber-400 flex-shrink-0" />
+                        <span className="text-sm font-medium leading-relaxed">{rule}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            )}
+
             {/* Availability Section */}
             <div className="py-6 border-b">
               <h3 className="font-semibold text-xl text-gray-800 mb-4">Availability</h3>
-              <Calendar
-                unavailableDates={hall.blockedDates?.map(date => new Date(date)) || []}
-                onChange={(range: Range) => {
-                  console.log(range);
-                }}
-              />
+              <div className="flex flex-col md:flex-row justify-center items-start gap-8">
+                <Calendar
+                  unavailableDates={[]}
+                  selectedDates={undefined}
+                  onChange={() => {}}
+                  onMonthChange={setDisplayedMonth}
+                  displayedMonth={displayedMonth}
+                  getDateAvailability={getDateAvailability}
+                  onDateClick={(date) => {
+                    const availability = getDateAvailability(date);
+                    if (availability === 'fully booked') {
+                      Swal.fire({
+                        icon: 'error',
+                        title: 'Not Available',
+                        text: 'This date is not available for booking.',
+                      });
+                      return;
+                    }
+
+                    Swal.fire({
+                      title: 'Choose an option',
+                      text: `What would you like to do for ${date.toLocaleDateString()}?`,
+                      icon: 'question',
+                      showCancelButton: true,
+                      confirmButtonText: 'Book Now',
+                      cancelButtonText: 'Reserve Hall',
+                      confirmButtonColor: '#295FA7',
+                      cancelButtonColor: '#B68945',
+                    }).then((result) => {
+                      if (result.isConfirmed) {
+                        setBookingMode('book');
+                        setInitialSelectedDates([date]);
+                        setInitialStep(2);
+                        openBookingModal();
+                      } else if (result.dismiss === Swal.DismissReason.cancel) {
+                        setBookingMode('reserve');
+                        setInitialSelectedDates([date]);
+                        setInitialStep(2);
+                        openBookingModal();
+                      }
+                    });
+                  }}
+                />
+                <div className="mt-4 p-4 border rounded-lg bg-gray-50 w-full md:w-64">
+                  <h3 className="font-semibold text-lg mb-3">Legend</h3>
+                  <ul className="space-y-2">
+                    <li className="flex items-center">
+                      <span className="w-5 h-5 rounded-full bg-red-300 mr-2"></span>
+                      <span className="text-sm">Completely Booked</span>
+                    </li>
+                    <li className="flex items-center">
+                      <span className="w-5 h-5 rounded-full bg-orange-300 mr-2"></span>
+                      <span className="text-sm">Partially Booked</span>
+                    </li>
+                    <li className="flex items-center">
+                      <span className="w-5 h-5 rounded-full bg-green-300 mr-2"></span>
+                      <span className="text-sm">Completely Available</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
             </div>
 
             {/* Reviews Section */}
             <div className="py-6 border-b">
               <h3 className="font-semibold text-xl text-gray-800 mb-4">Reviews</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <ReviewCard
-                  name="John Doe"
-                  date="October 2023"
-                  rating={5}
-                  comment="This hall was amazing! It was clean, spacious, and perfect for our event."
-                />
-                <ReviewCard
-                  name="Jane Smith"
-                  date="September 2023"
-                  rating={4}
-                  comment="Great location and amenities. The host was very responsive and helpful."
-                />
-              </div>
+              {reviewsLoading ? (
+                <p className="text-gray-500 italic">Loading reviews...</p>
+              ) : reviews.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {reviews.map((review) => (
+                    <ReviewCard
+                      key={review._id}
+                      name={review.user?.fullName || 'Anonymous'}
+                      date={review.createdAt ? new Date(review.createdAt).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long'
+                      }) : 'N/A'}
+                      rating={review.rating}
+                      comment={review.comment}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500 italic">No reviews yet for this hall.</p>
+              )}
+            </div>
+             {/* Recommendation Section */}
+            <div className="py-6">
+              <h3 className="font-semibold text-xl text-gray-800 mb-4">You might also like</h3>
+              {recommendationsUnavailable ? (
+                <p className="text-gray-500">Recommendations are temporarily unavailable</p>
+              ) : recommendations.length > 0 ? (
+                <Carousel halls={recommendations} slidesToShow={3} />
+              ) : (
+                <p className="text-gray-500">No recommendation found</p>
+              )}
             </div>
           </div>
 
           {/* Sticky booking widget */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 order-1 lg:order-2 mb-8 lg:mb-0">
             <div className="sticky top-28 border rounded-xl shadow-lg p-6">
-              <div className="flex items-baseline mb-4">
-                <p className="text-2xl font-bold text-gray-900">
-                  ₦{hall.pricing?.dailyRate?.toLocaleString() || 'N/A'}
-                </p>
-                <span className="ml-1 text-gray-600">/ day</span>
+              <div className="mb-4">
+                {hall.pricing?.dailyRate && hall.pricing?.hourlyRate ? (
+                  <div className="flex items-center justify-around">
+                    <div className="text-center">
+                      <p className="text-xl font-bold text-gray-900">
+                        ₦{hall.pricing.dailyRate.toLocaleString()}
+                      </p>
+                      <span className="text-sm text-gray-600">/ day</span>
+                    </div>
+                    <div className="h-10 border-l border-gray-300"></div>
+                    <div className="text-center">
+                      <p className="text-xl font-bold text-gray-900">
+                        ₦{hall.pricing.hourlyRate.toLocaleString()}
+                      </p>
+                      <span className="text-sm text-gray-600">/ hour</span>
+                    </div>
+                  </div>
+                ) : hall.pricing?.dailyRate ? (
+                  <div className="flex items-baseline">
+                    <p className="text-2xl font-bold text-gray-900">
+                      ₦{hall.pricing.dailyRate.toLocaleString()}
+                    </p>
+                    <span className="ml-1 text-gray-600">/ day</span>
+                  </div>
+                ) : hall.pricing?.hourlyRate ? (
+                  <div className="flex items-baseline">
+                    <p className="text-2xl font-bold text-gray-900">
+                      ₦{hall.pricing.hourlyRate.toLocaleString()}
+                    </p>
+                    <span className="ml-1 text-gray-600">/ hour</span>
+                  </div>
+                ) : (
+                  <p className="text-2xl font-bold text-gray-500">Price not available</p>
+                )}
               </div>
-              <div className="mt-4">
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-2">
                 <button
-                  onClick={openBookingModal}
-                  className="w-full bg-[#295FA7] hover:bg-[#204a8a] text-white font-bold py-3 px-4 rounded-lg transition duration-300"
+                  onClick={() => {
+                    setBookingMode('reserve');
+                    setInitialSelectedDates(undefined);
+                    setInitialStep(1);
+                    openBookingModal();
+                  }}
+                  className="w-full bg-transparent border border-[#B68945] text-[#B68945] cursor-pointer font-bold py-3 px-4 rounded-lg transition duration-300 hover:bg-[#B68945] hover:text-white"
                 >
-                  Booking
+                  Reserve hall
+                </button>
+                <button
+                  onClick={() => {
+                    setBookingMode('book');
+                    setInitialSelectedDates(undefined);
+                    setInitialStep(1);
+                    openBookingModal();
+                  }}
+                  className="w-full bg-[#295FA7] hover:bg-[#204a8a] cursor-pointer text-white font-bold py-3 px-4 rounded-lg transition duration-300"
+                >
+                  Book Now
                 </button>
               </div>
               <div className="mt-2">
                 <button
                   onClick={handleBookDemo}
-                  className="w-full border border-gray-300 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-50 transition duration-300"
+                  className="w-full border border-gray-300 text-gray-700 py-3 rounded-lg font-semibold hover:bg-[#B68945] hover:text-white cursor-pointer transition duration-300"
                 >
                   Book a Demo
                 </button>
@@ -244,16 +503,20 @@ const HallDetailPage = () => {
       {hall && (
         <>
           <BookingModal
-            hallId={hall.id}
+            key={isBookingModalOpen ? 'open' : 'closed'}
+            hallId={hall.id || hall._id}
             isOpen={isBookingModalOpen}
             onClose={closeBookingModal}
-            blockedDates={hall.blockedDates?.map(date => new Date(date)) || []}
+            bookingMode={bookingMode as 'book' | 'reserve'}
+            initialSelectedDates={initialSelectedDates}
+            initialStep={initialStep}
           />
           <DemoModal
             isOpen={isDemoModalOpen}
             onClose={() => setDemoModalOpen(false)}
             phone={ownerContact.phone}
             whatsappNumber={ownerContact.whatsappNumber}
+            address={hall.geoLocation?.address}
           />
         </>
       )}

@@ -38,7 +38,7 @@ const TermsOfServiceModal = ({ onContinue, onClose }: TermsOfServiceModalProps) 
         <div ref={scrollableContentRef} className="p-6 overflow-y-auto max-h-[60vh]">
           <h3 className="text-lg font-semibold mb-2">1. Introduction</h3>
           <p className="mb-4 text-gray-700">
-            Welcome to HallBooker. These terms and conditions outline the rules and regulations for the use of HallBooker's Website, located at hallbooker.com. By accessing this website we assume you accept these terms and conditions. Do not continue to use HallBooker if you do not agree to take all of the terms and conditions stated on this page.
+            Welcome to HallBooker. These terms and conditions outline the rules and regulations for the use of HallBooker&apos;s Website, located at hallbooker.com. By accessing this website we assume you accept these terms and conditions. Do not continue to use HallBooker if you do not agree to take all of the terms and conditions stated on this page.
           </p>
           <h3 className="text-lg font-semibold mb-2">2. Intellectual Property Rights</h3>
           <p className="mb-4 text-gray-700">
@@ -50,11 +50,11 @@ const TermsOfServiceModal = ({ onContinue, onClose }: TermsOfServiceModalProps) 
           </p>
           <h3 className="text-lg font-semibold mb-2">4. Your Content</h3>
           <p className="mb-4 text-gray-700">
-            In these Website Standard Terms and Conditions, “Your Content” shall mean any audio, video text, images or other material you choose to display on this Website. By displaying Your Content, you grant HallBooker a non-exclusive, worldwide irrevocable, sub-licensable license to use, reproduce, adapt, publish, translate and distribute it in any and all media.
+            In these Website Standard Terms and Conditions, &ldquo;Your Content&rdquo; shall mean any audio, video text, images or other material you choose to display on this Website. By displaying Your Content, you grant HallBooker a non-exclusive, worldwide irrevocable, sub-licensable license to use, reproduce, adapt, publish, translate and distribute it in any and all media.
           </p>
            <h3 className="text-lg font-semibold mb-2">5. No warranties</h3>
           <p className="mb-4 text-gray-700">
-           This Website is provided “as is,” with all faults, and HallBooker express no representations or warranties, of any kind related to this Website or the materials contained on this Website. Also, nothing contained on this Website shall be interpreted as advising you.
+           This Website is provided &ldquo;as is,&rdquo; with all faults, and HallBooker express no representations or warranties, of any kind related to this Website or the materials contained on this Website. Also, nothing contained on this Website shall be interpreted as advising you.
           </p>
           <h3 className="text-lg font-semibold mb-2">6. Limitation of liability</h3>
            <p className="mb-4 text-gray-700">

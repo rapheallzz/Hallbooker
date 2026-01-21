@@ -23,8 +23,19 @@ interface User {
 
 interface Subaccount {
   _id: string;
-  userId: string;
-  percentageCharge: number;
+  user: {
+      _id: string;
+      email: string;
+  };
+  subAccountCode: string;
+  bankName: string;
+  accountNumber: string;
+  accountName: string;
+}
+
+interface Bank {
+  code: string;
+  name: string;
 }
 
 const PaymentSettingsTab = () => {
@@ -129,7 +140,7 @@ const PaymentSettingsTab = () => {
         <div className="space-y-2">
           {paymentMethods.map((method) => (
             <div key={method._id} className="flex justify-between items-center bg-gray-50 p-2 rounded-md">
-              <span>{method.name}</span>
+              <span className="text-gray-800">{method.name}</span>
               <button onClick={() => handleRemoveMethod(method._id)} className="text-red-500 hover:text-red-700">
                 <Trash2 size={18} />
               </button>
@@ -156,7 +167,7 @@ const PaymentSettingsTab = () => {
         <div className="space-y-2">
           {paymentStatuses.map((status) => (
             <div key={status._id} className="flex justify-between items-center bg-gray-50 p-2 rounded-md">
-              <span>{status.name}</span>
+              <span className="text-gray-800">{status.name}</span>
               <button onClick={() => handleRemoveStatus(status._id)} className="text-red-500 hover:text-red-700">
                 <Trash2 size={18} />
               </button>
@@ -171,26 +182,30 @@ const PaymentSettingsTab = () => {
 const SubaccountsTab = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [subaccounts, setSubaccounts] = useState<Subaccount[]>([]);
+  const [banks, setBanks] = useState<Bank[]>([]);
   const [loading, setLoading] = useState(true);
+  const [validationLoading, setValidationLoading] = useState(false);
+  const [accountName, setAccountName] = useState('');
 
   const [selectedUserId, setSelectedUserId] = useState('');
-  const [percentageCharge, setPercentageCharge] = useState<number | ''>('');
+  const [selectedBankCode, setSelectedBankCode] = useState('');
+  const [accountNumber, setAccountNumber] = useState('');
+  const [defaultSplitPercentage, setDefaultSplitPercentage] = useState<number | ''>('');
 
   const fetchSubaccountData = async () => {
     setLoading(true);
     try {
-      const [usersRes, subaccountsRes] = await Promise.all([
+      const [usersRes, subaccountsRes, banksRes] = await Promise.all([
         api.get('/users?role=hall-owner'),
-        api.get('/subaccounts'), // Assuming a GET endpoint for subaccounts
+        api.get('/subaccounts'),
+        api.get('/monnify/banks'),
       ]);
       setUsers(usersRes.data.data);
       setSubaccounts(Array.isArray(subaccountsRes.data.data) ? subaccountsRes.data.data : []);
+      setBanks(banksRes.data.data);
     } catch (error) {
-      console.error("Error fetching subaccount data:", error);
-      // Don't show a Swal error for subaccounts, as the endpoint might not exist yet
-      if (error.config.url.includes('/users')) {
-        Swal.fire("Error", "Could not fetch hall owners.", "error");
-      }
+      console.error("Error fetching initial data:", error);
+      Swal.fire("Error", "Could not fetch required data.", "error");
     } finally {
       setLoading(false);
     }
@@ -200,35 +215,62 @@ const SubaccountsTab = () => {
     fetchSubaccountData();
   }, []);
 
+  useEffect(() => {
+    const validateAccount = async () => {
+      if (accountNumber.length === 10 && selectedBankCode) {
+        setValidationLoading(true);
+        setAccountName('');
+        try {
+          const response = await api.post('/monnify/validate-account', {
+            accountNumber,
+            bankCode: selectedBankCode,
+          });
+          setAccountName(response.data.data.accountName);
+        } catch (error) {
+          console.error("Error validating account:", error);
+          Swal.fire("Validation Error", "Could not validate the bank account.", "error");
+        } finally {
+          setValidationLoading(false);
+        }
+      }
+    };
+    validateAccount();
+  }, [accountNumber, selectedBankCode]);
+
   const handleCreateSubaccount = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedUserId || percentageCharge === '') {
-        Swal.fire('Validation Error', 'Please select a hall owner and set a percentage charge.', 'error');
+    if (!selectedUserId || !selectedBankCode || !accountNumber || !accountName || defaultSplitPercentage === '') {
+        Swal.fire('Validation Error', 'Please fill all fields and validate the account.', 'error');
         return;
     }
 
     Swal.fire({
         title: 'Creating Subaccount...',
-        didOpen: () => {
-            Swal.showLoading();
-        },
+        didOpen: () => Swal.showLoading(),
         allowOutsideClick: false
     });
 
     try {
         const payload = {
             userId: selectedUserId,
-            percentageCharge: Number(percentageCharge),
+            bankCode: selectedBankCode,
+            accountNumber,
+            accountName,
+            defaultSplitPercentage: Number(defaultSplitPercentage),
         };
         await api.post('/subaccounts', payload);
 
         Swal.fire('Success!', 'Subaccount created successfully.', 'success');
         setSelectedUserId('');
-        setPercentageCharge('');
+        setSelectedBankCode('');
+        setAccountNumber('');
+        setAccountName('');
+        setDefaultSplitPercentage('');
         fetchSubaccountData();
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Error creating subaccount:", error);
-        const errorMessage = error.response?.data?.message || 'Could not create the subaccount.';
+        const err = error as { response?: { data?: { message?: string } } };
+        const errorMessage = err.response?.data?.message || 'Could not create the subaccount.';
         Swal.fire('Error', errorMessage, 'error');
     }
   };
@@ -258,14 +300,55 @@ const SubaccountsTab = () => {
                       </select>
                   </div>
                   <div>
-                      <label htmlFor="percentageCharge" className="block text-sm font-medium text-gray-700">Percentage Charge (%)</label>
+                      <label htmlFor="bank" className="block text-sm font-medium text-gray-700">Bank</label>
+                      <select
+                          id="bank"
+                          value={selectedBankCode}
+                          onChange={(e) => setSelectedBankCode(e.target.value)}
+                          className="mt-1 block w-full p-2 border border-gray-300 rounded-md text-gray-600"
+                          required
+                      >
+                          <option value="" disabled>Select a bank</option>
+                          {banks.map((bank: Bank) => (
+                              <option key={bank.code} value={bank.code}>{bank.name}</option>
+                          ))}
+                      </select>
+                  </div>
+                  <div>
+                      <label htmlFor="accountNumber" className="block text-sm font-medium text-gray-700">Account Number</label>
+                      <div className="relative">
+                          <input
+                              type="text"
+                              id="accountNumber"
+                              value={accountNumber}
+                              onChange={(e) => setAccountNumber(e.target.value)}
+                              className="mt-1 block w-full p-2 border border-gray-300 rounded-md text-gray-600"
+                              placeholder="10 digits"
+                              maxLength={10}
+                              required
+                          />
+                          {validationLoading && <div className="absolute inset-y-0 right-0 flex items-center pr-3"><LoadingSpinner /></div>}
+                      </div>
+                  </div>
+                  <div>
+                      <label htmlFor="accountName" className="block text-sm font-medium text-gray-700">Account Name</label>
+                      <input
+                          type="text"
+                          id="accountName"
+                          value={accountName}
+                          className="mt-1 block w-full p-2 border border-gray-300 rounded-md bg-gray-100 text-gray-800"
+                          disabled
+                      />
+                  </div>
+                  <div>
+                      <label htmlFor="defaultSplitPercentage" className="block text-sm font-medium text-gray-700">Default Split Percentage (%)</label>
                       <input
                           type="number"
-                          id="percentageCharge"
-                          value={percentageCharge}
-                          onChange={(e) => setPercentageCharge(Number(e.target.value))}
+                          id="defaultSplitPercentage"
+                          value={defaultSplitPercentage}
+                          onChange={(e) => setDefaultSplitPercentage(Number(e.target.value))}
                           className="mt-1 block w-full p-2 border border-gray-300 rounded-md text-gray-600"
-                          placeholder="e.g., 10"
+                          placeholder="e.g., 90"
                           min="0"
                           max="100"
                           required
@@ -290,15 +373,19 @@ const SubaccountsTab = () => {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hall Owner</th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Percentage Charge</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Account Name</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Account Number</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bank Name</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subaccount Code</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {subaccounts.map((subaccount) => (
                       <tr key={subaccount._id}>
-                        <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{subaccount.userId}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{subaccount.percentageCharge}%</td>
+                        <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{subaccount.accountName}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{subaccount.accountNumber}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{subaccount.bankName}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{subaccount.subAccountCode}</td>
                       </tr>
                     ))}
                   </tbody>

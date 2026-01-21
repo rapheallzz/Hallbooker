@@ -5,9 +5,10 @@ interface DemoModalProps {
   onClose: () => void;
   phone: string;
   whatsappNumber: string;
+  address?: string;
 }
 
-const DemoModal: React.FC<DemoModalProps> = ({ isOpen, onClose, phone, whatsappNumber }) => {
+const DemoModal: React.FC<DemoModalProps> = ({ isOpen, onClose, phone, whatsappNumber, address }) => {
   if (!isOpen) return null;
 
   return (
@@ -17,9 +18,14 @@ const DemoModal: React.FC<DemoModalProps> = ({ isOpen, onClose, phone, whatsappN
         <p className="mb-2">
           <strong>Phone:</strong> {phone}
         </p>
-        <p className="mb-4">
+        <p className="mb-2">
           <strong>WhatsApp:</strong> {whatsappNumber}
         </p>
+        {address && (
+          <p className="mb-4">
+            <strong>Address:</strong> {address}
+          </p>
+        )}
         <button
           onClick={onClose}
           className="w-full bg-[#295FA7] hover:bg-[#204a8a] text-white font-bold py-2 px-4 rounded-lg transition duration-300"

@@ -1,10 +1,11 @@
 "use client";
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import withAuth from "@/components/auth/withAuth";
 import api from "@/services/api";
 import Swal from "sweetalert2";
 import LoadingSpinner from "@/components/admin/LoadingSpinner";
-import { Search, Trash, Edit, Power, PowerOff, Eye, PlusCircle, Calendar as CalendarIcon } from "lucide-react";
+import { Search, Trash, Edit, Power, PowerOff, Eye, PlusCircle, Calendar as CalendarIcon, Ban, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import HallModal from "@/components/vendor/HallModal";
 import ReservationModal from "@/components/vendor/ReservationModal";
@@ -19,6 +20,7 @@ interface Hall {
     fullName: string;
   };
   isOnlineBookingEnabled: boolean;
+  isListed: boolean;
 }
 
 // Facility Interface
@@ -27,14 +29,22 @@ interface Facility {
   name: string;
 }
 
-const HallManagementPage = () => {
+// Suitability Interface
+interface Suitability {
+  _id: string;
+  name: string;
+}
+
+const HallManagementContent = () => {
   // Common State
+  const searchParams = useSearchParams();
+  const initialSearch = searchParams.get("search") || "";
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("halls");
 
   // Halls State
   const [halls, setHalls] = useState<Hall[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState(initialSearch);
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingHall, setEditingHall] = useState<Hall | undefined>(undefined);
@@ -44,11 +54,14 @@ const HallManagementPage = () => {
   // Facilities State
   const [facilities, setFacilities] = useState<Facility[]>([]);
 
+  // Suitabilities State
+  const [suitabilities, setSuitabilities] = useState<Suitability[]>([]);
+
   useEffect(() => {
     const fetchData = async () => {
         setLoading(true);
         try {
-            await Promise.all([fetchHalls(), fetchFacilities()]);
+            await Promise.all([fetchHalls(), fetchFacilities(), fetchSuitabilities()]);
         } catch (error) {
             console.error("Error fetching data:", error);
             Swal.fire("Error", "Could not fetch all necessary data.", "error");
@@ -76,6 +89,8 @@ const HallManagementPage = () => {
       .filter(hall => {
         if (statusFilter === "enabled") return hall.isOnlineBookingEnabled;
         if (statusFilter === "disabled") return !hall.isOnlineBookingEnabled;
+        if (statusFilter === "listed") return hall.isListed;
+        if (statusFilter === "unlisted") return !hall.isListed;
         return true;
       })
       .filter(hall =>
@@ -106,6 +121,56 @@ const HallManagementPage = () => {
     }
   };
 
+  const handleUnlistRelist = async (hallId: string, isListed: boolean) => {
+    if (isListed) {
+      const { value: reason } = await Swal.fire({
+        title: 'Unlist Hall',
+        input: 'textarea',
+        inputLabel: 'Reason for unlisting',
+        inputPlaceholder: 'The hall is under renovation...',
+        inputAttributes: {
+          'aria-label': 'Type your reason here'
+        },
+        showCancelButton: true,
+        inputValidator: (value) => {
+          if (!value) {
+            return 'You need to provide a reason for unlisting!'
+          }
+        }
+      });
+
+      if (reason) {
+        try {
+          await api.patch(`/admin/halls/${hallId}/unlist`, { reason });
+          Swal.fire('Success!', 'The hall has been unlisted.', 'success');
+          fetchHalls();
+        } catch (error) {
+          console.error("Error unlisting hall:", error);
+          Swal.fire('Error', 'Could not unlist the hall.', 'error');
+        }
+      }
+    } else {
+      const result = await Swal.fire({
+        title: 'Relist Hall',
+        text: "Are you sure you want to relist this hall?",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, relist it!'
+      });
+
+      if (result.isConfirmed) {
+        try {
+          await api.patch(`/admin/halls/${hallId}/relist`);
+          Swal.fire('Success!', 'The hall has been relisted.', 'success');
+          fetchHalls();
+        } catch (error) {
+          console.error("Error relisting hall:", error);
+          Swal.fire('Error', 'Could not relist the hall.', 'error');
+        }
+      }
+    }
+  };
+
   const handleDeleteHall = async (hallId: string) => {
     const result = await Swal.fire({
       title: 'Are you sure?',
@@ -128,7 +193,7 @@ const HallManagementPage = () => {
     }
   };
 
-  const handleCreateHall = async (formData: any) => {
+  const handleCreateHall = async (formData: unknown) => {
     try {
       await api.post('/halls', formData);
       fetchHalls();
@@ -138,7 +203,7 @@ const HallManagementPage = () => {
     }
   };
 
-  const handleUpdateHall = async (formData: any) => {
+  const handleUpdateHall = async (formData: unknown) => {
     if (!editingHall) return;
     try {
       await api.patch(`/halls/${editingHall._id}`, formData);
@@ -160,6 +225,7 @@ const HallManagementPage = () => {
     setIsModalOpen(true);
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleCreateReservation = async (reservationData: any) => {
     try {
       await api.post(`/halls/${reservationData.hallId}/reservations`, reservationData);
@@ -180,7 +246,7 @@ const HallManagementPage = () => {
   const fetchFacilities = () => {
     return api.get("/facilities")
       .then(response => {
-        setFacilities(response.data.data);
+        setFacilities(response.data.data.facilities || []);
       })
       .catch(error => {
         console.error("Error fetching facilities:", error);
@@ -257,6 +323,87 @@ const HallManagementPage = () => {
     }
   };
 
+  // Suitabilities Functions
+  const fetchSuitabilities = () => {
+    return api.get("/suitabilities")
+      .then(response => {
+        setSuitabilities(response.data.data || []);
+      })
+      .catch(error => {
+        console.error("Error fetching suitabilities:", error);
+        throw error;
+      });
+  };
+
+  const handleAddSuitability = async () => {
+    const { value: name } = await Swal.fire({
+      title: 'Add a new suitability',
+      input: 'text',
+      inputLabel: 'Suitability Name',
+      inputPlaceholder: 'e.g., Wedding',
+      showCancelButton: true,
+      inputValidator: (value) => {
+        if (!value) return 'You need to write something!'
+      }
+    });
+
+    if (name) {
+      try {
+        await api.post('/suitabilities', { name });
+        Swal.fire('Success!', 'Suitability added successfully.', 'success');
+        fetchSuitabilities();
+      } catch (error) {
+        console.error("Error adding suitability:", error);
+        Swal.fire('Error', 'Could not add the suitability.', 'error');
+      }
+    }
+  };
+
+  const handleEditSuitability = async (suitability: Suitability) => {
+    const { value: name } = await Swal.fire({
+      title: 'Edit suitability',
+      input: 'text',
+      inputValue: suitability.name,
+      inputLabel: 'Suitability Name',
+      showCancelButton: true,
+      inputValidator: (value) => {
+        if (!value) return 'You need to write something!'
+      }
+    });
+
+    if (name && name !== suitability.name) {
+      try {
+        await api.patch(`/suitabilities/${suitability._id}`, { name });
+        Swal.fire('Success!', 'Suitability updated successfully.', 'success');
+        fetchSuitabilities();
+      } catch (error) {
+        console.error("Error updating suitability:", error);
+        Swal.fire('Error', 'Could not update the suitability.', 'error');
+      }
+    }
+  };
+
+  const handleDeleteSuitability = async (suitabilityId: string) => {
+    const result = await Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, delete it!'
+    });
+
+    if (result.isConfirmed) {
+        try {
+            await api.delete(`/suitabilities/${suitabilityId}`);
+            Swal.fire('Deleted!', 'The suitability has been deleted.', 'success');
+            fetchSuitabilities();
+        } catch (error) {
+            console.error("Error deleting suitability:", error);
+            Swal.fire('Error', 'Could not delete the suitability.', 'error');
+        }
+    }
+  };
+
   if (loading) {
     return <LoadingSpinner />;
   }
@@ -264,6 +411,7 @@ const HallManagementPage = () => {
   const tabs = [
       { label: "Halls", value: "halls" },
       { label: "Facilities", value: "facilities" },
+      { label: "Suitabilities", value: "suitabilities" },
   ];
 
   return (
@@ -310,6 +458,15 @@ const HallManagementPage = () => {
                 <span>Add Facility</span>
             </button>
         )}
+        {activeTab === 'suitabilities' && (
+            <button
+                onClick={handleAddSuitability}
+                className="bg-primary text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-opacity-90"
+            >
+                <PlusCircle size={20} />
+                <span>Add Suitability</span>
+            </button>
+        )}
       </div>
 
       <Tabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
@@ -334,9 +491,11 @@ const HallManagementPage = () => {
                             onChange={(e) => setStatusFilter(e.target.value)}
                             className="block w-full p-2 border border-gray-300 rounded-md text-gray-600"
                         >
-                            <option value="">All Booking Statuses</option>
+                            <option value="">All Statuses</option>
                             <option value="enabled">Booking Enabled</option>
                             <option value="disabled">Booking Disabled</option>
+                            <option value="listed">Listed</option>
+                            <option value="unlisted">Unlisted</option>
                         </select>
                     </div>
                 </div>
@@ -347,7 +506,7 @@ const HallManagementPage = () => {
                         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
                         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Owner</th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Online Booking</th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                         <th scope="col" className="relative px-6 py-3"><span className="sr-only">Actions</span></th>
                     </tr>
                     </thead>
@@ -357,11 +516,16 @@ const HallManagementPage = () => {
                         <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{hall.name}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{hall.location}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{hall.owner.fullName}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-6 py-4 whitespace-nowrap space-x-2">
                             <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                                 hall.isOnlineBookingEnabled ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                             }`}>
-                                {hall.isOnlineBookingEnabled ? 'Enabled' : 'Disabled'}
+                                Booking: {hall.isOnlineBookingEnabled ? 'Enabled' : 'Disabled'}
+                            </span>
+                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                hall.isListed ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
+                            }`}>
+                                {hall.isListed ? 'Listed' : 'Unlisted'}
                             </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -376,6 +540,13 @@ const HallManagementPage = () => {
                             >
                                 {hall.isOnlineBookingEnabled ? <PowerOff size={18} /> : <Power size={18} />}
                             </button>
+                            <button
+                                onClick={() => handleUnlistRelist(hall._id, hall.isListed)}
+                                title={hall.isListed ? "Unlist Hall" : "Relist Hall"}
+                                className={`${hall.isListed ? 'text-orange-600 hover:text-orange-900' : 'text-green-600 hover:text-green-900'} mr-3`}
+                            >
+                                {hall.isListed ? <Ban size={18} /> : <CheckCircle size={18} />}
+                            </button>
                             <button onClick={() => openReservationModal(hall._id)} title="Block Dates" className="text-green-600 hover:text-green-900 mr-3">
                                 <CalendarIcon size={18} />
                             </button>
@@ -387,6 +558,11 @@ const HallManagementPage = () => {
                     ))}
                     </tbody>
                 </table>
+                {filteredHalls.length === 0 && (
+                    <div className="text-center py-8 text-gray-500">
+                        No halls found.
+                    </div>
+                )}
                 </div>
             </div>
         )}
@@ -401,7 +577,7 @@ const HallManagementPage = () => {
                     </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                    {facilities.map((facility) => (
+                    {Array.isArray(facilities) && facilities.map((facility) => (
                         <tr key={facility._id}>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{facility.name}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -418,7 +594,41 @@ const HallManagementPage = () => {
                 </table>
                 {facilities.length === 0 && (
                     <div className="text-center py-8 text-gray-500">
-                        No facilities found. Click "Add Facility" to create one.
+                        No facilities found. Click &quot;Add Facility&quot; to create one.
+                    </div>
+                )}
+                </div>
+            </div>
+        )}
+        {activeTab === 'suitabilities' && (
+             <div className="bg-white p-6 shadow-lg rounded-lg">
+                <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                    <tr>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                        <th scope="col" className="relative px-6 py-3"><span className="sr-only">Actions</span></th>
+                    </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                    {Array.isArray(suitabilities) && suitabilities.map((suitability) => (
+                        <tr key={suitability._id}>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{suitability.name}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button onClick={() => handleEditSuitability(suitability)} className="text-indigo-600 hover:text-indigo-900 mr-4">
+                                <Edit size={18} />
+                            </button>
+                            <button onClick={() => handleDeleteSuitability(suitability._id)} className="text-red-600 hover:text-red-900">
+                                <Trash size={18} />
+                            </button>
+                        </td>
+                        </tr>
+                    ))}
+                    </tbody>
+                </table>
+                {suitabilities.length === 0 && (
+                    <div className="text-center py-8 text-gray-500">
+                        No suitabilities found. Click &quot;Add Suitability&quot; to create one.
                     </div>
                 )}
                 </div>
@@ -428,5 +638,11 @@ const HallManagementPage = () => {
     </div>
   );
 };
+
+const HallManagementPage = () => (
+  <Suspense fallback={<div>Loading...</div>}>
+    <HallManagementContent />
+  </Suspense>
+);
 
 export default withAuth(HallManagementPage, ["super-admin"]);

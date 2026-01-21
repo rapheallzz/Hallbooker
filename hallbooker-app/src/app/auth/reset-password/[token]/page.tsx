@@ -29,8 +29,9 @@ const ResetPasswordPage = () => {
       setTimeout(() => {
         router.push('/auth/login');
       }, 3000);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'An error occurred.');
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string } } };
+      setError(e.response?.data?.message || 'An error occurred.');
     }
   };
 

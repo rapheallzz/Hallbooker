@@ -1,9 +1,10 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { jwtDecode } from 'jwt-decode';
 import api from '@/services/api';
+import { getDashboardPath } from '@/utils/redirects';
 
 interface User {
   id: string;
@@ -30,6 +31,7 @@ interface DecodedToken {
 
 interface AuthContextType {
   user: User | null;
+  activeRole: string | null;
   token: string | null;
   loading: boolean;
   login: (token: string, user: User) => void;
@@ -45,6 +47,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+
+  const logout = useCallback(() => {
+    setToken(null);
+    setUser(null);
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    delete api.defaults.headers.Authorization;
+    router.push('/auth/login');
+  }, [router]);
 
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
@@ -82,7 +93,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     }
     setLoading(false);
-  }, []);
+  }, [logout]);
 
   const login = (newToken: string, newUser: User) => {
     setToken(newToken);
@@ -90,15 +101,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem('token', newToken);
     localStorage.setItem('user', JSON.stringify(newUser));
     api.defaults.headers.Authorization = `Bearer ${newToken}`;
-  };
 
-  const logout = () => {
-    setToken(null);
-    setUser(null);
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    delete api.defaults.headers.Authorization;
-    router.push('/auth/login');
+    const redirectPath = getDashboardPath(newUser.activeRole);
+    router.push(redirectPath);
   };
 
   const updateToken = (newToken: string) => {
@@ -118,6 +123,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       };
       setUser(updatedUser);
       localStorage.setItem('user', JSON.stringify(updatedUser));
+
+      const redirectPath = getDashboardPath(decodedToken.activeRole);
+      router.push(redirectPath);
     } catch (error) {
       console.error("Failed to decode token or update user", error);
       logout();
@@ -139,7 +147,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout, updateToken, updateUserApplicationStatus }}>
+    <AuthContext.Provider value={{ user, activeRole: user?.activeRole || null, token, loading, login, logout, updateToken, updateUserApplicationStatus }}>
       {children}
     </AuthContext.Provider>
   );

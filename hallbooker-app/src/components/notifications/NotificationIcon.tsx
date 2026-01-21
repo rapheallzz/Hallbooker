@@ -14,11 +14,11 @@ const NotificationIcon = () => {
     const fetchNotifications = async () => {
       try {
         const response = await api.get("/notifications");
-        const notifications = Array.isArray(response.data.data) ? response.data.data : [];
-        const unread = notifications.filter((n: any) => !n.isRead).length;
+        const unread = response.data.data.unreadCount || 0;
         setUnreadCount(unread);
       } catch (error) {
         console.error("Failed to fetch notifications:", error);
+        setUnreadCount(0);
       }
     };
 

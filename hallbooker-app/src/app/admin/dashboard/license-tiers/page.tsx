@@ -137,7 +137,7 @@ const LicenseTiersPage = () => {
                 </div>
                 <div className="mt-6 pt-4 border-t border-gray-200 flex justify-end space-x-3">
                     <button onClick={() => handleEditTier(tier)} className="text-gray-400 hover:text-indigo-600 transition-colors"><Edit size={20} /></button>
-                    <button onClick={() => handleDeleteTier(tier._id)} className="text-gray-400 hover:text-red-600 transition-colors"><Trash size={20} /></button>
+                    <button onClick={() => tier._id && handleDeleteTier(tier._id)} className="text-gray-400 hover:text-red-600 transition-colors"><Trash size={20} /></button>
                 </div>
             </div>
         ))}
@@ -146,7 +146,7 @@ const LicenseTiersPage = () => {
       {tiers.length === 0 && !loading && (
         <div className="text-center py-12 text-gray-500">
             <h3 className="text-lg font-medium">No license tiers found.</h3>
-            <p>Click "Add New Tier" to get started.</p>
+            <p>Click &quot;Add New Tier&quot; to get started.</p>
         </div>
       )}
     </div>

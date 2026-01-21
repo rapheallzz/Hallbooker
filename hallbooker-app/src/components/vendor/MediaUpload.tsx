@@ -59,21 +59,41 @@ const MediaUpload: React.FC<MediaUploadProps> = ({ hallId, onUploadSuccess }) =>
 
     try {
       const sigResponse = await api.post('/halls/media/generate-signature');
-      const { signature, timestamp, cloudname, apikey } = sigResponse.data.data;
+      const { signature, cloudname, ...params } = sigResponse.data.data;
 
       const uploadPromises = files.map(async (file) => {
         const formData = new FormData();
         formData.append('file', file);
         formData.append('signature', signature);
-        formData.append('timestamp', timestamp);
-        formData.append('api_key', apikey);
+
+        // Append all parameters from the signature response (timestamp, api_key, folder, etc.)
+        Object.entries(params).forEach(([key, value]) => {
+          if (value !== undefined && value !== null) {
+            const valStr = String(value);
+            // Skip parameters that look like JSON objects/arrays (starting with { or [).
+            // These cause 400 errors (e.g. "Invalid transformation parameter") because
+            // Cloudinary's REST API expects its own custom string format for complex params.
+            if (valStr.startsWith('{') || valStr.startsWith('[')) {
+              return;
+            }
+            // Cloudinary expects api_key, handle both apikey and api_key from backend
+            const formDataKey = key === 'apikey' ? 'api_key' : key;
+            formData.append(formDataKey, valStr);
+          }
+        });
+
         const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudname}/image/upload`;
 
         try {
             const response = await fetch(uploadUrl, { method: 'POST', body: formData });
             const data = await response.json();
+            if (!response.ok) {
+              console.error('Cloudinary upload error:', data);
+              return null;
+            }
             return data.secure_url;
-        } catch {
+        } catch (error) {
+            console.error('Cloudinary upload fetch error:', error);
             return null; // Return null if a single upload fails
         }
       });

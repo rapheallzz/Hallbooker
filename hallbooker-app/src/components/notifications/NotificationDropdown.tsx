@@ -4,13 +4,7 @@ import api from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import { Check, Circle } from "lucide-react";
-
-interface Notification {
-  _id: string;
-  message: string;
-  isRead: boolean;
-  createdAt: string;
-}
+import { Notification } from "@/types";
 
 const NotificationDropdown = () => {
   const { user } = useAuth();
@@ -21,7 +15,7 @@ const NotificationDropdown = () => {
     setLoading(true);
     try {
       const response = await api.get("/notifications");
-      setNotifications(response.data.data);
+      setNotifications(response.data.data.notifications || []);
     } catch (error) {
       console.error("Failed to fetch notifications:", error);
     } finally {
@@ -37,7 +31,7 @@ const NotificationDropdown = () => {
 
   const handleMarkAsRead = async (notificationId: string) => {
     try {
-      await api.post(`/notifications/${notificationId}/read`);
+      await api.patch(`/notifications/${notificationId}/read`);
       fetchNotifications();
     } catch (error) {
       console.error("Failed to mark notification as read:", error);
@@ -46,7 +40,7 @@ const NotificationDropdown = () => {
 
   const handleMarkAsUnread = async (notificationId: string) => {
     try {
-      await api.post(`/notifications/${notificationId}/unread`);
+      await api.patch(`/notifications/${notificationId}/unread`);
       fetchNotifications();
     } catch (error) {
       console.error("Failed to mark notification as unread:", error);
@@ -55,7 +49,7 @@ const NotificationDropdown = () => {
 
   const handleMarkAllAsRead = async () => {
     try {
-      await api.post("/notifications/read-all");
+      await api.patch("/notifications/read-all");
       fetchNotifications();
     } catch (error) {
       console.error("Failed to mark all notifications as read:", error);
@@ -78,11 +72,11 @@ const NotificationDropdown = () => {
             <div
               key={notification._id}
               className={`flex items-start p-4 ${
-                notification.isRead ? "bg-gray-50" : "bg-white"
+                notification.read ? "bg-gray-50" : "bg-white"
               }`}
             >
               <div className="flex-shrink-0">
-                {notification.isRead ? (
+                {notification.read ? (
                   <Check className="w-5 h-5 text-green-500" />
                 ) : (
                   <Circle className="w-5 h-5 text-blue-500" />
@@ -93,7 +87,7 @@ const NotificationDropdown = () => {
                 <p className="text-xs text-gray-500">
                   {new Date(notification.createdAt).toLocaleString()}
                 </p>
-                {!notification.isRead ? (
+                {!notification.read ? (
                   <button onClick={() => handleMarkAsRead(notification._id)} className="text-xs text-primary hover:underline">
                     Mark as read
                   </button>
