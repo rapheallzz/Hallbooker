@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import api from "@/services/api";
 import { useState, useRef, useEffect } from "react";
@@ -27,12 +27,13 @@ const Header = () => {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const notificationDropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const pathname = usePathname();
   const scrolled = useScroll(100);
 
   // Close mobile menu on route change
   useEffect(() => {
     setMobileMenuOpen(false);
-  }, [router]);
+  }, [pathname]);
 
   // Prevent scroll when mobile menu is open
   useEffect(() => {

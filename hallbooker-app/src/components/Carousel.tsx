@@ -1,8 +1,6 @@
 'use client';
 import { useRef } from 'react';
 import Slider, { ResponsiveObject } from 'react-slick';
-import 'slick-carousel/slick/slick.css';
-import 'slick-carousel/slick/slick-theme.css';
 import HallCard from './HallCard';
 import NextArrow from './NextArrow';
 import PrevArrow from './PrevArrow';
@@ -30,47 +28,43 @@ const Carousel = ({
 
   const defaultResponsive = [
     {
-      breakpoint: 1279, // Match Tailwind xl breakpoint (below 1280px)
+      breakpoint: 1280,
+      settings: {
+        slidesToShow: 7,
+        slidesToScroll: 1,
+      },
+    },
+    {
+      breakpoint: 1024,
       settings: {
         slidesToShow: 5,
         slidesToScroll: 1,
-        infinite: halls.length > 5,
-        dots: false,
       },
     },
     {
-      breakpoint: 1023, // Match Tailwind lg breakpoint (below 1024px)
+      breakpoint: 768,
       settings: {
-        slidesToShow: 4,
+        slidesToShow: 3,
         slidesToScroll: 1,
-        infinite: halls.length > 4,
       },
     },
     {
-      breakpoint: 767, // Match Tailwind md breakpoint (below 768px)
+      breakpoint: 640,
       settings: {
         slidesToShow: 2,
         slidesToScroll: 1,
-        infinite: halls.length > 2,
-      },
-    },
-    {
-      breakpoint: 639, // Match Tailwind sm breakpoint (below 640px)
-      settings: {
-        slidesToShow: 2,
-        slidesToScroll: 1,
-        infinite: halls.length > 2,
       },
     },
   ];
 
   const settings = {
     dots: false,
-    infinite: halls.length > baseSlidesToShow,
+    infinite: halls.length > 2,
     speed: 500,
-    slidesToShow: baseSlidesToShow,
+    slidesToShow: 2, // Start with 2 for mobile (mobileFirst)
     slidesToScroll: 1,
-    arrows: false, // We are using custom arrows outside the slider
+    arrows: false,
+    mobileFirst: true, // Use mobile-first breakpoints
     responsive: responsive || defaultResponsive,
   };
 

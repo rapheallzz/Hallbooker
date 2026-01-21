@@ -4,6 +4,8 @@ import { useState, useRef } from 'react';
 import { DayPicker, DateRange } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
 import { format } from 'date-fns';
+import { MapPin, Calendar, Users, Banknote, Search, ChevronDown } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import useOnClickOutside from '@/hooks/useOnClickOutside';
 
 interface SearchBarProps {
@@ -64,28 +66,58 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
     });
   };
 
+  const containerVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.5,
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, x: -10 },
+    visible: { opacity: 1, x: 0 }
+  };
+
   return (
-    <form onSubmit={handleSearch} className="bg-white rounded-3xl md:rounded-full shadow-lg p-2 flex flex-col md:flex-row items-stretch md:items-center w-full max-w-5xl mx-auto">
-      <div className="flex-1 relative group" ref={locationRef}>
-        <div
-          className="p-3 md:p-4 rounded-2xl md:rounded-full hover:bg-gray-100 cursor-pointer"
+    <motion.form
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      onSubmit={handleSearch}
+      className="bg-white rounded-[2rem] md:rounded-full shadow-2xl p-2 flex flex-col md:flex-row items-stretch md:items-center w-full max-w-5xl mx-auto border border-gray-100"
+    >
+      {/* Location Section */}
+      <motion.div variants={itemVariants} className="flex-1 relative group" ref={locationRef}>
+        <motion.div
+          whileTap={{ scale: 0.98 }}
+          className="p-4 md:p-5 rounded-2xl md:rounded-full hover:bg-gray-50 cursor-pointer transition-colors flex items-center space-x-3"
           onClick={() => setShowLocations(true)}
         >
-          <label
-            htmlFor="location"
-            className="block text-sm font-bold text-gray-800"
-          >
-            Location
-          </label>
-          <input
-            type="text"
-            id="location"
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            placeholder="Where is your event?"
-            className="w-full bg-transparent border-none focus:ring-0 text-gray-600 placeholder-gray-400 text-sm"
-          />
-        </div>
+          <div className="bg-blue-50 p-2.5 rounded-full text-blue-600 md:hidden">
+            <MapPin className="w-5 h-5" />
+          </div>
+          <div className="flex-grow">
+            <div className="flex items-center space-x-1">
+              <MapPin className="hidden md:block w-4 h-4 text-gray-400" />
+              <label htmlFor="location" className="block text-xs md:text-sm font-bold text-gray-800 uppercase tracking-tight">
+                Location
+              </label>
+            </div>
+            <input
+              type="text"
+              id="location"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="Where is your event?"
+              className="w-full bg-transparent border-none focus:ring-0 text-gray-600 placeholder-gray-400 text-sm mt-0.5"
+            />
+          </div>
+        </motion.div>
         {showLocations && (
           <div className="absolute z-20 w-full mt-1 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
             <ul className="py-2">
@@ -104,23 +136,31 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
             </ul>
           </div>
         )}
-      </div>
+      </motion.div>
 
-      <div className="flex-1 relative group" ref={priceRef}>
-        <div
-          className="p-3 md:p-4 rounded-2xl md:rounded-full hover:bg-gray-100 cursor-pointer border-t md:border-t-0 md:border-l border-gray-100"
+      {/* Price Section */}
+      <motion.div variants={itemVariants} className="flex-1 relative group border-t md:border-t-0 md:border-l border-gray-100" ref={priceRef}>
+        <motion.div
+          whileTap={{ scale: 0.98 }}
+          className="p-4 md:p-5 rounded-2xl md:rounded-full hover:bg-gray-50 cursor-pointer transition-colors flex items-center space-x-3"
           onClick={() => setShowPrice(!showPrice)}
         >
-          <label
-            htmlFor="price"
-            className="block text-sm font-bold text-gray-800"
-          >
-            Price Range
-          </label>
-          <div className="text-gray-600 truncate text-sm">
-            ₦{minPrice.toLocaleString()} - ₦{maxPrice.toLocaleString()}
+          <div className="bg-green-50 p-2.5 rounded-full text-green-600 md:hidden">
+            <Banknote className="w-5 h-5" />
           </div>
-        </div>
+          <div className="flex-grow overflow-hidden">
+            <div className="flex items-center space-x-1">
+              <Banknote className="hidden md:block w-4 h-4 text-gray-400" />
+              <label className="block text-xs md:text-sm font-bold text-gray-800 uppercase tracking-tight">
+                Price Range
+              </label>
+            </div>
+            <div className="text-gray-600 truncate text-sm mt-0.5 flex items-center">
+              <span>₦{minPrice.toLocaleString()} - ₦{maxPrice.toLocaleString()}</span>
+              <ChevronDown className="w-3 h-3 ml-1 text-gray-400" />
+            </div>
+          </div>
+        </motion.div>
         {showPrice && (
           <div className="absolute z-20 w-full md:w-64 mt-1 p-4 bg-white rounded-xl shadow-lg border border-gray-100">
              <div className="space-y-4">
@@ -147,25 +187,35 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
              </div>
           </div>
         )}
-      </div>
+      </motion.div>
 
-      <div className="flex-1 relative group" ref={calendarRef}>
-        <div
-          className="p-3 md:p-4 rounded-2xl md:rounded-full hover:bg-gray-100 cursor-pointer border-t md:border-t-0 md:border-l border-gray-100"
+      {/* Date Section */}
+      <motion.div variants={itemVariants} className="flex-1 relative group border-t md:border-t-0 md:border-l border-gray-100" ref={calendarRef}>
+        <motion.div
+          whileTap={{ scale: 0.98 }}
+          className="p-4 md:p-5 rounded-2xl md:rounded-full hover:bg-gray-50 cursor-pointer transition-colors flex items-center space-x-3"
           onClick={() => setShowCalendar(!showCalendar)}
         >
-          <label
-            htmlFor="date"
-            className="block text-sm font-bold text-gray-800"
-          >
-            Date
-          </label>
-          <div className="w-full bg-transparent border-none focus:ring-0 text-gray-600 placeholder-gray-400 text-sm truncate">
-            {dateRange?.from ? (
-              dateRange.to ? `${format(dateRange.from, 'MMM d')} - ${format(dateRange.to, 'MMM d')}` : format(dateRange.from, 'MMM d')
-            ) : 'Select dates'}
+          <div className="bg-purple-50 p-2.5 rounded-full text-purple-600 md:hidden">
+            <Calendar className="w-5 h-5" />
           </div>
-        </div>
+          <div className="flex-grow overflow-hidden">
+            <div className="flex items-center space-x-1">
+              <Calendar className="hidden md:block w-4 h-4 text-gray-400" />
+              <label className="block text-xs md:text-sm font-bold text-gray-800 uppercase tracking-tight">
+                Date
+              </label>
+            </div>
+            <div className="text-gray-600 text-sm mt-0.5 truncate flex items-center">
+              <span>
+                {dateRange?.from ? (
+                  dateRange.to ? `${format(dateRange.from, 'MMM d')} - ${format(dateRange.to, 'MMM d')}` : format(dateRange.from, 'MMM d')
+                ) : 'Select dates'}
+              </span>
+              <ChevronDown className="w-3 h-3 ml-1 text-gray-400" />
+            </div>
+          </div>
+        </motion.div>
         {showCalendar && (
           <div className="absolute z-30 mt-2 left-1/2 transform -translate-x-1/2 bg-white rounded-xl shadow-lg border border-gray-100 p-2 overflow-auto max-w-[90vw]">
             <style>{`
@@ -187,26 +237,31 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
             />
           </div>
         )}
-      </div>
+      </motion.div>
 
-      <div className="flex-1 relative group" ref={capacityRef}>
-        <div
-          className="p-3 md:p-4 rounded-2xl md:rounded-full hover:bg-gray-100 cursor-pointer border-t md:border-t-0 md:border-l border-gray-100"
+      {/* Capacity Section */}
+      <motion.div variants={itemVariants} className="flex-1 relative group border-t md:border-t-0 md:border-l border-gray-100" ref={capacityRef}>
+        <motion.div
+          whileTap={{ scale: 0.98 }}
+          className="p-4 md:p-5 rounded-2xl md:rounded-full hover:bg-gray-50 cursor-pointer transition-colors flex items-center space-x-3"
           onClick={() => setShowCapacity(!showCapacity)}
         >
-          <label
-            htmlFor="capacity"
-            className="block text-sm font-bold text-gray-800"
-          >
-            Capacity
-          </label>
-          <input
-            type="text"
-            readOnly
-            value={capacity || 'number of Guest'}
-            className="w-full bg-transparent border-none focus:ring-0 text-gray-600 text-sm"
-          />
-        </div>
+          <div className="bg-orange-50 p-2.5 rounded-full text-orange-600 md:hidden">
+            <Users className="w-5 h-5" />
+          </div>
+          <div className="flex-grow overflow-hidden">
+            <div className="flex items-center space-x-1">
+              <Users className="hidden md:block w-4 h-4 text-gray-400" />
+              <label className="block text-xs md:text-sm font-bold text-gray-800 uppercase tracking-tight">
+                Capacity
+              </label>
+            </div>
+            <div className="text-gray-600 text-sm mt-0.5 truncate flex items-center">
+              <span>{capacity || 'Number of Guests'}</span>
+              <ChevronDown className="w-3 h-3 ml-1 text-gray-400" />
+            </div>
+          </div>
+        </motion.div>
         {showCapacity && (
           <div className="absolute z-20 w-full mt-1 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
             <ul className="py-2">
@@ -225,26 +280,19 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
             </ul>
           </div>
         )}
-      </div>
+      </motion.div>
 
-      <button type="submit" className="bg-[#295FA7] hover:bg-blue-700 text-white rounded-2xl md:rounded-full p-4 mt-2 md:mt-0 md:mr-2 flex items-center justify-center space-x-2 md:space-x-0">
-        <span className="md:hidden font-bold">Search</span>
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-5 w-5 md:h-6 md:w-6"
-          fill="none"
-          viewBox="0 0 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-          />
-        </svg>
-      </button>
-    </form>
+      {/* Search Button */}
+      <motion.button
+        type="submit"
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        className="bg-primary hover:bg-blue-700 text-white rounded-2xl md:rounded-full p-4 md:p-6 mt-4 md:mt-0 md:ml-2 flex items-center justify-center space-x-3 md:space-x-0 shadow-lg shadow-primary/20 transition-all"
+      >
+        <span className="md:hidden font-bold text-lg">Search Halls</span>
+        <Search className="w-6 h-6" />
+      </motion.button>
+    </motion.form>
   );
 };
 

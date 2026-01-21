@@ -150,7 +150,7 @@ const HomePage = () => {
               <h2 className="text-2xl font-bold text-gray-900 mb-6">
                 Popular Halls
               </h2>
-              <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
                 {[...Array(6)].map((_, i) => (
                   <SkeletonCard key={i} />
                 ))}
