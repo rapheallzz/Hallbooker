@@ -503,6 +503,7 @@ const HallDetailPage = () => {
       {hall && (
         <>
           <BookingModal
+            key={isBookingModalOpen ? 'open' : 'closed'}
             hallId={hall.id || hall._id}
             isOpen={isBookingModalOpen}
             onClose={closeBookingModal}

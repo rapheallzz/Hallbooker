@@ -824,6 +824,7 @@ const BookingsPage = () => {
         )}
       </div>
       <BookingModal
+        key={isModalOpen ? 'open' : 'closed'}
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleCreateBooking}

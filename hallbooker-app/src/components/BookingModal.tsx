@@ -181,6 +181,7 @@ const BookingModal: FC<BookingModalProps> = ({
       setUsePerDateTimes(false);
       setDateTimes({});
       setError('');
+      setLoading(false);
 
       const fetchHallDetails = async () => {
         try {

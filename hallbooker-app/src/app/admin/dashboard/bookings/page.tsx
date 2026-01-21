@@ -569,6 +569,7 @@ const BookingsPage = () => {
         />
       )}
       <AdminBookingModal
+        key={isCreateModalOpen ? 'open' : 'closed'}
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onSubmit={handleCreateBooking}

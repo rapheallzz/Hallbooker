@@ -130,6 +130,35 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
 
   useEffect(() => {
     if (isOpen) {
+      // Reset form state
+      setActiveTab('reservation');
+      setHallPrice(0);
+      setFacilitiesPrice(0);
+      setTotalPrice(0);
+      setDiscountAmount(0);
+      setUsePerDateTimes(false);
+      setDateTimes({});
+      setRecurrencePattern('none');
+      setFormData({
+        hall: '',
+        startTime: '',
+        endTime: '',
+        eventDetails: '',
+        startDate: '',
+        recurrenceType: 'specific-dates',
+        daysOfWeek: [],
+        dayOfMonth: null,
+        dates: [],
+        recurringEndDate: '',
+        fullName: '',
+        email: '',
+        phone: '',
+        paymentMethod: 'CASH',
+        paymentStatus: 'pending',
+        selectedFacilities: [],
+      });
+      setError('');
+
       const fetchHalls = async () => {
         try {
           const endpoint = userRole === 'admin' ? '/halls' : '/halls/by-owner';
