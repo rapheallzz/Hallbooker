@@ -27,38 +27,31 @@ const Carousel = ({
     {
       breakpoint: 1280,
       settings: {
-        slidesToShow: 6,
+        slidesToShow: Math.min(halls.length, 6),
         slidesToScroll: 1,
       },
     },
     {
       breakpoint: 1024,
       settings: {
-        slidesToShow: 4,
+        slidesToShow: Math.min(halls.length, 4),
         slidesToScroll: 1,
       },
     },
     {
       breakpoint: 768,
       settings: {
-        slidesToShow: 2,
+        slidesToShow: Math.min(halls.length, 2),
         slidesToScroll: 1,
       },
-    },
-    {
-      breakpoint: 480,
-      settings: {
-        slidesToShow: 2,
-        slidesToScroll: 1,
-      },
-    },
+    }
   ];
 
   const settings = {
     dots: false,
     infinite: halls.length > slidesToShow,
     speed: 500,
-    slidesToShow: slidesToShow,
+    slidesToShow: Math.min(halls.length, slidesToShow),
     slidesToScroll: 1,
     arrows: false,
     draggable: true,
@@ -75,11 +68,12 @@ const Carousel = ({
   };
 
   // If we have few items, show them in a grid instead of a carousel
-  const actualGridThreshold = gridThreshold ?? 3;
+  // Only use grid if there's very few items (e.g. 1) or if specified
+  const actualGridThreshold = gridThreshold ?? 2;
 
   if (halls.length < actualGridThreshold) {
     return (
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4">
         {halls.map((hall) => (
           <div key={hall._id} className="w-full">
             <HallCard hall={hall} />
@@ -90,12 +84,14 @@ const Carousel = ({
   }
 
   return (
-    <div className="relative group">
+    <div className="relative group" data-testid="main-carousel">
+      {/* Show arrows if we have more halls than can be shown on ANY screen size
+          Actually, simplified: show if > 2, since mobile shows 2. */}
       {halls.length > 2 && (
-        <>
+        <div className="absolute top-[-50px] right-0 flex space-x-2 z-10">
            <PrevArrow onClick={goToPrev} />
            <NextArrow onClick={goToNext} />
-        </>
+        </div>
       )}
       <div className="mx-[-8px]">
         <Slider ref={sliderRef} {...settings}>

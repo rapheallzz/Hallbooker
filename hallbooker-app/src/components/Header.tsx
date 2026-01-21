@@ -174,7 +174,7 @@ const Header = () => {
             </div>
           )}
 
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden lg:flex items-center space-x-4">
             {renderBecomeOwnerButton()}
             {message && <p>{message}</p>}
              {isTermsModalOpen && (
@@ -325,7 +325,7 @@ const Header = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setMobileMenuOpen(false)}
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] md:hidden"
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] lg:hidden"
             />
 
             {/* Side Panel */}
@@ -334,7 +334,7 @@ const Header = () => {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed right-0 top-0 bottom-0 w-[80%] max-w-sm bg-white shadow-2xl z-[101] md:hidden flex flex-col"
+              className="fixed right-0 top-0 bottom-0 w-[80%] max-w-sm bg-white shadow-2xl z-[101] lg:hidden flex flex-col"
             >
               <div className="p-4 flex items-center justify-between border-b">
                 <span className="text-xl font-bold text-primary">HallBooker</span>
