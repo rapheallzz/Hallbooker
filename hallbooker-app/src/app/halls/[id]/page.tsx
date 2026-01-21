@@ -225,7 +225,7 @@ const HallDetailPage = () => {
 
         {/* Main content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-x-12 mt-8">
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 order-2 lg:order-1">
             <div className="pb-6 border-b">
               <h2 className="text-2xl font-semibold text-gray-800">
                 Capacity
@@ -426,7 +426,7 @@ const HallDetailPage = () => {
           </div>
 
           {/* Sticky booking widget */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 order-1 lg:order-2 mb-8 lg:mb-0">
             <div className="sticky top-28 border rounded-xl shadow-lg p-6">
               <div className="mb-4">
                 {hall.pricing?.dailyRate && hall.pricing?.hourlyRate ? (
