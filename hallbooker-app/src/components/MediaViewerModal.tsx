@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import Image from 'next/image';
 import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
@@ -74,10 +75,12 @@ const MediaViewerModal = ({ isOpen, onClose, media, startIndex }: MediaViewerMod
                     className="max-h-full max-w-full object-contain"
                   />
                 ) : (
-                  <img
+                  <Image
                     src={url}
                     alt={`Media ${index + 1}`}
-                    className="max-h-full max-w-full object-contain"
+                    fill
+                    className="object-contain"
+                    sizes="100vw"
                   />
                 )}
               </div>

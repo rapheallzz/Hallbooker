@@ -6,7 +6,7 @@ import api from "@/services/api";
 import HallModal from "@/components/vendor/HallModal";
 import ReservationModal from "@/components/vendor/ReservationModal";
 import { useUI } from "@/context/UIContext";
-import { Calendar as CalendarIcon, ChevronDown, Edit, Trash2 } from "lucide-react";
+import { Calendar as CalendarIcon, ChevronDown, Edit } from "lucide-react";
 import Swal from "sweetalert2";
 
 interface Hall {

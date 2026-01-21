@@ -5,7 +5,7 @@ import { DayPicker, DateRange } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
 import { format } from 'date-fns';
 import { MapPin, Calendar, Users, Banknote, Search, ChevronDown } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import useOnClickOutside from '@/hooks/useOnClickOutside';
 
 interface SearchBarProps {

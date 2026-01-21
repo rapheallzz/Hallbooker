@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { useParams } from 'next/navigation';
 
 interface Venue {
@@ -61,7 +62,7 @@ const VenueDetailPage = () => {
         const currentVenue = hallsData.find((hall: Venue) => hall.id === id);
         setVenue(currentVenue);
         setReviews(mockedReviews);
-      } catch (err) {
+      } catch (_err) {
         setError('Failed to fetch venue details.');
       } finally {
         setLoading(false);
@@ -92,11 +93,13 @@ const VenueDetailPage = () => {
         </div>
         <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {venue.media.slice(0, 3).map((media, index) => (
-            <div key={index} className="overflow-hidden rounded-lg shadow-lg">
-              <img
-                className="w-full h-full object-cover"
+            <div key={index} className="overflow-hidden rounded-lg shadow-lg relative h-64">
+              <Image
+                fill
+                className="object-cover"
                 src={media.url}
                 alt={`${venue.name} image ${index + 1}`}
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               />
             </div>
           ))}

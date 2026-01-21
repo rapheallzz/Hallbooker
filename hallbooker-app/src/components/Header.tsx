@@ -5,7 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import api from "@/services/api";
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, ChevronRight, LogOut, LayoutDashboard, UserCircle, Bell } from "lucide-react";
+import { Menu, X, ChevronRight, LogOut, LayoutDashboard, UserCircle } from "lucide-react";
 import useOnClickOutside from "@/hooks/useOnClickOutside";
 import useScroll from "@/hooks/useScroll";
 import CollapsedSearchBar from "./CollapsedSearchBar";

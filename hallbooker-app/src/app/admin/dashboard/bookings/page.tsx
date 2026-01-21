@@ -1,14 +1,13 @@
 
 'use client';
 
-import React, { useState, useEffect, useMemo, Suspense } from 'react';
+import React, { useState, useEffect, useMemo, Suspense, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import api from '@/services/api';
 import AdminBookingDetailsModal from '@/components/admin/AdminBookingDetailsModal';
 import AdminBookingModal from '@/components/admin/AdminBookingModal';
 import ConversionModal from '@/components/shared/ConversionModal';
 import { Search, ChevronDown, Eye } from 'lucide-react';
-import LoadingSpinner from '@/components/admin/LoadingSpinner';
 import Swal from 'sweetalert2';
 import { Booking, Hall } from '@/types';
 
@@ -52,7 +51,7 @@ const BookingsPage = () => {
   const [selectedReservationId, setSelectedReservationId] = useState<string | null>(null);
   const [expandedBookingId, setExpandedBookingId] = useState<string | null>(null);
 
-  const fetchAllData = async () => {
+  const fetchAllData = useCallback(async () => {
     setLoading(true);
     try {
       if (activeTab === 'bookings') {
@@ -76,23 +75,30 @@ const BookingsPage = () => {
           setReservations([]);
         }
       }
-
-      if (!halls.length) {
-        const hallsRes = await api.get('/halls');
-        if (hallsRes.data && Array.isArray(hallsRes.data.data)) {
-          setHalls(hallsRes.data.data);
-        }
-      }
     } catch (err) {
       console.error("Failed to fetch data", err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedHall, activeTab]);
+
+  useEffect(() => {
+    const fetchHalls = async () => {
+      try {
+        const hallsRes = await api.get('/halls');
+        if (hallsRes.data && Array.isArray(hallsRes.data.data)) {
+          setHalls(hallsRes.data.data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch halls", err);
+      }
+    };
+    fetchHalls();
+  }, []);
 
   useEffect(() => {
     fetchAllData();
-  }, [selectedHall, activeTab]);
+  }, [fetchAllData]);
 
   const filteredBookings = useMemo(() => {
     if (!searchTerm) return allBookings;

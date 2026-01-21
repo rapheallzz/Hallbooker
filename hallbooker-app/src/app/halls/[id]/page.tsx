@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { VIEW_COUNT_ROLES } from '@/constants/auth';
@@ -177,39 +178,53 @@ const HallDetailPage = () => {
 
         {/* Image gallery */}
         <div className="grid grid-cols-1 md:grid-cols-2 md:grid-rows-2 gap-2 h-96 rounded-xl overflow-hidden">
-          <div className="md:col-span-1 md:row-span-2 h-full cursor-pointer" onClick={() => openMediaViewer(0)}>
-            <img
+          <div className="md:col-span-1 md:row-span-2 h-full cursor-pointer relative" onClick={() => openMediaViewer(0)}>
+            <Image
               src={media[0] || '/hall_default.jpg'}
               alt={hall.name}
-              className="w-full h-full object-cover"
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 50vw"
+              priority
             />
           </div>
           <div className="hidden md:grid grid-cols-2 grid-rows-1 gap-2 h-full">
-            <img
-              src={media[1] || '/hall_default.jpg'}
-              alt=""
-              className="w-full h-full object-cover cursor-pointer"
-              onClick={() => openMediaViewer(1)}
-            />
-            <img
-              src={media[2] || '/hall_default.jpg'}
-              alt=""
-              className="w-full h-full object-cover cursor-pointer"
-              onClick={() => openMediaViewer(2)}
-            />
+            <div className="relative h-full w-full cursor-pointer" onClick={() => openMediaViewer(1)}>
+              <Image
+                src={media[1] || '/hall_default.jpg'}
+                alt=""
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 50vw, 25vw"
+              />
+            </div>
+            <div className="relative h-full w-full cursor-pointer" onClick={() => openMediaViewer(2)}>
+              <Image
+                src={media[2] || '/hall_default.jpg'}
+                alt=""
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 50vw, 25vw"
+              />
+            </div>
           </div>
           <div className="hidden md:grid grid-cols-2 grid-rows-1 gap-2 h-full">
-            <img
-              src={media[3] || '/hall_default.jpg'}
-              alt=""
-              className="w-full h-full object-cover cursor-pointer"
-              onClick={() => openMediaViewer(3)}
-            />
+            <div className="relative h-full w-full cursor-pointer" onClick={() => openMediaViewer(3)}>
+              <Image
+                src={media[3] || '/hall_default.jpg'}
+                alt=""
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 50vw, 25vw"
+              />
+            </div>
             <div className="relative w-full h-full cursor-pointer" onClick={() => openMediaViewer(4)}>
-              <img
+              <Image
                 src={media[4] || '/hall_default.jpg'}
                 alt=""
-                className="w-full h-full object-cover"
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 50vw, 25vw"
               />
               <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center">
                 <button

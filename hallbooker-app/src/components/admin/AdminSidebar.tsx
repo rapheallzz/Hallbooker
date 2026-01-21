@@ -12,7 +12,6 @@ import {
   Settings,
   LogOut,
   Shield,
-  Briefcase,
   DollarSign,
 } from "lucide-react";
 

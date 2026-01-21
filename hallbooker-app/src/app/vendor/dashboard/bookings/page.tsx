@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, Suspense, useCallback } from "react";
 import { useSearchParams } from 'next/navigation';
 import { useAuth } from "@/context/AuthContext";
 import api from "@/services/api";
@@ -117,7 +117,7 @@ const BookingsPage = () => {
   const [bookingTypeFilter, setBookingTypeFilter] = useState('all');
   const LIMIT = 20;
 
-  const fetchHalls = async () => {
+  const fetchHalls = useCallback(async () => {
     try {
       const response = await api.get("/halls/by-owner");
       if (response.data && Array.isArray(response.data.data)) {
@@ -131,9 +131,9 @@ const BookingsPage = () => {
       console.error("Error fetching halls:", err);
       setError('Failed to fetch halls.');
     }
-  };
+  }, [hallIdFromQuery]);
 
-  const fetchBookings = async (hallId: string, page: number = 1) => {
+  const fetchBookings = useCallback(async (hallId: string, page: number = 1) => {
     if (!hallId) {
       setBookings([]);
       return;
@@ -164,9 +164,9 @@ const BookingsPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [status, startDate, endDate, sortBy, sortOrder]);
 
-  const fetchReservations = async (hallId: string, page: number = 1) => {
+  const fetchReservations = useCallback(async (hallId: string, page: number = 1) => {
     if (!hallId) {
       setReservations([]);
       return;
@@ -190,11 +190,11 @@ const BookingsPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchHalls();
-  }, []);
+  }, [fetchHalls]);
 
   useEffect(() => {
     if (selectedHall) {
@@ -204,7 +204,7 @@ const BookingsPage = () => {
         fetchReservations(selectedHall, reservationsPage);
       }
     }
-  }, [selectedHall, activeTab, bookingsPage, reservationsPage, status, startDate, endDate, sortBy, sortOrder]);
+  }, [selectedHall, activeTab, bookingsPage, reservationsPage, fetchBookings, fetchReservations]);
 
   const handleHallChange = (hallId: string) => {
     setSelectedHall(hallId);

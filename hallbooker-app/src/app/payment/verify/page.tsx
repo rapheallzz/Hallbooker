@@ -26,7 +26,7 @@ const VerifyPaymentContent = () => {
         } else {
           setPaymentStatus({ status: 'error', message: response.data.message || 'Payment verification failed.' });
         }
-      } catch (error) {
+      } catch (_error) {
         setPaymentStatus({ status: 'error', message: 'An error occurred during payment verification.' });
       }
     };

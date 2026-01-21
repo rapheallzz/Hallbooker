@@ -318,7 +318,7 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
     e.preventDefault();
 
     // Clean up facilities data before submission
-    const facilitiesPayload = formData.facilities.map(({ name: _name, ...rest }) => {
+    const facilitiesPayload = formData.facilities.map(({ name: _unused_name, ...rest }) => {
       const facilityData: Record<string, unknown> = { ...rest };
       if (!facilityData.chargeable) {
         delete facilityData.chargeMethod;
@@ -338,7 +338,7 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
         return;
       }
 
-      const { hourlyRate, dailyRate, facilities: _facilities, openingHour, closingHour, country, state, localGovernment, ...rest } = formData;
+      const { hourlyRate, dailyRate, facilities: _unused_facilities, openingHour, closingHour, country, state, localGovernment, ...rest } = formData;
       const pricing = {
         hourlyRate: Number(hourlyRate),
         dailyRate: Number(dailyRate),

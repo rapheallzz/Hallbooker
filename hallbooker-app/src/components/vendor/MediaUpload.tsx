@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import Image from 'next/image';
 import api from '@/services/api';
 import { UploadCloud, X, CheckCircle } from 'lucide-react';
 
@@ -160,8 +161,14 @@ const MediaUpload: React.FC<MediaUploadProps> = ({ hallId, onUploadSuccess }) =>
           <h4 className="font-semibold text-gray-800 mb-2">Selected Files:</h4>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {previews.map((preview, index) => (
-              <div key={index} className="relative group">
-                <img src={preview} alt={`preview ${index}`} className="w-full h-32 object-cover rounded-md border border-gray-200" />
+              <div key={index} className="relative group h-32">
+                <Image
+                  src={preview}
+                  alt={`preview ${index}`}
+                  fill
+                  className="object-cover rounded-md border border-gray-200"
+                  unoptimized
+                />
                 <button
                   onClick={() => removeFile(index)}
                   className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"

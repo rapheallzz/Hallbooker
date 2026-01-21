@@ -1,5 +1,6 @@
 'use client';
 import Link from "next/link";
+import Image from "next/image";
 import { Star, Eye } from "lucide-react";
 import Slider from "react-slick";
 
@@ -35,21 +36,29 @@ const HallCard = ({ hall }: HallCardProps) => {
             <Slider {...settings} className="hall-card-slick">
               {hall.images.map((image, index) => (
                 <Link href={`/halls/${hall._id}`} key={index}>
-                  <img
-                    className="h-48 w-full object-cover"
-                    src={image}
-                    alt={`${hall.name} image ${index + 1}`}
-                  />
+                  <div className="relative h-48 w-full">
+                    <Image
+                      fill
+                      className="object-cover"
+                      src={image}
+                      alt={`${hall.name} image ${index + 1}`}
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    />
+                  </div>
                 </Link>
               ))}
             </Slider>
           ) : (
             <Link href={`/halls/${hall._id}`}>
-              <img
-                className="h-48 w-full object-cover"
-                src={hall.images && hall.images.length > 0 ? hall.images[0] : "/hall_default.jpg"}
-                alt={hall.name}
-              />
+              <div className="relative h-48 w-full">
+                <Image
+                  fill
+                  className="object-cover"
+                  src={hall.images && hall.images.length > 0 ? hall.images[0] : "/hall_default.jpg"}
+                  alt={hall.name}
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                />
+              </div>
             </Link>
           )}
         </div>
