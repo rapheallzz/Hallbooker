@@ -54,35 +54,35 @@ const HallCard = ({ hall }: HallCardProps) => {
           )}
         </div>
         <Link href={`/halls/${hall._id}`} className="h-full">
-          <div className="p-1.5">
-            <h3 className="text-[11px] font-bold text-gray-800 truncate">{hall.name}</h3>
-          <p className="mt-0 text-[10px] text-gray-500 truncate">{hall.location}</p>
-          <div className="mt-0.5 flex justify-between items-end">
-            <div className="text-[11px] font-semibold text-gray-800 min-h-[3em] flex items-center">
+          <div className="p-3">
+            <h3 className="text-sm font-bold text-gray-800 truncate">{hall.name}</h3>
+          <p className="mt-0.5 text-xs text-gray-500 truncate">{hall.location}</p>
+          <div className="mt-2 flex justify-between items-end">
+            <div className="text-xs font-semibold text-gray-800 min-h-[2.5em] flex items-center">
               {dailyRate && hourlyRate ? (
                 <div>
                   <p>
-                    <span className="font-bold">₦{dailyRate.toLocaleString()}</span> / day
+                    <span className="font-bold text-sm">₦{dailyRate.toLocaleString()}</span>/day
                   </p>
                   <p>
-                    <span className="font-bold">₦{hourlyRate.toLocaleString()}</span> / hour
+                    <span className="font-bold">₦{hourlyRate.toLocaleString()}</span>/hr
                   </p>
                 </div>
               ) : dailyRate ? (
                 <p>
-                  <span className="font-bold">₦{dailyRate.toLocaleString()}</span> / day
+                  <span className="font-bold text-sm">₦{dailyRate.toLocaleString()}</span> / day
                 </p>
               ) : hourlyRate ? (
                 <p>
-                  <span className="font-bold">₦{hourlyRate.toLocaleString()}</span> / hour
+                  <span className="font-bold text-sm">₦{hourlyRate.toLocaleString()}</span> / hour
                 </p>
               ) : (
                 <span className="text-gray-500">Price not available</span>
               )}
             </div>
-            <div className="flex flex-col items-end text-[10px] space-y-0.5 pb-1">
+            <div className="flex flex-col items-end text-[11px] space-y-1 pb-0.5">
               <div className="flex items-center">
-                <Star className="h-3 w-3 text-gray-400 fill-gray-400" />
+                <Star className="h-3.5 w-3.5 text-gray-400 fill-gray-400" />
                 {hall.averageRating > 0 ? (
                   <span className="ml-1 text-gray-400 font-semibold">
                     {hall.averageRating.toFixed(1)}

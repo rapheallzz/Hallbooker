@@ -23,33 +23,30 @@ const Carousel = ({
 }: CarouselProps) => {
   const sliderRef = useRef<Slider>(null);
 
-  // Use the intended slidesToShow instead of limiting by halls.length to maintain item size
-  const baseSlidesToShow = slidesToShow;
-
   const defaultResponsive = [
     {
       breakpoint: 1280,
       settings: {
-        slidesToShow: 7,
+        slidesToShow: 6,
         slidesToScroll: 1,
       },
     },
     {
       breakpoint: 1024,
       settings: {
-        slidesToShow: 5,
+        slidesToShow: 4,
         slidesToScroll: 1,
       },
     },
     {
       breakpoint: 768,
       settings: {
-        slidesToShow: 3,
+        slidesToShow: 2,
         slidesToScroll: 1,
       },
     },
     {
-      breakpoint: 640,
+      breakpoint: 480,
       settings: {
         slidesToShow: 2,
         slidesToScroll: 1,
@@ -59,12 +56,13 @@ const Carousel = ({
 
   const settings = {
     dots: false,
-    infinite: halls.length > 2,
+    infinite: halls.length > slidesToShow,
     speed: 500,
-    slidesToShow: 2, // Start with 2 for mobile (mobileFirst)
+    slidesToShow: slidesToShow,
     slidesToScroll: 1,
     arrows: false,
-    mobileFirst: true, // Use mobile-first breakpoints
+    draggable: true,
+    swipeToSlide: true,
     responsive: responsive || defaultResponsive,
   };
 
@@ -76,44 +74,38 @@ const Carousel = ({
     sliderRef.current?.slickPrev();
   };
 
-
-  // Use provided gridThreshold, or default to slidesToShow + 1.
-  // This ensures that if the items fit in one row, we use a left-aligned grid instead of a carousel.
-  const actualGridThreshold = gridThreshold ?? (slidesToShow + 1);
+  // If we have few items, show them in a grid instead of a carousel
+  const actualGridThreshold = gridThreshold ?? 3;
 
   if (halls.length < actualGridThreshold) {
-    // Maintain item size by using a grid that matches the carousel's visible slots at different breakpoints
-    const gridColsClass =
-      slidesToShow === DEFAULT_SLIDES_TO_SHOW
-        ? 'grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7'
-        : 'grid-cols-2 sm:grid-cols-2 md:grid-cols-3';
-
     return (
-      <div className={`grid ${gridColsClass} gap-4 overflow-hidden`}>
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {halls.map((hall) => (
-          <HallCard key={hall._id} hall={hall} />
+          <div key={hall._id} className="w-full">
+            <HallCard hall={hall} />
+          </div>
         ))}
       </div>
     );
   }
 
   return (
-    <div className="relative">
-      {halls.length > settings.slidesToShow && (
+    <div className="relative group">
+      {halls.length > 2 && (
         <>
-          <PrevArrow onClick={goToPrev} />
-          <NextArrow onClick={goToNext} />
+           <PrevArrow onClick={goToPrev} />
+           <NextArrow onClick={goToNext} />
         </>
       )}
-      <Slider ref={sliderRef} {...settings}>
-        {halls.map((hall) => {
-          return (
-            <div key={hall._id} className="px-2">
-              <HallCard key={hall._id} hall={hall} />
+      <div className="mx-[-8px]">
+        <Slider ref={sliderRef} {...settings}>
+          {halls.map((hall) => (
+            <div key={hall._id} className="px-2 pb-4">
+              <HallCard hall={hall} />
             </div>
-          );
-        })}
-      </Slider>
+          ))}
+        </Slider>
+      </div>
     </div>
   );
 };

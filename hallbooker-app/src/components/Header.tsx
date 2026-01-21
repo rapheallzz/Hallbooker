@@ -169,7 +169,7 @@ const Header = () => {
           </div>
 
           {scrolled && (
-            <div className="flex-grow">
+            <div className="hidden lg:block flex-grow">
               <CollapsedSearchBar />
             </div>
           )}
@@ -285,7 +285,7 @@ const Header = () => {
           </div>
 
           {/* Mobile Menu Toggle */}
-          <div className="md:hidden flex items-center space-x-2">
+          <div className="lg:hidden flex items-center space-x-2">
             {user && (
               <div className="relative mr-2">
                  <button
@@ -305,7 +305,9 @@ const Header = () => {
             )}
             <button
               onClick={() => setMobileMenuOpen(true)}
-              className={`p-2 rounded-md ${scrolled ? 'text-gray-900' : 'text-gray-800 md:text-white'}`}
+              className={`p-2 rounded-md transition-colors ${
+                scrolled ? 'text-gray-900 bg-gray-100' : 'text-gray-800 bg-white/80 backdrop-blur-sm shadow-sm'
+              }`}
             >
               <Menu className="w-6 h-6" />
             </button>
@@ -399,10 +401,16 @@ const Header = () => {
                         </div>
                       )}
 
-                      <div className="pt-4">
+                      <div className="pt-4 px-2">
                         {renderBecomeOwnerButton() && (
-                           <div className="p-3">
-                             {renderBecomeOwnerButton()}
+                           <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10">
+                             <div className="flex flex-col space-y-3">
+                               <p className="text-sm text-gray-600 font-semibold">Have a space to share?</p>
+                               <div className="[&>a]:!block [&>a]:w-full [&>a]:py-3 [&>a]:!bg-primary [&>a]:!text-white [&>a]:text-center [&>a]:rounded-xl [&>a]:font-bold [&>a]:shadow-md [&>a]:shadow-primary/20
+                                             [&>button]:!block [&>button]:w-full [&>button]:py-3 [&>button]:!bg-primary [&>button]:!text-white [&>button]:text-center [&>button]:rounded-xl [&>button]:font-bold [&>button]:shadow-md [&>button]:shadow-primary/20">
+                                 {renderBecomeOwnerButton()}
+                               </div>
+                             </div>
                            </div>
                         )}
                       </div>
@@ -423,6 +431,19 @@ const Header = () => {
                     >
                       Register
                     </Link>
+
+                    {renderBecomeOwnerButton() && (
+                      <div className="pt-4">
+                        <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10">
+                          <div className="flex flex-col space-y-3">
+                            <p className="text-sm text-gray-600 font-semibold">Have a space to share?</p>
+                            <div className="[&>a]:!block [&>a]:w-full [&>a]:py-3 [&>a]:!bg-primary [&>a]:!text-white [&>a]:text-center [&>a]:rounded-xl [&>a]:font-bold [&>a]:shadow-md [&>a]:shadow-primary/20">
+                              {renderBecomeOwnerButton()}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
