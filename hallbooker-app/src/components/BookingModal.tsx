@@ -275,6 +275,8 @@ const BookingModal: FC<BookingModalProps> = ({
       const payload = {
         hallId,
         bookingDates,
+        startTime: bookingDates[0].startTime,
+        endTime: bookingDates[0].endTime,
         eventDetails,
         selectedFacilities: facilitiesPayload,
       };

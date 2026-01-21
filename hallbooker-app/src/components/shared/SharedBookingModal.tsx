@@ -445,12 +445,13 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
       paymentStatus,
       selectedFacilities,
       bookingDates,
-      recurrenceType: recurrenceType,
+      startTime: bookingDates[0].startTime,
+      endTime: bookingDates[0].endTime,
     };
 
     if (recurrenceType === 'weekly' || recurrenceType === 'monthly') {
       const recurrenceRule: Record<string, unknown> = {
-        endDate: recurringEndDate ? parseLocalDate(recurringEndDate).toISOString() : bookingDates[bookingDates.length - 1].endTime,
+        endDate: recurringEndDate || format(parseISO(bookingDates[bookingDates.length - 1].endTime), 'yyyy-MM-dd'),
       };
       if (recurrenceType === 'weekly') {
         recurrenceRule.frequency = 'weekly';
@@ -532,6 +533,8 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
     onSubmit({
       hallId: hall,
       bookingDates,
+      startTime: bookingDates[0].startTime,
+      endTime: bookingDates[0].endTime,
       eventDetails,
       walkInUserDetails,
       paymentMethod,
@@ -575,6 +578,8 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
     onSubmit({
       hallId: hall,
       bookingDates,
+      startTime: bookingDates[0].startTime,
+      endTime: bookingDates[0].endTime,
       eventDetails,
       walkInUserDetails,
       paymentMethod,
