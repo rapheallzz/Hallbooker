@@ -131,15 +131,15 @@ const HomePage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <main className="container mx-auto px-4 pt-24 pb-8 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">
+      <main className="container mx-auto px-4 pt-20 pb-8 sm:px-6 lg:px-8">
+        <div className="text-center mb-8 md:mb-12">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-gray-900 tracking-tight px-2">
             Find the perfect hall for your next event
           </h1>
-          <p className="mt-4 text-lg text-gray-600">
+          <p className="mt-3 md:mt-4 text-sm sm:text-base md:text-lg text-gray-600 max-w-2xl mx-auto">
             Browse through our curated list of halls and book with ease.
           </p>
-          <div className="mt-8">
+          <div className="mt-6 md:mt-8">
             {!scrolled && <SearchBar onSearch={handleSearch} />}
           </div>
         </div>
@@ -162,51 +162,51 @@ const HomePage = () => {
         {error && <p className="mt-8 text-center text-red-600">{error}</p>}
 
         {!loading && !error && (
-          <div className="space-y-12">
+          <div className="space-y-8 md:space-y-12">
             {popularHalls.length > 0 && (
               <section>
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Popular Halls</h2>
+                <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6">Popular Halls</h2>
                 <Carousel halls={popularHalls} />
               </section>
             )}
 
             {closestHalls.length > 0 && (
               <section>
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Closest to You</h2>
+                <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6">Closest to You</h2>
                 <Carousel halls={closestHalls} />
               </section>
             )}
 
             {highlyRatedHalls.length > 0 && (
               <section>
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Highly Rated</h2>
+                <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6">Highly Rated</h2>
                 <Carousel halls={highlyRatedHalls} />
               </section>
             )}
 
             {newlyAddedHalls.length > 0 && (
               <section>
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Newly Added</h2>
+                <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6">Newly Added</h2>
                 <Carousel halls={newlyAddedHalls} />
               </section>
             )}
 
             {largeCapacityHalls.length > 0 && (
               <section>
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Large Capacity Halls</h2>
+                <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6">Large Capacity Halls</h2>
                 <Carousel halls={largeCapacityHalls} />
               </section>
             )}
 
             {budgetFriendlyHalls.length > 0 && (
               <section>
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Budget Friendly</h2>
+                <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6">Budget Friendly</h2>
                 <Carousel halls={budgetFriendlyHalls} />
               </section>
             )}
 
             <section>
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Featured Locations</h2>
+              <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6">Featured Locations</h2>
               <Carousel halls={allHalls.slice(0, 7)} />
             </section>
           </div>

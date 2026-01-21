@@ -57,9 +57,9 @@ const Carousel = ({
     {
       breakpoint: 639, // Match Tailwind sm breakpoint (below 640px)
       settings: {
-        slidesToShow: 1,
+        slidesToShow: 2,
         slidesToScroll: 1,
-        infinite: halls.length > 1,
+        infinite: halls.length > 2,
       },
     },
   ];
@@ -91,8 +91,8 @@ const Carousel = ({
     // Maintain item size by using a grid that matches the carousel's visible slots at different breakpoints
     const gridColsClass =
       slidesToShow === DEFAULT_SLIDES_TO_SHOW
-        ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7'
-        : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3';
+        ? 'grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7'
+        : 'grid-cols-2 sm:grid-cols-2 md:grid-cols-3';
 
     return (
       <div className={`grid ${gridColsClass} gap-4 overflow-hidden`}>

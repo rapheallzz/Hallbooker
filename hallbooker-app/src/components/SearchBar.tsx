@@ -65,10 +65,10 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
   };
 
   return (
-    <form onSubmit={handleSearch} className="bg-white rounded-full shadow-lg p-2 flex items-center w-full max-w-5xl mx-auto">
+    <form onSubmit={handleSearch} className="bg-white rounded-3xl md:rounded-full shadow-lg p-2 flex flex-col md:flex-row items-stretch md:items-center w-full max-w-5xl mx-auto">
       <div className="flex-1 relative group" ref={locationRef}>
         <div
-          className="p-4 rounded-full hover:bg-gray-100 cursor-pointer"
+          className="p-3 md:p-4 rounded-2xl md:rounded-full hover:bg-gray-100 cursor-pointer"
           onClick={() => setShowLocations(true)}
         >
           <label
@@ -87,7 +87,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
           />
         </div>
         {showLocations && (
-          <div className="absolute z-10 w-full mt-1 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+          <div className="absolute z-20 w-full mt-1 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
             <ul className="py-2">
               {locations.map((loc) => (
                 <li
@@ -108,7 +108,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
 
       <div className="flex-1 relative group" ref={priceRef}>
         <div
-          className="p-4 rounded-full hover:bg-gray-100 cursor-pointer"
+          className="p-3 md:p-4 rounded-2xl md:rounded-full hover:bg-gray-100 cursor-pointer border-t md:border-t-0 md:border-l border-gray-100"
           onClick={() => setShowPrice(!showPrice)}
         >
           <label
@@ -122,7 +122,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
           </div>
         </div>
         {showPrice && (
-          <div className="absolute z-10 w-64 mt-1 p-4 bg-white rounded-xl shadow-lg border border-gray-100">
+          <div className="absolute z-20 w-full md:w-64 mt-1 p-4 bg-white rounded-xl shadow-lg border border-gray-100">
              <div className="space-y-4">
                <div>
                  <label className="block text-xs text-gray-500 mb-1">Min Price (₦)</label>
@@ -151,7 +151,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
 
       <div className="flex-1 relative group" ref={calendarRef}>
         <div
-          className="p-4 rounded-full hover:bg-gray-100 cursor-pointer"
+          className="p-3 md:p-4 rounded-2xl md:rounded-full hover:bg-gray-100 cursor-pointer border-t md:border-t-0 md:border-l border-gray-100"
           onClick={() => setShowCalendar(!showCalendar)}
         >
           <label
@@ -167,7 +167,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
           </div>
         </div>
         {showCalendar && (
-          <div className="absolute z-10 mt-2 left-1/2 transform -translate-x-1/2 bg-white rounded-xl shadow-lg border border-gray-100 p-2">
+          <div className="absolute z-30 mt-2 left-1/2 transform -translate-x-1/2 bg-white rounded-xl shadow-lg border border-gray-100 p-2 overflow-auto max-w-[90vw]">
             <style>{`
               .rdp-day_selected, .rdp-day_selected:hover {
                 background-color: #295FA7 !important;
@@ -191,7 +191,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
 
       <div className="flex-1 relative group" ref={capacityRef}>
         <div
-          className="p-4 rounded-full hover:bg-gray-100 cursor-pointer"
+          className="p-3 md:p-4 rounded-2xl md:rounded-full hover:bg-gray-100 cursor-pointer border-t md:border-t-0 md:border-l border-gray-100"
           onClick={() => setShowCapacity(!showCapacity)}
         >
           <label
@@ -208,7 +208,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
           />
         </div>
         {showCapacity && (
-          <div className="absolute z-10 w-full mt-1 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+          <div className="absolute z-20 w-full mt-1 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
             <ul className="py-2">
               {capacities.map((cap) => (
                 <li
@@ -227,10 +227,11 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
         )}
       </div>
 
-      <button type="submit" className="bg-[#295FA7] hover:bg-blue-700 text-white rounded-full p-4 mr-2">
+      <button type="submit" className="bg-[#295FA7] hover:bg-blue-700 text-white rounded-2xl md:rounded-full p-4 mt-2 md:mt-0 md:mr-2 flex items-center justify-center space-x-2 md:space-x-0">
+        <span className="md:hidden font-bold">Search</span>
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          className="h-6 w-6"
+          className="h-5 w-5 md:h-6 md:w-6"
           fill="none"
           viewBox="0 0 24"
           stroke="currentColor"

@@ -7,19 +7,12 @@
    - Network:      http://192.168.0.2:3000
 
  ✓ Starting...
- ✓ Ready in 4s
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+
+ ✓ Ready in 3.6s
  ○ Compiling / ...
- ✓ Compiled / in 7.6s (2814 modules)
- GET / 200 in 9536ms
- ○ Compiling /halls/[id] ...
- ✓ Compiled /halls/[id] in 1781ms (2906 modules)
- GET /halls/696f5e9bd0fe2e123e4daf6d 200 in 3234ms
- GET /halls/696f5e9bd0fe2e123e4daf6d 200 in 172ms
- GET /halls/696f5e9bd0fe2e123e4daf6d 200 in 143ms
- GET /halls/696f5e9bd0fe2e123e4daf6d 200 in 145ms
- GET /halls/696f5e9bd0fe2e123e4daf6d 200 in 180ms
- ✓ Compiled in 1228ms (2906 modules)
- ✓ Compiled in 243ms (1341 modules)
- ✓ Compiled in 215ms (1341 modules)
- GET /halls/696f5e9bd0fe2e123e4daf6d 200 in 636ms
- GET /halls/696f5e9bd0fe2e123e4daf6d 200 in 190ms
+ ✓ Compiled / in 19s (3681 modules)
+ GET / 200 in 23782ms

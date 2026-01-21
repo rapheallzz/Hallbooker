@@ -3,7 +3,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import api from "@/services/api";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Menu, X, ChevronRight, LogOut, LayoutDashboard, UserCircle, Bell } from "lucide-react";
 import useOnClickOutside from "@/hooks/useOnClickOutside";
 import useScroll from "@/hooks/useScroll";
 import CollapsedSearchBar from "./CollapsedSearchBar";
@@ -21,10 +23,26 @@ const Header = () => {
   const [roleSwitchOpen, setRoleSwitchOpen] = useState(false);
   const [notificationDropdownOpen, setNotificationDropdownOpen] = useState(false);
   const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const notificationDropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const scrolled = useScroll(100);
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [router]);
+
+  // Prevent scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+  }, [mobileMenuOpen]);
+
   useOnClickOutside(dropdownRef, () => setDropdownOpen(false));
   useOnClickOutside(notificationDropdownRef, () =>
     setNotificationDropdownOpen(false)
@@ -155,7 +173,7 @@ const Header = () => {
             </div>
           )}
 
-          <div className="flex items-center space-x-4">
+          <div className="hidden md:flex items-center space-x-4">
             {renderBecomeOwnerButton()}
             {message && <p>{message}</p>}
              {isTermsModalOpen && (
@@ -264,8 +282,176 @@ const Header = () => {
               </Link>
             )}
           </div>
+
+          {/* Mobile Menu Toggle */}
+          <div className="md:hidden flex items-center space-x-2">
+            {user && (
+              <div className="relative mr-2">
+                 <button
+                    onClick={() =>
+                      setNotificationDropdownOpen(!notificationDropdownOpen)
+                    }
+                    className="p-2"
+                  >
+                    <NotificationIcon />
+                  </button>
+                  {notificationDropdownOpen && (
+                    <div className="absolute right-0 mt-2 z-[60]">
+                       <NotificationDropdown />
+                    </div>
+                  )}
+              </div>
+            )}
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              className={`p-2 rounded-md ${scrolled ? 'text-gray-900' : 'text-gray-800 md:text-white'}`}
+            >
+              <Menu className="w-6 h-6" />
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Mobile Menu Overlay & Sidebar */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setMobileMenuOpen(false)}
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] md:hidden"
+            />
+
+            {/* Side Panel */}
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="fixed right-0 top-0 bottom-0 w-[80%] max-w-sm bg-white shadow-2xl z-[101] md:hidden flex flex-col"
+            >
+              <div className="p-4 flex items-center justify-between border-b">
+                <span className="text-xl font-bold text-primary">HallBooker</span>
+                <button
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                  <X className="w-6 h-6 text-gray-600" />
+                </button>
+              </div>
+
+              <div className="flex-grow overflow-y-auto py-6 px-4">
+                {user ? (
+                  <div className="space-y-6">
+                    {/* User Info */}
+                    <div className="flex items-center space-x-3 pb-6 border-b">
+                      <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                        <UserCircle className="w-8 h-8 text-primary" />
+                      </div>
+                      <div className="overflow-hidden">
+                        <p className="font-bold text-gray-900 truncate">
+                          {user.fullName || "User"}
+                        </p>
+                        <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                      </div>
+                    </div>
+
+                    {/* Nav Links */}
+                    <nav className="space-y-2">
+                      <Link
+                        href={dashboardUrl}
+                        className="flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 transition-colors group"
+                      >
+                        <div className="flex items-center space-x-3">
+                          <LayoutDashboard className="w-5 h-5 text-gray-500 group-hover:text-primary" />
+                          <span className="font-medium text-gray-700 group-hover:text-primary">Dashboard</span>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-gray-400" />
+                      </Link>
+
+                      {user.role && user.role.length > 1 && (
+                        <div className="pt-4">
+                          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3 mb-2">
+                            Switch Account
+                          </p>
+                          <div className="grid grid-cols-1 gap-1">
+                            {user.role.map((role) => (
+                              <button
+                                key={role}
+                                onClick={() => handleRoleSwitch(role)}
+                                className={`flex items-center justify-between p-3 rounded-xl transition-colors ${
+                                  user.activeRole === role
+                                    ? 'bg-primary/5 text-primary'
+                                    : 'hover:bg-gray-50 text-gray-700'
+                                }`}
+                              >
+                                <span className="capitalize">{role}</span>
+                                {user.activeRole === role && (
+                                  <div className="w-2 h-2 rounded-full bg-primary" />
+                                )}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="pt-4">
+                        {renderBecomeOwnerButton() && (
+                           <div className="p-3">
+                             {renderBecomeOwnerButton()}
+                           </div>
+                        )}
+                      </div>
+                    </nav>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <p className="text-gray-600 text-sm">Log in to book halls and manage your reservations.</p>
+                    <Link
+                      href="/auth/login"
+                      className="block w-full py-3 text-center bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20"
+                    >
+                      Login
+                    </Link>
+                    <Link
+                      href="/auth/register"
+                      className="block w-full py-3 text-center border-2 border-primary text-primary font-bold rounded-xl"
+                    >
+                      Register
+                    </Link>
+                  </div>
+                )}
+              </div>
+
+              {user && (
+                <div className="p-4 border-t mt-auto">
+                  <button
+                    onClick={logout}
+                    className="flex items-center space-x-3 w-full p-3 rounded-xl text-red-600 hover:bg-red-50 transition-colors font-medium"
+                  >
+                    <LogOut className="w-5 h-5" />
+                    <span>Logout</span>
+                  </button>
+                </div>
+              )}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Global Terms Modal for Mobile as well */}
+      {isTermsModalOpen && (
+        <TermsOfServiceModal
+          onClose={() => setIsTermsModalOpen(false)}
+          onContinue={() => {
+            setIsTermsModalOpen(false);
+            handleApply();
+          }}
+        />
+      )}
     </header>
   );
 };
