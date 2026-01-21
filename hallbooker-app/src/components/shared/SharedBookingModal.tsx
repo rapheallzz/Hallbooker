@@ -446,7 +446,6 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
       selectedFacilities,
       bookingDates,
       recurrenceType: recurrenceType,
-      dates: bookingDates.map(bd => bd.startTime),
     };
 
     if (recurrenceType === 'weekly' || recurrenceType === 'monthly') {
