@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import api from '@/services/api';
 import { format as formatDate } from 'date-fns';
-import { DateRange } from 'react-date-range';
+import { DateRange, Range } from 'react-date-range';
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
 import useOnClickOutside from '@/hooks/useOnClickOutside';
@@ -26,8 +26,9 @@ const Cell = dynamic(() => import('recharts').then(mod => mod.Cell), { ssr: fals
 interface PlatformRevenue { totalBookingRevenue: number; totalSubscriptionRevenue: number; grandTotal: number; }
 interface CommissionAnalytics { commissionRate: string; totalCommission: number; commissionableRevenue: number; }
 interface HallPerformance { _id: string; owner: { _id: string; fullName: string; email: string; }; name: string; revenue: number; bookingCount: number; viewCount: number; score: number; }
+interface InactiveHall { hallId: string; hallName: string; ownerName?: string; }
 interface DataComparison { currentPeriod: { from: string; to: string; bookingRevenue: number; subscriptionRevenue: number; }; previousPeriod: { from: string; to: string; bookingRevenue: number; subscriptionRevenue: number; }; change: { bookingRevenuePercentage: string; subscriptionRevenuePercentage: string; }; }
-interface AdminAnalyticsData { platformRevenue: PlatformRevenue; commissionAnalytics: CommissionAnalytics; hallPerformance: { mostActiveHalls: HallPerformance[]; inactiveHalls: any[]; }; dataComparison: DataComparison; }
+interface AdminAnalyticsData { platformRevenue: PlatformRevenue; commissionAnalytics: CommissionAnalytics; hallPerformance: { mostActiveHalls: HallPerformance[]; inactiveHalls: InactiveHall[]; }; dataComparison: DataComparison; }
 
 const formatCurrency = (amount: number) => new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(amount);
 
@@ -43,22 +44,24 @@ const AdminStatCard = ({ title, value, trend }: { title: string; value: string |
 const AdminEnhancedAnalytics = () => {
   const [data, setData] = useState<AdminAnalyticsData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [dateRange, setDateRange] = useState([{ startDate: new Date(new Date().setDate(new Date().getDate() - 7)), endDate: new Date(), key: 'selection' }]);
+  const [dateRange, setDateRange] = useState<Range[]>([{ startDate: new Date(new Date().setDate(new Date().getDate() - 7)), endDate: new Date(), key: 'selection' }]);
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const datePickerRef = useRef(null);
+  const datePickerRef = useRef<HTMLDivElement>(null);
   useOnClickOutside(datePickerRef, () => setShowDatePicker(false));
 
   const fetchAdminAnalytics = useCallback(async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({ startDate: formatDate(dateRange[0].startDate, 'yyyy-MM-dd'), endDate: formatDate(dateRange[0].endDate, 'yyyy-MM-dd') });
+      const startDateStr = dateRange[0].startDate ? formatDate(dateRange[0].startDate, 'yyyy-MM-dd') : '';
+      const endDateStr = dateRange[0].endDate ? formatDate(dateRange[0].endDate, 'yyyy-MM-dd') : '';
+      const params = new URLSearchParams({ startDate: startDateStr, endDate: endDateStr });
       const response = await api.get(`../v2/analytics/super-admin?${params.toString()}`);
       if (response.data?.success) {
         setData(response.data.data);
       } else {
         throw new Error(response.data.message || 'Failed to fetch');
       }
-    } catch (err: any) { console.error(err); setData(null); }
+    } catch (err: unknown) { console.error(err); setData(null); }
     finally { setLoading(false); }
   }, [dateRange]);
 
@@ -71,12 +74,14 @@ const AdminEnhancedAnalytics = () => {
   ] : [];
   const COLORS = ['#295FA7', '#B68945'];
 
+  const formattedDateRange = `${dateRange[0].startDate ? formatDate(dateRange[0].startDate, "MMM d, yyyy") : ''} - ${dateRange[0].endDate ? formatDate(dateRange[0].endDate, "MMM d, yyyy") : ''}`;
+
   return (
     <div className="p-6 bg-gray-50 min-h-screen space-y-6">
-      <div><h1 className="text-3xl font-bold text-gray-800">Admin Dashboard</h1><p className="text-gray-500">A top-level overview of the platform's performance.</p></div>
+      <div><h1 className="text-3xl font-bold text-gray-800">Admin Dashboard</h1><p className="text-gray-500">A top-level overview of the platform&apos;s performance.</p></div>
       <div className="p-4 bg-white rounded-lg shadow-md flex items-center gap-4">
         <div className="relative" ref={datePickerRef}>
-            <button onClick={() => setShowDatePicker(d => !d)} className="w-64 border rounded-md p-2 flex items-center justify-between"><CalendarIcon className="h-5 w-5 mr-2 text-gray-500"/><span>{`${formatDate(dateRange[0].startDate, "MMM d, yyyy")} - ${formatDate(dateRange[0].endDate, "MMM d, yyyy")}`}</span><ChevronDown className="h-5 w-5 text-gray-500"/></button>
+            <button onClick={() => setShowDatePicker(d => !d)} className="w-64 border rounded-md p-2 flex items-center justify-between"><CalendarIcon className="h-5 w-5 mr-2 text-gray-500"/><span>{formattedDateRange}</span><ChevronDown className="h-5 w-5 text-gray-500"/></button>
             {showDatePicker && (<div className="absolute top-full mt-2 z-10 shadow-lg border rounded-md bg-white"><DateRange editableDateInputs={true} onChange={item => setDateRange([item.selection])} moveRangeOnFirstSelection={false} ranges={dateRange} /></div>)}
         </div>
       </div>
@@ -112,7 +117,7 @@ const AdminEnhancedAnalytics = () => {
                   <h2 className="text-xl font-bold text-gray-800 mb-4">Revenue Sources</h2>
                   <ResponsiveContainer width="100%" height={300}>
                       <PieChart>
-                          <Pie data={revenueBreakdownData} cx="50%" cy="50%" labelLine={false} outerRadius={100} fill="#8884d8" dataKey="value" nameKey="name" label={(entry) => `${(entry.percent * 100).toFixed(0)}%`}>
+                          <Pie data={revenueBreakdownData} cx="50%" cy="50%" labelLine={false} outerRadius={100} fill="#8884d8" dataKey="value" nameKey="name" label={(entry) => entry.percent !== undefined ? `${(entry.percent * 100).toFixed(0)}%` : ''}>
                               {revenueBreakdownData.map((entry, index) => (<Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />))}
                           </Pie>
                           <Tooltip formatter={(value) => `${formatCurrency(value as number)}`} />

@@ -19,7 +19,7 @@ const withAuth = <P extends object>(
       if (!loading) {
         if (!user) {
           router.replace('/auth/login');
-        } else if (!user.role || !user.role.some(role => allowedRoles.includes(role))) {
+        } else if (!user.role || !user.role.some(role => (allowedRoles as string[]).includes(role))) {
           // Redirect to a relevant page based on role if they try to access a forbidden page
           if (user.role && user.role.includes('super-admin')) {
             router.replace('/admin/dashboard');
@@ -43,7 +43,7 @@ const withAuth = <P extends object>(
 
     // Once loaded, if user doesn't have the right role, they will be redirected by the useEffect.
     // We can show a loading state or nothing while the redirect happens.
-    if (!user.role || !user.role.some(role => allowedRoles.includes(role))) {
+    if (!user.role || !user.role.some(role => (allowedRoles as string[]).includes(role))) {
       return (
         <div className="flex items-center justify-center min-h-screen">
           <p>Redirecting...</p>

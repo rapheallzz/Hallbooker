@@ -31,6 +31,7 @@ interface DecodedToken {
 
 interface AuthContextType {
   user: User | null;
+  activeRole: string | null;
   token: string | null;
   loading: boolean;
   login: (token: string, user: User) => void;
@@ -146,7 +147,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout, updateToken, updateUserApplicationStatus }}>
+    <AuthContext.Provider value={{ user, activeRole: user?.activeRole || null, token, loading, login, logout, updateToken, updateUserApplicationStatus }}>
       {children}
     </AuthContext.Provider>
   );

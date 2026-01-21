@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import { DateRange } from 'react-day-picker';
 import Carousel from '@/components/Carousel';
 import SkeletonCard from '@/components/SkeletonCard';
 import SearchBar from '@/components/SearchBar';
@@ -53,7 +54,7 @@ const HomePage = () => {
     }
   }, []);
 
-  const handleSearch = (filters: { location: string; dateRange: any; capacity: string; priceRange: [number, number] }) => {
+  const handleSearch = (filters: { location: string; dateRange: DateRange | undefined; capacity: string; priceRange: [number, number] }) => {
     const { location, capacity, priceRange, dateRange } = filters;
     const [minPrice, maxPrice] = priceRange;
 

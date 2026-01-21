@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { Booking } from "@/types";
+import { Booking, Hall } from "@/types";
 
 interface BookingCardProps {
   booking: Booking;
@@ -10,11 +10,14 @@ interface BookingCardProps {
 }
 
 const BookingCard: React.FC<BookingCardProps> = ({ booking, onViewReceipt, onReview, isPast }) => {
+  const hall = typeof booking.hall === 'object' ? (booking.hall as Hall) : null;
+  const hallName = hall ? hall.name : "Hall details unavailable";
+
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden transform hover:scale-105 transition-transform duration-300">
       <div className="p-6">
         <h3 className="text-xl font-semibold text-gray-800">
-          {booking.hall ? booking.hall.name : "Hall details unavailable"}
+          {hallName}
         </h3>
         <p className="text-gray-600 mt-2">Booking ID: {booking.bookingId}</p>
         <p className="text-gray-600">
@@ -27,9 +30,9 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, onViewReceipt, onRev
           {isPast && (
             <button
               onClick={() => onReview(booking)}
-              disabled={!booking.hall}
+              disabled={!hall}
               className={`py-2 px-4 rounded-md transition-colors duration-300 text-center flex-1 ${
-                !booking.hall
+                !hall
                   ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                   : "bg-primary text-white hover:bg-opacity-90"
               }`}
@@ -39,9 +42,9 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, onViewReceipt, onRev
           )}
           <button
             onClick={() => onViewReceipt(booking.bookingId)}
-            disabled={!booking.hall}
+            disabled={!hall}
             className={`py-2 px-4 rounded-md transition-colors duration-300 text-center ${
-              !booking.hall
+              !hall
                 ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                 : "bg-gray-200 text-gray-800 hover:bg-gray-300"
             }`}

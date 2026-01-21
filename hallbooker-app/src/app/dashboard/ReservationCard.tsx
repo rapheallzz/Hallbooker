@@ -1,15 +1,23 @@
 
 "use client";
 import React from "react";
+import { Reservation, Hall } from "@/types";
 
-const ReservationCard = ({ reservation, onCompleteBooking, onViewReceipt }) => {
+interface ReservationCardProps {
+  reservation: Reservation;
+  onCompleteBooking: (reservation: Reservation) => void;
+  onViewReceipt: (id: string) => void;
+}
+
+const ReservationCard: React.FC<ReservationCardProps> = ({ reservation, onCompleteBooking, onViewReceipt }) => {
+  const hall = typeof reservation.hall === "object" ? (reservation.hall as Hall) : null;
+  const hallName = hall ? hall.name : "Hall details unavailable";
+
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden transform hover:scale-105 transition-transform duration-300">
       <div className="p-6">
         <h3 className="text-xl font-semibold text-gray-800">
-          {reservation.hall && typeof reservation.hall === "object"
-            ? (reservation.hall as { name: string }).name
-            : "Hall details unavailable"}
+          {hallName}
         </h3>
         <p className="text-gray-600 mt-2">Reservation ID: {reservation.reservationId}</p>
         <p className="text-gray-600">
@@ -39,9 +47,9 @@ const ReservationCard = ({ reservation, onCompleteBooking, onViewReceipt }) => {
           {reservation.status === "ACTIVE" && (
             <button
               onClick={() => onCompleteBooking(reservation)}
-              disabled={!reservation.hall || typeof reservation.hall !== "object"}
+              disabled={!hall}
               className={`px-4 py-2 rounded-md transition-colors ${
-                !reservation.hall || typeof reservation.hall !== "object"
+                !hall
                   ? "bg-primary/50 text-white cursor-not-allowed"
                   : "bg-primary text-white hover:bg-primary-dark"
               }`}
@@ -51,9 +59,9 @@ const ReservationCard = ({ reservation, onCompleteBooking, onViewReceipt }) => {
           )}
           <button
             onClick={() => onViewReceipt(reservation.reservationId)}
-            disabled={!reservation.hall || typeof reservation.hall !== "object"}
+            disabled={!hall}
             className={`px-4 py-2 rounded-md transition-colors ${
-              !reservation.hall || typeof reservation.hall !== "object"
+              !hall
                 ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                 : "bg-gray-200 text-gray-800 hover:bg-gray-300"
             }`}

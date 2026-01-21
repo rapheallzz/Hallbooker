@@ -21,8 +21,37 @@ import {
 interface BookingModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (formData: unknown, type: string) => void;
+  onSubmit: (formData: Record<string, unknown>, type: string) => void;
   userRole: 'admin' | 'vendor';
+}
+
+interface FacilityItem {
+  _id: string;
+  facility?: {
+    _id: string;
+    name: string;
+  };
+  name: string;
+  cost: number;
+  chargeMethod: string;
+  quantity: number;
+}
+
+interface HallItem {
+  _id: string;
+  name: string;
+  facilities: FacilityItem[];
+  pricing: {
+    dailyRate?: number;
+    hourlyRate?: number;
+  };
+}
+
+interface UnavailableDate {
+  bufferTime: {
+    startTime: string;
+    endTime: string;
+  };
 }
 
 const parseLocalDate = (dateStr: string) => {
@@ -39,15 +68,15 @@ const formatLabel = (label: string) => {
 
 const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSubmit, userRole }) => {
   const [activeTab, setActiveTab] = useState('reservation');
-  const [halls, setHalls] = useState([]);
-  const [facilities, setFacilities] = useState([]);
+  const [halls, setHalls] = useState<HallItem[]>([]);
+  const [facilities, setFacilities] = useState<FacilityItem[]>([]);
   const [error, setError] = useState('');
   const [hallPrice, setHallPrice] = useState(0);
   const [facilitiesPrice, setFacilitiesPrice] = useState(0);
   const [totalPrice, setTotalPrice] = useState(0);
   const [usePerDateTimes, setUsePerDateTimes] = useState(false);
   const [dateTimes, setDateTimes] = useState<Record<string, { startTime: string; endTime: string }>>({});
-  const [paymentOptions, setPaymentOptions] = useState({ paymentMethods: [], paymentStatuses: [] });
+  const [paymentOptions, setPaymentOptions] = useState<{ paymentMethods: string[]; paymentStatuses: string[] }>({ paymentMethods: [], paymentStatuses: [] });
   const [displayedMonth, setDisplayedMonth] = useState(new Date());
   const [unavailableDates, setUnavailableDates] = useState<Date[]>([]);
   const [recurrencePattern, setRecurrencePattern] = useState<'none' | 'weekly' | 'monthly-fixed' | 'monthly-relative'>('none');
@@ -67,7 +96,7 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
     phone: '',
     paymentMethod: 'CASH',
     paymentStatus: 'pending',
-    selectedFacilities: [],
+    selectedFacilities: [] as { facilityId: string; quantity: number }[],
   });
 
   useEffect(() => {
@@ -82,10 +111,10 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
         const response = await api.get(`/halls/${formData.hall}/unavailable-dates`, {
           params: { startDate, endDate },
         });
-        const dates = (response.data.data || []).map((ud: any) => parseISO(ud.bufferTime.startTime));
+        const dates = (response.data.data || []).map((ud: UnavailableDate) => parseISO(ud.bufferTime.startTime));
         setUnavailableDates(dates);
-      } catch (error) {
-        console.error('Failed to fetch unavailable dates:', error);
+      } catch (err) {
+        console.error('Failed to fetch unavailable dates:', err);
         setUnavailableDates([]);
       }
     };
@@ -98,9 +127,9 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
         try {
           const endpoint = userRole === 'admin' ? '/halls' : '/halls/by-owner';
           const response = await api.get(endpoint);
-          setHalls(response.data.data);
-        } catch (error) {
-          console.error('Failed to fetch halls:', error);
+          setHalls(response.data.data || []);
+        } catch (err) {
+          console.error('Failed to fetch halls:', err);
         }
       };
       fetchHalls();
@@ -109,8 +138,8 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
         try {
           const response = await api.get('/settings/payment-options');
           setPaymentOptions(response.data.data);
-        } catch (error) {
-          console.error('Failed to fetch payment options:', error);
+        } catch (err) {
+          console.error('Failed to fetch payment options:', err);
           setPaymentOptions({
             paymentMethods: ['CASH', 'BANK_TRANSFER', 'POS', 'ONLINE', 'CHEQUE'],
             paymentStatuses: ['pending', 'paid', 'failed', 'refunded'],
@@ -123,9 +152,9 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
 
   useEffect(() => {
     if (formData.hall) {
-      const selectedHall = halls.find((h: any) => h._id === formData.hall);
+      const selectedHall = halls.find((h) => h._id === formData.hall);
       if (selectedHall) {
-        setFacilities((selectedHall as any).facilities);
+        setFacilities(selectedHall.facilities);
       }
     }
   }, [formData.hall, halls]);
@@ -140,7 +169,7 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
 
   useEffect(() => {
     const calculateTotalPrice = () => {
-      const selectedHall = halls.find((h: any) => h._id === formData.hall);
+      const selectedHall = halls.find((h) => h._id === formData.hall);
       if (!selectedHall) {
         setHallPrice(0);
         setFacilitiesPrice(0);
@@ -176,8 +205,8 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
         return;
       }
 
-      const dailyRate = (selectedHall as any).pricing.dailyRate || 0;
-      const hourlyRate = (selectedHall as any).pricing.hourlyRate || 0;
+      const dailyRate = selectedHall.pricing.dailyRate || 0;
+      const hourlyRate = selectedHall.pricing.hourlyRate || 0;
 
       let calculatedHallPrice = 0;
       if (dailyRate > 0) {
@@ -188,8 +217,8 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
       setHallPrice(calculatedHallPrice);
 
       let currentFacilitiesPrice = 0;
-      (formData.selectedFacilities as { facilityId: string, quantity: number }[]).forEach(sf => {
-        const facility = (facilities as any[]).find(f => (f.facility?._id || f._id) === sf.facilityId);
+      formData.selectedFacilities.forEach(sf => {
+        const facility = (facilities as FacilityItem[]).find(f => (f.facility?._id || f._id) === sf.facilityId);
         if (facility) {
           switch (facility.chargeMethod) {
             case 'flat':
@@ -383,12 +412,12 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
     let bookingDates;
     try {
       bookingDates = generateBookingDates(dates, usePerDateTimes, dateTimes, startTime, endTime);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : String(err));
       return;
     }
 
-    const bookingPayload: any = {
+    const bookingPayload: Record<string, unknown> = {
       hallId: hall,
       eventDetails,
       walkInUserDetails,
@@ -403,29 +432,27 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
     };
 
     if (recurrenceType === 'weekly' || recurrenceType === 'monthly') {
+      const recurrenceRule: Record<string, unknown> = {
+        endDate: recurringEndDate,
+      };
       if (recurrenceType === 'weekly') {
-        bookingPayload.recurrenceRule = {
-          frequency: 'weekly',
-          daysOfWeek,
-          endDate: recurringEndDate,
-        };
+        recurrenceRule.frequency = 'weekly';
+        recurrenceRule.daysOfWeek = daysOfWeek;
       } else { // monthly
-        bookingPayload.recurrenceRule = {
-          frequency: 'monthly',
-          dayOfMonth,
-          endDate: recurringEndDate,
-        };
+        recurrenceRule.frequency = 'monthly';
+        recurrenceRule.dayOfMonth = dayOfMonth;
       }
+      bookingPayload.recurrenceRule = recurrenceRule;
     }
 
     setError('');
     onSubmit(bookingPayload, 'recurring');
   };
 
-  const handleFacilityChange = (facility: { facility?: { _id: string }; _id: string; name: string; cost: number; chargeMethod: string }) => {
+  const handleFacilityChange = (facility: FacilityItem) => {
     setFormData((prev) => {
-      const selectedFacilities = prev.selectedFacilities as { facilityId: string, quantity: number }[];
-      const facilityIdToUse = facility.facility?._id;
+      const selectedFacilities = prev.selectedFacilities;
+      const facilityIdToUse = facility.facility?._id || facility._id;
       if (!facilityIdToUse) return prev;
 
       const isSelected = selectedFacilities.some((f) => f.facilityId === facilityIdToUse);
@@ -447,7 +474,7 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
     const newQuantity = Math.max(1, quantity);
     setFormData((prev) => ({
       ...prev,
-      selectedFacilities: (prev.selectedFacilities as { facilityId: string, quantity: number }[]).map((f) =>
+      selectedFacilities: prev.selectedFacilities.map((f) =>
         f.facilityId === facilityId ? { ...f, quantity: newQuantity } : f
       ),
     }));
@@ -480,8 +507,8 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
     let bookingDates;
     try {
       bookingDates = generateBookingDates(dates, usePerDateTimes, dateTimes, startTime, endTime);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : String(err));
       return;
     }
 
@@ -525,8 +552,8 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
     let bookingDates;
     try {
       bookingDates = generateBookingDates(dates, usePerDateTimes, dateTimes, startTime, endTime);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : String(err));
       return;
     }
 
@@ -579,7 +606,7 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
                 <label className="block text-sm font-medium text-gray-800">Hall</label>
                 <select name="hall" value={formData.hall} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900">
                   <option value="">Select a hall</option>
-                  {halls.map((hall: { _id: string; name: string }) => (
+                  {halls.map((hall: HallItem) => (
                     <option key={hall._id} value={hall._id}>
                       {hall.name}
                     </option>
@@ -685,11 +712,11 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
                 <label className="block text-sm font-medium text-gray-800">Facilities</label>
                 <div className="max-h-48 overflow-y-auto pr-2">
                   <div className="grid grid-cols-1 gap-y-3">
-                    {(facilities as { _id: string; facility?: { _id: string; name: string }; name: string; cost: number; chargeMethod: string }[]).map((facility) => {
-                      const facilityIdToUse = facility.facility?._id;
+                    {facilities.map((facility) => {
+                      const facilityIdToUse = facility.facility?._id || facility._id;
                       if (!facilityIdToUse) return null;
-                      const isSelected = (formData.selectedFacilities as { facilityId: string }[]).some(f => f.facilityId === facilityIdToUse);
-                      const selectedFacility = (formData.selectedFacilities as { facilityId: string, quantity: number }[]).find(f => f.facilityId === facilityIdToUse);
+                      const isSelected = formData.selectedFacilities.some(f => f.facilityId === facilityIdToUse);
+                      const selectedFacility = formData.selectedFacilities.find(f => f.facilityId === facilityIdToUse);
                       return (
                         <div key={facility._id} className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200">
                           <label className="flex items-center space-x-3 text-sm cursor-pointer">
@@ -749,7 +776,7 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
                 <label className="block text-sm font-medium text-gray-800">Hall</label>
                 <select name="hall" value={formData.hall} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900">
                   <option value="">Select a hall</option>
-                  {halls.map((hall: any) => (
+                  {halls.map((hall: HallItem) => (
                     <option key={hall._id} value={hall._id}>
                       {hall.name}
                     </option>
@@ -905,11 +932,11 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
                 <label className="block text-sm font-medium text-gray-800">Facilities</label>
                 <div className="max-h-48 overflow-y-auto pr-2">
                   <div className="grid grid-cols-1 gap-y-3">
-                    {(facilities as { _id: string; facility?: { _id: string; name: string }; name: string; cost: number; chargeMethod: string }[]).map((facility) => {
-                      const facilityIdToUse = facility.facility?._id;
+                    {facilities.map((facility) => {
+                      const facilityIdToUse = facility.facility?._id || facility._id;
                       if (!facilityIdToUse) return null;
-                      const isSelected = (formData.selectedFacilities as { facilityId: string }[]).some(f => f.facilityId === facilityIdToUse);
-                      const selectedFacility = (formData.selectedFacilities as { facilityId: string, quantity: number }[]).find(f => f.facilityId === facilityIdToUse);
+                      const isSelected = formData.selectedFacilities.some(f => f.facilityId === facilityIdToUse);
+                      const selectedFacility = formData.selectedFacilities.find(f => f.facilityId === facilityIdToUse);
                       return (
                         <div key={facility._id} className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200">
                           <label className="flex items-center space-x-3 text-sm cursor-pointer">
@@ -977,7 +1004,7 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
                 <label className="block text-sm font-medium text-gray-800">Hall</label>
                 <select name="hall" value={formData.hall} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900">
                   <option value="">Select a hall</option>
-                  {halls.map((hall: any) => (
+                  {halls.map((hall: HallItem) => (
                     <option key={hall._id} value={hall._id}>
                       {hall.name}
                     </option>
@@ -1083,11 +1110,11 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
                 <label className="block text-sm font-medium text-gray-800">Facilities</label>
                 <div className="max-h-48 overflow-y-auto pr-2">
                   <div className="grid grid-cols-1 gap-y-3">
-                    {(facilities as { _id: string; facility?: { _id: string; name: string }; name: string; cost: number; chargeMethod: string }[]).map((facility) => {
-                      const facilityIdToUse = facility.facility?._id;
+                    {facilities.map((facility) => {
+                      const facilityIdToUse = facility.facility?._id || facility._id;
                       if (!facilityIdToUse) return null;
-                      const isSelected = (formData.selectedFacilities as { facilityId: string }[]).some(f => f.facilityId === facilityIdToUse);
-                      const selectedFacility = (formData.selectedFacilities as { facilityId: string, quantity: number }[]).find(f => f.facilityId === facilityIdToUse);
+                      const isSelected = formData.selectedFacilities.some(f => f.facilityId === facilityIdToUse);
+                      const selectedFacility = formData.selectedFacilities.find(f => f.facilityId === facilityIdToUse);
                       return (
                         <div key={facility._id} className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200">
                           <label className="flex items-center space-x-3 text-sm cursor-pointer">

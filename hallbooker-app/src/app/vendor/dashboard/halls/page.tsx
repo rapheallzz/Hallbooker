@@ -6,7 +6,7 @@ import api from "@/services/api";
 import HallModal from "@/components/vendor/HallModal";
 import ReservationModal from "@/components/vendor/ReservationModal";
 import { useUI } from "@/context/UIContext";
-import { Calendar as CalendarIcon, ChevronDown } from "lucide-react";
+import { Calendar as CalendarIcon, ChevronDown, Edit, Trash2 } from "lucide-react";
 import Swal from "sweetalert2";
 
 interface Hall {
@@ -29,6 +29,14 @@ interface Hall {
   carParkCapacity: number;
 }
 
+interface Subscription {
+  tier: {
+    maxHalls: number;
+    name: string;
+  };
+  status: string;
+}
+
 const HallsContent = () => {
   const router = useRouter();
   const { user } = useAuth();
@@ -38,7 +46,7 @@ const HallsContent = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [editingHall, setEditingHall] = useState<Hall | undefined>(undefined);
-  const [subscription, setSubscription] = useState<any>(null);
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
   const { isHallModalOpen, openHallModal, closeHallModal } = useUI();
   const [expandedHallId, setExpandedHallId] = useState<string | null>(null);
 
@@ -52,6 +60,7 @@ const HallsContent = () => {
       setHalls(response.data.data);
       setError('');
     } catch (err) {
+      console.error(err);
       setError('Failed to fetch your halls. You can still create a new one.');
       setHalls([]); // Ensure halls is an empty array on error
     } finally {
@@ -71,6 +80,7 @@ const HallsContent = () => {
         setSubscription(subscriptionResponse.data.data);
         setError('');
       } catch (err) {
+        console.error(err);
         setError('Failed to fetch data. Please try again.');
         setHalls([]);
       } finally {
@@ -81,7 +91,7 @@ const HallsContent = () => {
     fetchData();
   }, []);
 
-  const handleCreate = async (formData: any) => {
+  const handleCreate = async (formData: Record<string, unknown>) => {
     Swal.fire({
       title: 'Creating Hall...',
       text: 'Please wait while we set up your new hall.',
@@ -112,7 +122,7 @@ const HallsContent = () => {
     }
   };
 
-  const handleUpdate = async (formData: any) => {
+  const handleUpdate = async (formData: Record<string, unknown>) => {
     if (!editingHall) return;
 
     Swal.fire({
@@ -146,7 +156,7 @@ const HallsContent = () => {
     }
   };
 
-  const handleCreateReservation = async (reservationData: any) => {
+  const handleCreateReservation = async (reservationData: Record<string, unknown>) => {
     Swal.fire({
       title: 'Creating Reservation...',
       text: 'Please wait while we block the dates.',
@@ -216,109 +226,214 @@ const HallsContent = () => {
       (hall) =>
         hall.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         hall.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        hall.geoLocation?.address.toLowerCase().includes(searchTerm.toLowerCase())
+        hall.geoLocation?.address?.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [halls, searchTerm]);
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <h1 className="text-3xl font-bold text-primary">Halls</h1>
         {user?.activeRole === "hall-owner" && (
           <button
             onClick={handleOpenCreateModal}
-            className="bg-primary text-white px-4 py-2 rounded-lg"
+            className="w-full sm:w-auto bg-primary text-white px-6 py-2.5 rounded-lg font-semibold shadow-md hover:bg-primary-dark transition-colors"
           >
             Create Hall
           </button>
         )}
       </div>
 
-      {loading && <div>Loading halls...</div>}
+      {loading && <div className="text-center py-10">Loading halls...</div>}
 
-      {error && <p className="text-red-600 mb-4">{error}</p>}
+      {error && <p className="text-red-600 mb-4 bg-red-50 p-4 rounded-lg border border-red-100">{error}</p>}
 
       {!loading && (
-        <div className="bg-white p-4 shadow-lg rounded-lg">
-          <table className="min-w-full">
-            <thead>
-              <tr>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-left leading-4 text-primary tracking-wider">Name</th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-left leading-4 text-primary tracking-wider">Location</th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-left leading-4 text-primary tracking-wider">Capacity</th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-left leading-4 text-primary tracking-wider">Views</th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-left leading-4 text-primary tracking-wider">Demo Bookings</th>
-                <th className="px-6 py-3 border-b-2 border-gray-300 text-left leading-4 text-primary tracking-wider">Actions</th>
-                <th className="px-6 py-3 border-b-2 border-gray-300"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredHalls.length > 0 ? (
-                filteredHalls.map((hall) => (
-                  <React.Fragment key={hall.id}>
-                    <tr>
-                      <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">{hall.name}</td>
-                      <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">{hall.location}</td>
-                      <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">{hall.capacity}</td>
-                      <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">{hall.views || 0}</td>
-                      <td className="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-gray-900">{hall.demoBookings}</td>
-                      <td className="px-6 py-4 whitespace-no-wrap text-right border-b border-gray-500 text-gray-900">
-                        <button onClick={() => openEditModal(hall)} className="px-5 py-2 border-primary border text-primary rounded transition duration-300 hover:bg-primary hover:text-white focus:outline-none">Edit</button>
+        <div className="space-y-4">
+          {/* Desktop Table */}
+          <div className="hidden md:block bg-white shadow-lg rounded-lg overflow-hidden border border-gray-200">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Location</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Capacity</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Views</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Demo Bookings</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                  <th className="px-6 py-3"></th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredHalls.length > 0 ? (
+                  filteredHalls.map((hall) => (
+                    <React.Fragment key={hall.id}>
+                      <tr className="hover:bg-gray-50 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{hall.name}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{hall.location}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{hall.capacity}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{hall.views || 0}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{hall.demoBookings}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <div className="flex justify-end space-x-2">
+                            <button
+                              onClick={() => openEditModal(hall)}
+                              className="p-2 text-primary hover:bg-primary/10 rounded-full transition-colors"
+                              title="Edit Hall"
+                            >
+                              <Edit size={18} />
+                            </button>
+                            <button
+                              onClick={() => openReservationModal(hall.id)}
+                              className="p-2 text-yellow-600 hover:bg-yellow-50 rounded-full transition-colors"
+                              title="Block Dates"
+                            >
+                              <CalendarIcon size={18} />
+                            </button>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-center text-sm">
+                          <button onClick={() => handleToggle(hall.id)} className="p-1 text-gray-400 hover:text-gray-600">
+                            <ChevronDown
+                              className={`transform transition-transform duration-200 ${
+                                expandedHallId === hall.id ? "rotate-180" : ""
+                              }`}
+                            />
+                          </button>
+                        </td>
+                      </tr>
+                      {expandedHallId === hall.id && (
+                        <tr>
+                          <td colSpan={7} className="px-6 py-4 bg-gray-50 border-t border-gray-100">
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                              <div>
+                                <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Pricing</p>
+                                <p className="text-sm text-gray-700">
+                                  Daily: ₦{hall.pricing?.dailyRate?.toLocaleString() || 'N/A'}<br/>
+                                  Hourly: ₦{hall.pricing?.hourlyRate?.toLocaleString() || 'N/A'}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Hall Size</p>
+                                <p className="text-sm text-gray-700">{hall.hallSize || 'N/A'}</p>
+                              </div>
+                              <div>
+                                <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Parking</p>
+                                <p className="text-sm text-gray-700">{hall.carParkCapacity ? `${hall.carParkCapacity} cars` : 'N/A'}</p>
+                              </div>
+                              <div>
+                                <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Full Address</p>
+                                <p className="text-sm text-gray-700 line-clamp-2">{hall.geoLocation?.address || 'N/A'}</p>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={7} className="px-6 py-12 text-center text-gray-500 font-medium">
+                      {searchTerm ? `No halls found matching "${searchTerm}"` : "No halls found. Create one to get started."}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile Cards */}
+          <div className="md:hidden space-y-4">
+            {filteredHalls.length > 0 ? (
+              filteredHalls.map((hall) => (
+                <div key={hall.id} className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+                  <div className="p-4">
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="text-lg font-bold text-gray-900">{hall.name}</h3>
+                      <div className="flex space-x-1">
+                        <button
+                          onClick={() => openEditModal(hall)}
+                          className="p-2 text-primary bg-primary/5 rounded-lg"
+                        >
+                          <Edit size={18} />
+                        </button>
                         <button
                           onClick={() => openReservationModal(hall.id)}
-                          className="ml-2 px-3 py-2 border-yellow-500 border text-yellow-500 rounded transition duration-300 hover:bg-yellow-500 hover:text-white focus:outline-none"
-                          title="Block Dates"
+                          className="p-2 text-yellow-600 bg-yellow-50 rounded-lg"
                         >
                           <CalendarIcon size={18} />
                         </button>
-                      </td>
-                      <td className="px-6 py-4 whitespace-no-wrap text-center border-b border-gray-500">
-                        <button onClick={() => handleToggle(hall.id)} className="focus:outline-none">
-                          <ChevronDown
-                            className={`transform transition-transform duration-200 ${
-                              expandedHallId === hall.id ? "rotate-180" : ""
-                            }`}
-                          />
-                        </button>
-                      </td>
-                    </tr>
-                    {expandedHallId === hall.id && (
-                      <tr>
-                        <td colSpan={7} className="px-6 py-4 bg-gray-50">
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <p className="font-semibold text-gray-800">Pricing:</p>
-                              <p className="text-gray-600">
-                                Daily: ₦{hall.pricing?.dailyRate?.toLocaleString() || 'N/A'} | Hourly: ₦{hall.pricing?.hourlyRate?.toLocaleString() || 'N/A'}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="font-semibold text-gray-800">Hall Size:</p>
-                              <p className="text-gray-600">{hall.hallSize || 'N/A'}</p>
-                            </div>
-                            <div>
-                              <p className="font-semibold text-gray-800">Parking Capacity:</p>
-                              <p className="text-gray-600">{hall.carParkCapacity ? `${hall.carParkCapacity} cars` : 'N/A'}</p>
-                            </div>
-                            <div>
-                              <p className="font-semibold text-gray-800">Full Address:</p>
-                              <p className="text-gray-600">{hall.geoLocation?.address || 'N/A'}</p>
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </React.Fragment>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={7} className="text-center py-10">
-                    {!error && (searchTerm ? `No halls found matching "${searchTerm}"` : "No halls found. Create one to get started.")}
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                      </div>
+                    </div>
+
+                    <p className="text-sm text-gray-600 mb-3 flex items-center">
+                      <span className="truncate">{hall.location}</span>
+                    </p>
+
+                    <div className="grid grid-cols-3 gap-2 py-3 border-y border-gray-100">
+                      <div className="text-center">
+                        <p className="text-[10px] font-semibold text-gray-400 uppercase">Capacity</p>
+                        <p className="text-sm font-bold text-gray-800">{hall.capacity}</p>
+                      </div>
+                      <div className="text-center border-x border-gray-100">
+                        <p className="text-[10px] font-semibold text-gray-400 uppercase">Views</p>
+                        <p className="text-sm font-bold text-gray-800">{hall.views || 0}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-[10px] font-semibold text-gray-400 uppercase">Demos</p>
+                        <p className="text-sm font-bold text-gray-800">{hall.demoBookings}</p>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => handleToggle(hall.id)}
+                      className="w-full mt-3 flex items-center justify-center text-xs font-medium text-gray-500 py-1"
+                    >
+                      {expandedHallId === hall.id ? 'Show Less' : 'Show More Details'}
+                      <ChevronDown
+                        size={16}
+                        className={`ml-1 transform transition-transform duration-200 ${
+                          expandedHallId === hall.id ? "rotate-180" : ""
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {expandedHallId === hall.id && (
+                    <div className="px-4 pb-4 bg-gray-50 border-t border-gray-100 pt-4 space-y-3">
+                      <div>
+                        <p className="text-[10px] font-semibold text-gray-500 uppercase mb-1">Pricing Details</p>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600">Daily Rate:</span>
+                          <span className="font-bold text-gray-800">₦{hall.pricing?.dailyRate?.toLocaleString() || 'N/A'}</span>
+                        </div>
+                        <div className="flex justify-between text-sm mt-1">
+                          <span className="text-gray-600">Hourly Rate:</span>
+                          <span className="font-bold text-gray-800">₦{hall.pricing?.hourlyRate?.toLocaleString() || 'N/A'}</span>
+                        </div>
+                      </div>
+                      <div className="flex justify-between items-center text-sm border-t border-gray-200 pt-2">
+                        <span className="text-gray-600">Hall Size:</span>
+                        <span className="font-bold text-gray-800">{hall.hallSize || 'N/A'}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-sm border-t border-gray-200 pt-2">
+                        <span className="text-gray-600">Parking Capacity:</span>
+                        <span className="font-bold text-gray-800">{hall.carParkCapacity ? `${hall.carParkCapacity} cars` : 'N/A'}</span>
+                      </div>
+                      <div className="border-t border-gray-200 pt-2">
+                        <p className="text-[10px] font-semibold text-gray-500 uppercase mb-1">Full Address</p>
+                        <p className="text-xs text-gray-700 leading-relaxed">{hall.geoLocation?.address || 'N/A'}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))
+            ) : (
+              <div className="bg-white rounded-xl p-10 text-center text-gray-500 border border-dashed border-gray-300">
+                 {searchTerm ? `No halls found matching "${searchTerm}"` : "No halls found. Create one to get started."}
+              </div>
+            )}
+          </div>
         </div>
       )}
 

@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import api from '@/services/api';
 import { BarChart as BarChartIcon, Eye, Briefcase, TrendingUp, Target, CalendarCheck, Calendar as CalendarIcon, ChevronDown, Search, ChevronLeft, ChevronRight } from 'lucide-react';
-import { DateRange } from 'react-date-range';
+import { DateRange, Range } from 'react-date-range';
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
 import { format as formatDate } from 'date-fns';
@@ -11,7 +11,6 @@ import useOnClickOutside from '@/hooks/useOnClickOutside';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, Sector } from 'recharts';
 import ReservationAnalyticsCard from './ReservationAnalyticsCard';
 
-// (Keep all the previously defined types)
 interface OverallStats {
   totalRevenue: number;
   totalViews: number;
@@ -29,6 +28,7 @@ interface RevenueBreakdown {
   facilityRevenue: number;
   hallId: string;
   hallName: string;
+  [key: string]: string | number;
 }
 
 interface Booking {
@@ -101,9 +101,23 @@ const StatCard = ({ title, value, icon: Icon }: { title: string; value: string |
   </div>
 );
 
-const renderActiveShape = (props: any) => {
+interface ActiveShapeProps {
+  cx: number;
+  cy: number;
+  midAngle: number;
+  innerRadius: number;
+  outerRadius: number;
+  startAngle: number;
+  endAngle: number;
+  fill: string;
+  payload: { hallName: string };
+  percent: number;
+  value: number;
+}
+
+const renderActiveShape = (props: unknown) => {
     const RADIAN = Math.PI / 180;
-    const { cx, cy, midAngle, innerRadius, outerRadius, startAngle, endAngle, fill, payload, percent, value } = props;
+    const { cx, cy, midAngle, innerRadius, outerRadius, startAngle, endAngle, fill, payload, percent, value } = props as ActiveShapeProps;
     const sin = Math.sin(-RADIAN * midAngle); const cos = Math.cos(-RADIAN * midAngle);
     const sx = cx + (outerRadius + 10) * cos; const sy = cy + (outerRadius + 10) * sin;
     const mx = cx + (outerRadius + 30) * cos; const my = cy + (outerRadius + 30) * sin;
@@ -130,27 +144,29 @@ const EnhancedAnalytics = ({ initialData }: { initialData?: AnalyticsData | null
   const [loading, setLoading] = useState<boolean>(!initialData);
   const [halls, setHalls] = useState<Hall[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [dateRange, setDateRange] = useState([{ startDate: new Date(new Date().setDate(new Date().getDate() - 7)), endDate: new Date(), key: 'selection' }]);
+  const [dateRange, setDateRange] = useState<Range[]>([{ startDate: new Date(new Date().setDate(new Date().getDate() - 7)), endDate: new Date(), key: 'selection' }]);
   const [selectedHall, setSelectedHall] = useState<Hall | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showHallPicker, setShowHallPicker] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const datePickerRef = useRef(null);
-  const hallPickerRef = useRef(null);
+  const datePickerRef = useRef<HTMLDivElement>(null);
+  const hallPickerRef = useRef<HTMLDivElement>(null);
 
   useOnClickOutside(datePickerRef, () => setShowDatePicker(false));
   useOnClickOutside(hallPickerRef, () => setShowHallPicker(false));
 
-  const onPieEnter = (_: any, index: number) => setActiveIndex(index);
+  const onPieEnter = (_: unknown, index: number) => setActiveIndex(index);
 
   const fetchAnalytics = useCallback(async (page: number) => {
     setLoading(true);
     try {
+      const startDateStr = dateRange[0].startDate ? formatDate(dateRange[0].startDate, 'yyyy-MM-dd') : '';
+      const endDateStr = dateRange[0].endDate ? formatDate(dateRange[0].endDate, 'yyyy-MM-dd') : '';
       const params = new URLSearchParams({
-        startDate: formatDate(dateRange[0].startDate, 'yyyy-MM-dd'),
-        endDate: formatDate(dateRange[0].endDate, 'yyyy-MM-dd'),
+        startDate: startDateStr,
+        endDate: endDateStr,
         page: page.toString(),
         limit: '10'
       });
@@ -159,7 +175,7 @@ const EnhancedAnalytics = ({ initialData }: { initialData?: AnalyticsData | null
       const response = await api.get(`../v2/analytics/hall-owner?${params.toString()}`);
       if (response.data?.success) setData(response.data.data);
       else throw new Error(response.data.message || 'Failed to fetch');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
       setData({ overallStats: { totalRevenue: 0, totalViews: 0, totalDemoBookings: 0, totalBookings: { confirmed: 0, cancelled: 0, pending: 0 } }, revenueDetails: { breakdownByHall: [] }, recentBookings: { bookings: [], pagination: { currentPage: 1, totalPages: 1, totalBookings: 0 } }, kpis: { bookingConversionRate: '0.00', averageBookingValue: '0.00', busiestDays: [] } });
     } finally { setLoading(false); }
@@ -201,7 +217,7 @@ const EnhancedAnalytics = ({ initialData }: { initialData?: AnalyticsData | null
     <div className="p-6 bg-gray-50 min-h-screen space-y-6">
         <div><h1 className="text-3xl font-bold text-gray-800">Dashboard</h1><p className="text-gray-500">An overview of your business performance.</p></div>
         <div className="p-4 bg-white rounded-lg shadow-md flex flex-wrap items-center gap-4">
-            <div className="relative flex-grow md:flex-grow-0" ref={datePickerRef}><button onClick={() => setShowDatePicker(d => !d)} className="w-full md:w-64 border rounded-md p-2 flex items-center justify-between"><CalendarIcon className="h-5 w-5 mr-2 text-gray-500"/><span>{`${formatDate(dateRange[0].startDate, "MMM d, yyyy")} - ${formatDate(dateRange[0].endDate, "MMM d, yyyy")}`}</span><ChevronDown className="h-5 w-5 text-gray-500"/></button>{showDatePicker && (<div className="absolute top-full mt-2 z-10"><DateRange editableDateInputs={true} onChange={item => setDateRange([item.selection])} moveRangeOnFirstSelection={false} ranges={dateRange} /></div>)}</div>
+            <div className="relative flex-grow md:flex-grow-0" ref={datePickerRef}><button onClick={() => setShowDatePicker(d => !d)} className="w-full md:w-64 border rounded-md p-2 flex items-center justify-between"><CalendarIcon className="h-5 w-5 mr-2 text-gray-500"/><span>{`${dateRange[0].startDate ? formatDate(dateRange[0].startDate, "MMM d, yyyy") : ''} - ${dateRange[0].endDate ? formatDate(dateRange[0].endDate, "MMM d, yyyy") : ''}`}</span><ChevronDown className="h-5 w-5 text-gray-500"/></button>{showDatePicker && (<div className="absolute top-full mt-2 z-10"><DateRange editableDateInputs={true} onChange={item => setDateRange([item.selection])} moveRangeOnFirstSelection={false} ranges={dateRange} /></div>)}</div>
             <div className="relative flex-grow md:flex-grow-0" ref={hallPickerRef}><button onClick={() => setShowHallPicker(d => !d)} className="w-full md:w-64 border rounded-md p-2 flex items-center justify-between"><Search className="h-5 w-5 mr-2 text-gray-500"/><span>{selectedHall ? selectedHall.name : 'All Halls'}</span><ChevronDown className="h-5 w-5 text-gray-500"/></button>{showHallPicker && (<div className="absolute top-full mt-2 z-10 bg-white border rounded-md shadow-lg w-full md:w-64"><div className="p-2 border-b"><input type="text" placeholder="Search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full p-2 border rounded-md"/></div><ul className="max-h-60 overflow-y-auto">{halls.filter(h => h.name.toLowerCase().includes(searchTerm.toLowerCase())).map(hall => (<li key={hall._id} onClick={() => { setSelectedHall(hall); setShowHallPicker(false); }} className="p-2 hover:bg-gray-100 cursor-pointer">{hall.name}</li>))}</ul></div>)}</div>
             <button onClick={handleClearFilters} className="text-sm text-gray-600 hover:text-gray-800 ml-auto">Clear Filters</button>
         </div>
@@ -238,6 +254,7 @@ const EnhancedAnalytics = ({ initialData }: { initialData?: AnalyticsData | null
                     {revenueDetails && revenueDetails.breakdownByHall && revenueDetails.breakdownByHall.length > 0 ? (
                         <ResponsiveContainer width="100%" height={300}>
                             <PieChart>
+                                {/* @ts-expect-error - activeIndex and activeShape are supported by recharts but may not be in the current type definitions */}
                                 <Pie activeIndex={activeIndex} activeShape={renderActiveShape} data={revenueDetails.breakdownByHall} cx="50%" cy="50%" innerRadius={60} outerRadius={80} fill="#295FA7" dataKey="totalRevenue" onMouseEnter={onPieEnter}>
                                     {revenueDetails.breakdownByHall.map((entry, index) => (<Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />))}
                                 </Pie>

@@ -16,20 +16,47 @@ export interface Facility {
 export interface Booking {
   _id: string;
   bookingId: string;
-  hall: Hall;
-  user: string;
+  hall: string | Hall;
+  user: string | { _id: string; fullName: string; email: string };
   bookingDates: {
     startTime: string;
     endTime: string;
   }[];
   totalPrice: number;
   paymentStatus: string;
-  bookingStatus?: string;
+  bookingStatus?: 'pending' | 'confirmed' | 'cancelled' | string;
+  status?: 'pending' | 'confirmed' | 'cancelled' | string;
   eventDetails?: string;
   createdAt: string;
   review?: Review;
   isRecurring?: boolean;
   recurringBookingId?: string;
+  paymentMethod?: string;
+  bookingType?: string;
+  walkInUserDetails?: {
+    fullName: string;
+    email: string;
+    phone: string;
+  };
+}
+
+export interface Reservation {
+  _id: string;
+  reservationId: string;
+  hall: string | Hall;
+  user: string | { _id: string; fullName: string; email: string };
+  bookingDates: {
+    startTime: string;
+    endTime: string;
+  }[];
+  totalPrice: number;
+  status: string;
+  paymentStatus?: string;
+  walkInUserDetails?: {
+    fullName: string;
+    email: string;
+    phone: string;
+  };
 }
 
 export interface Suitability {
@@ -39,7 +66,7 @@ export interface Suitability {
 }
 
 export interface Hall {
-  id: string; // id is used in some places, _id in others
+  id: string;
   _id: string;
   name: string;
   location: string;
@@ -68,8 +95,9 @@ export interface Hall {
     coordinates: number[];
     address?: string;
   };
-  suitableFor?: Suitability[];
-  rules?: string[];
+  suitableFor?: (Suitability | string)[];
+  rules?: string[] | string;
+  views?: number;
 }
 
 export interface Notification {
@@ -90,4 +118,11 @@ export interface Review {
   rating: number;
   comment: string;
   createdAt?: string;
+}
+
+export interface UnavailableDate {
+  bufferTime: {
+    startTime: string;
+    endTime: string;
+  };
 }

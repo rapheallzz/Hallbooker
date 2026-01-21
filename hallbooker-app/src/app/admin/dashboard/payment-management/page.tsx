@@ -33,6 +33,11 @@ interface Subaccount {
   accountName: string;
 }
 
+interface Bank {
+  code: string;
+  name: string;
+}
+
 const PaymentSettingsTab = () => {
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [paymentStatuses, setPaymentStatuses] = useState<PaymentStatus[]>([]);
@@ -135,7 +140,7 @@ const PaymentSettingsTab = () => {
         <div className="space-y-2">
           {paymentMethods.map((method) => (
             <div key={method._id} className="flex justify-between items-center bg-gray-50 p-2 rounded-md">
-              <span>{method.name}</span>
+              <span className="text-gray-800">{method.name}</span>
               <button onClick={() => handleRemoveMethod(method._id)} className="text-red-500 hover:text-red-700">
                 <Trash2 size={18} />
               </button>
@@ -162,7 +167,7 @@ const PaymentSettingsTab = () => {
         <div className="space-y-2">
           {paymentStatuses.map((status) => (
             <div key={status._id} className="flex justify-between items-center bg-gray-50 p-2 rounded-md">
-              <span>{status.name}</span>
+              <span className="text-gray-800">{status.name}</span>
               <button onClick={() => handleRemoveStatus(status._id)} className="text-red-500 hover:text-red-700">
                 <Trash2 size={18} />
               </button>
@@ -177,7 +182,7 @@ const PaymentSettingsTab = () => {
 const SubaccountsTab = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [subaccounts, setSubaccounts] = useState<Subaccount[]>([]);
-  const [banks, setBanks] = useState([]);
+  const [banks, setBanks] = useState<Bank[]>([]);
   const [loading, setLoading] = useState(true);
   const [validationLoading, setValidationLoading] = useState(false);
   const [accountName, setAccountName] = useState('');
@@ -262,9 +267,10 @@ const SubaccountsTab = () => {
         setAccountName('');
         setDefaultSplitPercentage('');
         fetchSubaccountData();
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Error creating subaccount:", error);
-        const errorMessage = error.response?.data?.message || 'Could not create the subaccount.';
+        const err = error as { response?: { data?: { message?: string } } };
+        const errorMessage = err.response?.data?.message || 'Could not create the subaccount.';
         Swal.fire('Error', errorMessage, 'error');
     }
   };
@@ -303,7 +309,7 @@ const SubaccountsTab = () => {
                           required
                       >
                           <option value="" disabled>Select a bank</option>
-                          {banks.map((bank: any) => (
+                          {banks.map((bank: Bank) => (
                               <option key={bank.code} value={bank.code}>{bank.name}</option>
                           ))}
                       </select>

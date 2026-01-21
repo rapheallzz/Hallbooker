@@ -27,11 +27,50 @@ interface APISuitability {
   name: string;
 }
 
+interface HallData {
+  _id?: string;
+  id?: string;
+  name?: string;
+  description?: string;
+  capacity?: number;
+  openingHour?: string | number;
+  closingHour?: string | number;
+  location?: string;
+  pricing?: {
+    hourlyRate?: number;
+    perHour?: number;
+    dailyRate?: number;
+    perDay?: number;
+  };
+  facilities?: Array<{
+    facility?: string | { _id: string; name: string };
+    name?: string;
+    available: boolean;
+    chargeable: boolean;
+    chargeMethod?: 'free' | 'flat' | 'per_hour';
+    cost?: number;
+    quantity?: number;
+    chargePerUnit?: boolean;
+  }>;
+  suitableFor?: Array<string | { _id: string }>;
+  carParkCapacity?: number;
+  hallSize?: string;
+  rules?: string[] | string;
+  country?: string;
+  state?: string;
+  localGovernment?: string;
+  allowRecurringBookings?: boolean;
+  recurringBookingDiscount?: {
+    percentage?: number;
+    minBookings?: number;
+  };
+}
+
 interface HallModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (formData: any) => void;
-  hall?: any;
+  onSubmit: (formData: Record<string, unknown>) => void;
+  hall?: HallData;
 }
 
 const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }) => {
@@ -41,9 +80,9 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
   const [availableFacilities, setAvailableFacilities] = useState<APIFacility[]>([]);
   const [availableSuitabilities, setAvailableSuitabilities] = useState<APISuitability[]>([]);
   const [chargeMethods, setChargeMethods] = useState<string[]>([]);
-  const [countries, setCountries] = useState([]);
-  const [states, setStates] = useState([]);
-  const [lgas, setLgas] = useState([]);
+  const [countries, setCountries] = useState<{ _id: string; name: string }[]>([]);
+  const [states, setStates] = useState<{ _id: string; name: string }[]>([]);
+  const [lgas, setLgas] = useState<{ _id: string; name: string }[]>([]);
   const [formData, setFormData] = useState({
     name: '',
     country: '',
@@ -63,8 +102,8 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
     rules: '',
     allowRecurringBookings: false,
     recurringBookingDiscount: {
-      percentage: 0,
-      minBookings: 0,
+      percentage: 0 as number | string,
+      minBookings: 0 as number | string,
     },
   });
 
@@ -136,9 +175,9 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
   useEffect(() => {
     if (hall) {
       // Map incoming hall facilities to the new structure
-      const mappedFacilities = hall.facilities ? hall.facilities.map((fac: any) => ({
-        facility: fac.facility?._id || fac.facility, // Handle populated and non-populated facility
-        name: fac.facility?.name || fac.name, // Display name
+      const mappedFacilities = hall.facilities ? hall.facilities.map((fac) => ({
+        facility: typeof fac.facility === 'object' ? fac.facility?._id : fac.facility || '', // Handle populated and non-populated facility
+        name: typeof fac.facility === 'object' ? fac.facility?.name : (fac.name || ''), // Display name
         available: fac.available,
         chargeable: fac.chargeable,
         chargeMethod: fac.chargeMethod,
@@ -151,16 +190,16 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
         name: hall.name || '',
         description: hall.description || '',
         capacity: hall.capacity || 0,
-        openingHour: hall.openingHour || '09:00',
-        closingHour: hall.closingHour || '23:00',
+        openingHour: String(hall.openingHour || '09:00'),
+        closingHour: String(hall.closingHour || '23:00'),
         location: hall.location || '',
         hourlyRate: hall.pricing?.hourlyRate || hall.pricing?.perHour || 0,
         dailyRate: hall.pricing?.dailyRate || hall.pricing?.perDay || 0,
-        facilities: mappedFacilities,
-        suitableFor: hall.suitableFor ? hall.suitableFor.map((s: any) => typeof s === 'string' ? s : s._id) : [],
+        facilities: mappedFacilities as Facility[],
+        suitableFor: hall.suitableFor ? hall.suitableFor.map((s) => typeof s === 'string' ? s : s._id) : [],
         carParkCapacity: hall.carParkCapacity || 0,
         hallSize: hall.hallSize || '',
-        rules: Array.isArray(hall.rules) ? hall.rules.join('\n') : '',
+        rules: Array.isArray(hall.rules) ? hall.rules.join('\n') : (hall.rules || ''),
         country: hall.country || '',
         state: hall.state || '',
         localGovernment: hall.localGovernment || '',
@@ -170,7 +209,7 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
           minBookings: hall.recurringBookingDiscount?.minBookings || 0,
         },
       });
-      setHallId(hall._id || hall.id);
+      setHallId(hall._id || hall.id || null);
     } else {
       setFormData({
         name: '',
@@ -220,7 +259,7 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
     }
   };
 
-  const handleFacilityChange = (index: number, field: keyof Facility, value: any) => {
+  const handleFacilityChange = (index: number, field: keyof Facility, value: string | number | boolean) => {
     const newFacilities = [...formData.facilities];
     const facility = newFacilities[index];
 
@@ -229,7 +268,10 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
       facility.facility = selectedFacility?._id || '';
       facility.name = selectedFacility?.name || '';
     } else if (field === 'available' || field === 'chargeable' || field === 'chargePerUnit') {
-      facility[field] = value as boolean;
+      if (field === 'available') facility.available = value as boolean;
+      if (field === 'chargeable') facility.chargeable = value as boolean;
+      if (field === 'chargePerUnit') facility.chargePerUnit = value as boolean;
+
       if (field === 'chargeable' && !value) {
         // If chargeable is unchecked, reset charge method and cost
         delete facility.chargeMethod;
@@ -238,8 +280,10 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
         facility.chargePerUnit = false; // Reset charge per unit
       }
     } else if (field === 'cost' || field === 'quantity') {
-      facility[field] = Number(value);
+      if (field === 'cost') facility.cost = Number(value);
+      if (field === 'quantity') facility.quantity = Number(value);
     } else {
+       // @ts-expect-error - field is valid
       facility[field] = value;
     }
 
@@ -274,8 +318,8 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
     e.preventDefault();
 
     // Clean up facilities data before submission
-    const facilitiesPayload = formData.facilities.map(({ name, ...rest }) => {
-      const facilityData: any = { ...rest };
+    const facilitiesPayload = formData.facilities.map(({ name: _name, ...rest }) => {
+      const facilityData: Record<string, unknown> = { ...rest };
       if (!facilityData.chargeable) {
         delete facilityData.chargeMethod;
         delete facilityData.cost;
@@ -294,14 +338,14 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
         return;
       }
 
-      const { hourlyRate, dailyRate, facilities, openingHour, closingHour, country, state, localGovernment, ...rest } = formData;
+      const { hourlyRate, dailyRate, facilities: _facilities, openingHour, closingHour, country, state, localGovernment, ...rest } = formData;
       const pricing = {
         hourlyRate: Number(hourlyRate),
         dailyRate: Number(dailyRate),
       };
       const rulesArray = formData.rules.split('\n').filter(rule => rule.trim() !== '');
 
-      let payload: any = {
+      const payload: Record<string, unknown> = {
         ...rest,
         pricing,
         facilities: facilitiesPayload,
@@ -363,7 +407,7 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
       }
 
       const rulesArray = formData.rules.split('\n').filter(rule => rule.trim() !== '');
-      let payload: any = {
+      const payload: Record<string, unknown> = {
         name: formData.name,
         country: formData.country,
         state: formData.state,
@@ -467,21 +511,21 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
                   <label className="block text-sm font-medium text-gray-800">Country</label>
                   <select name="country" value={formData.country} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900">
                     <option value="">Select Country</option>
-                    {countries.map((country: any) => <option key={country._id} value={country._id}>{country.name}</option>)}
+                    {countries.map((country) => <option key={country._id} value={country._id}>{country.name}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-800">State</label>
                   <select name="state" value={formData.state} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900">
                     <option value="">Select State</option>
-                    {states.map((state: any) => <option key={state._id} value={state._id}>{state.name}</option>)}
+                    {states.map((state) => <option key={state._id} value={state._id}>{state.name}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-800">LGA</label>
                   <select name="localGovernment" value={formData.localGovernment} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900">
                     <option value="">Select LGA</option>
-                    {lgas.map((lga: any) => <option key={lga._id} value={lga._id}>{lga.name}</option>)}
+                    {lgas.map((lga) => <option key={lga._id} value={lga._id}>{lga.name}</option>)}
                   </select>
                 </div>
                 <div>
@@ -715,21 +759,21 @@ const HallModal: React.FC<HallModalProps> = ({ isOpen, onClose, onSubmit, hall }
                       <label className="block text-sm font-medium text-gray-800">Country</label>
                       <select name="country" value={formData.country} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900">
                         <option value="">Select Country</option>
-                        {countries.map((country: any) => <option key={country._id} value={country._id}>{country.name}</option>)}
+                        {countries.map((country) => <option key={country._id} value={country._id}>{country.name}</option>)}
                       </select>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-800">State</label>
                       <select name="state" value={formData.state} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900">
                         <option value="">Select State</option>
-                        {states.map((state: any) => <option key={state._id} value={state._id}>{state.name}</option>)}
+                        {states.map((state) => <option key={state._id} value={state._id}>{state.name}</option>)}
                       </select>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-800">LGA</label>
                       <select name="localGovernment" value={formData.localGovernment} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-900">
                         <option value="">Select LGA</option>
-                        {lgas.map((lga: any) => <option key={lga._id} value={lga._id}>{lga.name}</option>)}
+                        {lgas.map((lga) => <option key={lga._id} value={lga._id}>{lga.name}</option>)}
                       </select>
                     </div>
                     <div>

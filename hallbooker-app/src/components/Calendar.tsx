@@ -2,7 +2,7 @@
 'use client';
 
 import React from 'react';
-import { DayPicker } from 'react-day-picker';
+import { DayPicker, Modifiers } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
 
 interface CalendarProps {
@@ -26,15 +26,15 @@ const Calendar: React.FC<CalendarProps> = ({
   displayedMonth,
   onMonthChange,
 }) => {
-  const handleDayClick = (day: Date, { disabled }: { disabled: boolean }) => {
-    if (disabled) {
+  const handleDayClick = (day: Date, modifiers: Modifiers) => {
+    if (modifiers.disabled) {
       if (onDisabledDateClick) onDisabledDateClick(day);
     } else {
       if (onDateClick) onDateClick(day);
     }
   };
 
-  const modifiers = {
+  const customModifiers = {
     fully_booked: (date: Date) => getDateAvailability ? getDateAvailability(date) === 'fully booked' : false,
     partially_booked: (date: Date) => getDateAvailability ? getDateAvailability(date) === 'partially booked' : false,
     fully_available: (date: Date) => getDateAvailability ? getDateAvailability(date) === 'fully available' : false,
@@ -82,7 +82,7 @@ const Calendar: React.FC<CalendarProps> = ({
         onDayClick={handleDayClick}
         month={displayedMonth}
         onMonthChange={onMonthChange}
-        modifiers={modifiers}
+        modifiers={customModifiers}
         modifiersClassNames={{
             disabled: 'rdp-day_disabled',
             selected: 'rdp-day_selected',

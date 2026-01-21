@@ -1,6 +1,6 @@
 'use client';
 
-import { FC, useState, useEffect } from 'react';
+import { FC, useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { X } from 'lucide-react';
 import api from '@/services/api';
@@ -19,6 +19,10 @@ interface BookingModalProps {
   initialStep?: number;
 }
 
+interface FacilityWithQuantity extends Facility {
+  quantity: number;
+}
+
 const BookingModal: FC<BookingModalProps> = ({
   hallId,
   isOpen,
@@ -32,7 +36,7 @@ const BookingModal: FC<BookingModalProps> = ({
   const [selectedDates, setSelectedDates] = useState<Date[] | undefined>(initialSelectedDates);
   const [displayedMonth, setDisplayedMonth] = useState<Date>(new Date());
   const [eventDetails, setEventDetails] = useState('');
-  const [selectedFacilities, setSelectedFacilities] = useState<(Facility & { quantity: number })[]>([]);
+  const [selectedFacilities, setSelectedFacilities] = useState<FacilityWithQuantity[]>([]);
   const [totalPrice, setTotalPrice] = useState(0);
   const [hallCost, setHallCost] = useState(0);
   const [startTime, setStartTime] = useState('');
@@ -50,11 +54,11 @@ const BookingModal: FC<BookingModalProps> = ({
   const nextStep = () => setStep(step + 1);
   const prevStep = () => setStep(step - 1);
 
-  const generateTimeOptions = (openingHour: number, closingHour: number, disabledHours: number[]) => {
+  const generateTimeOptions = (openingHour: number, closingHour: number, disabled: number[]) => {
     const options = [];
     for (let i = openingHour; i <= closingHour; i++) {
       const time = `${i.toString().padStart(2, '0')}:00`;
-      const isDisabled = disabledHours.includes(i);
+      const isDisabled = disabled.includes(i);
       options.push(
         <option
           key={time}
@@ -82,6 +86,33 @@ const BookingModal: FC<BookingModalProps> = ({
       }
     }
   }, [startTime, endTime]);
+
+  const calculateFacilityCost = useCallback((facility: FacilityWithQuantity) => {
+    const numberOfDays = selectedDates?.length || 1;
+    const quantity = facility.quantity || 1;
+
+    if (facility.chargeMethod === 'per_day') {
+      return facility.cost * numberOfDays * quantity;
+    }
+    if (facility.chargeMethod === 'per_hour') {
+      let totalDuration = 0;
+      if (usePerDateTimes && selectedDates) {
+        selectedDates.forEach(date => {
+          const times = dateTimes[date.toDateString()] || { startTime, endTime };
+          if (times.startTime && times.endTime) {
+            const [startH, startM] = times.startTime.split(':').map(Number);
+            const [endH, endM] = times.endTime.split(':').map(Number);
+            const diff = (endH + endM / 60) - (startH + startM / 60);
+            if (diff > 0) totalDuration += diff;
+          }
+        });
+      } else {
+        totalDuration = durationInHours * numberOfDays;
+      }
+      return facility.cost * totalDuration * quantity;
+    }
+    return facility.cost * quantity;
+  }, [selectedDates, usePerDateTimes, dateTimes, startTime, endTime, durationInHours]);
 
   useEffect(() => {
     if (hall && selectedDates && selectedDates.length > 0) {
@@ -120,7 +151,7 @@ const BookingModal: FC<BookingModalProps> = ({
       setHallCost(0);
       setTotalPrice(0);
     }
-  }, [hall, selectedDates, selectedFacilities, durationInHours, usePerDateTimes, dateTimes, startTime, endTime]);
+  }, [hall, selectedDates, selectedFacilities, durationInHours, usePerDateTimes, dateTimes, startTime, endTime, calculateFacilityCost]);
 
   useEffect(() => {
     if (isOpen) {
@@ -142,8 +173,8 @@ const BookingModal: FC<BookingModalProps> = ({
         try {
           const response = await api.get(`/halls/${hallId}`);
           setHall(response.data.data);
-        } catch (error) {
-          console.error('Failed to fetch hall details:', error);
+        } catch (err) {
+          console.error('Failed to fetch hall details:', err);
           setError('Failed to load hall information. Please try again.');
         }
       };
@@ -179,33 +210,6 @@ const BookingModal: FC<BookingModalProps> = ({
         [field]: value
       }
     }));
-  };
-
-  const calculateFacilityCost = (facility: Facility & { quantity: number }) => {
-    const numberOfDays = selectedDates?.length || 1;
-    const quantity = facility.quantity || 1;
-
-    if (facility.chargeMethod === 'per_day') {
-      return facility.cost * numberOfDays * quantity;
-    }
-    if (facility.chargeMethod === 'per_hour') {
-      let totalDuration = 0;
-      if (usePerDateTimes && selectedDates) {
-        selectedDates.forEach(date => {
-          const times = dateTimes[date.toDateString()] || { startTime, endTime };
-          if (times.startTime && times.endTime) {
-            const [startH, startM] = times.startTime.split(':').map(Number);
-            const [endH, endM] = times.endTime.split(':').map(Number);
-            const diff = (endH + endM / 60) - (startH + startM / 60);
-            if (diff > 0) totalDuration += diff;
-          }
-        });
-      } else {
-        totalDuration = durationInHours * numberOfDays;
-      }
-      return facility.cost * totalDuration * quantity;
-    }
-    return facility.cost * quantity;
   };
 
   const handlePayment = async (paymentType: 'book' | 'reserve') => {
@@ -251,7 +255,7 @@ const BookingModal: FC<BookingModalProps> = ({
       });
 
       const facilitiesPayload = selectedFacilities.map(f => ({
-        facilityId: f.facility?._id,
+        facilityId: f.facility?._id || f._id,
         quantity: f.quantity,
       }));
 
@@ -283,8 +287,9 @@ const BookingModal: FC<BookingModalProps> = ({
       } else {
         setError('Could not retrieve payment URL. Please try again.');
       }
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.message || 'An unexpected error occurred.';
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string } } };
+      const errorMessage = e.response?.data?.message || 'An unexpected error occurred.';
       setError(errorMessage);
       Swal.fire('Error', errorMessage, 'error');
     } finally {

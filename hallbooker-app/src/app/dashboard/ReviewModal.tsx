@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Star, X } from 'lucide-react';
 import api from '@/services/api';
 import Swal from 'sweetalert2';
-import { Booking, Review } from '@/types';
+import { Booking, Review, Hall } from '@/types';
 
 interface ReviewModalProps {
   booking: Booking;
@@ -18,6 +18,10 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ booking, existingReview, onCl
   const [loading, setLoading] = useState(false);
   const [hover, setHover] = useState(0);
 
+  const hall = typeof booking.hall === 'object' ? (booking.hall as Hall) : null;
+  const hallId = hall ? hall._id : booking.hall;
+  const hallName = hall ? hall.name : 'Hall';
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (rating === 0) {
@@ -31,7 +35,7 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ booking, existingReview, onCl
 
     setLoading(true);
     try {
-      await api.post(`/reviews/hall/${booking.hall._id}/booking/${booking._id}`, {
+      await api.post(`/reviews/hall/${hallId}/booking/${booking._id}`, {
         rating,
         comment,
       });
@@ -52,7 +56,7 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ booking, existingReview, onCl
       <div className="bg-white rounded-lg w-full max-w-lg shadow-xl overflow-hidden border border-gray-200">
         <div className="flex justify-between items-center p-4 border-b">
           <h2 className="text-xl font-bold text-gray-800">
-            {existingReview ? 'Your Review' : `Rate & Review ${booking.hall?.name || 'Hall'}`}
+            {existingReview ? 'Your Review' : `Rate & Review ${hallName}`}
           </h2>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
             <X size={24} />

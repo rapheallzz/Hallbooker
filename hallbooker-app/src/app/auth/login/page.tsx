@@ -5,13 +5,6 @@ import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import AuthLayout from '@/components/auth/AuthLayout';
 import api from '@/services/api';
-import { jwtDecode } from 'jwt-decode';
-
-// Define the shape of the decoded token
-interface DecodedToken {
-  activeRole: string;
-  // ... other properties from the token
-}
 
 const LoginPage = () => {
   const [role, setRole] = useState('user');
@@ -51,8 +44,9 @@ const LoginPage = () => {
       // The login function in AuthContext will now handle the redirect
       login(accessToken, userWithActiveRole);
 
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'An error occurred during login.');
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string } } };
+      setError(e.response?.data?.message || 'An error occurred during login.');
     } finally {
       setIsLoading(false);
     }
@@ -117,7 +111,7 @@ const LoginPage = () => {
           </Link>
         </div>
         <p className="text-sm text-center text-gray-600">
-          Don't have an account?{' '}
+          Don&apos;t have an account?{' '}
           <Link href="/auth/register" className="font-medium text-indigo-600 hover:text-indigo-500">
             Register
           </Link>

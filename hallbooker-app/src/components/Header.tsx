@@ -16,7 +16,7 @@ import { getDashboardPath } from "@/utils/redirects";
 const Header = () => {
   const { user, logout, updateToken, updateUserApplicationStatus } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
+  const [message] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [roleSwitchOpen, setRoleSwitchOpen] = useState(false);
   const [notificationDropdownOpen, setNotificationDropdownOpen] = useState(false);
@@ -32,7 +32,6 @@ const Header = () => {
 
   const handleApply = async () => {
     setLoading(true);
-    setMessage("");
     try {
       await api.post("/users/apply-hall-owner", { hasReadTermsOfService: true });
       updateUserApplicationStatus("pending");
@@ -41,8 +40,9 @@ const Header = () => {
         title: "Application Submitted!",
         text: "Your application to become a hall owner has been submitted successfully.",
       });
-    } catch (error: any) {
-        const errorMessage = error.response?.data?.message || "An error occurred. Please try again.";
+    } catch (error: unknown) {
+        const err = error as { response?: { data?: { message?: string } } };
+        const errorMessage = err.response?.data?.message || "An error occurred. Please try again.";
         Swal.fire({
           icon: "error",
           title: "Application Failed",
@@ -74,12 +74,13 @@ const Header = () => {
       // Redirect based on the new role
       const redirectPath = getDashboardPath(role);
       router.push(redirectPath);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { code?: string; response?: { data?: { message?: string } } };
       let errorMessage = 'An error occurred. Please try again.';
-      if (error.code === 'ECONNABORTED') {
+      if (err.code === 'ECONNABORTED') {
         errorMessage = 'The request timed out. Please try again.';
-      } else if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
       }
 
       Swal.fire({
@@ -114,7 +115,7 @@ const Header = () => {
         );
       }
 
-      if (user.hallOwnerApplication?.status === 'not-applied') {
+      if (user.hallOwnerApplication?.status === 'not-applied' || !user.hallOwnerApplication?.status) {
         return (
           <button
             onClick={() => setIsTermsModalOpen(true)}

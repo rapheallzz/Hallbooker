@@ -7,7 +7,7 @@ import StaffModal from '@/components/vendor/StaffModal';
 import { useUI } from '@/context/UIContext';
 import withAuth from '@/components/auth/withAuth';
 import Swal from 'sweetalert2';
-import { Loader2, Trash2, Edit, Plus } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 interface Staff {
   _id: string;
@@ -31,6 +31,7 @@ const StaffContent = () => {
       setStaff(response.data.data);
       setError('');
     } catch (err) {
+      console.error(err);
       setError('Failed to fetch staff members. You can still add a new one.');
       setStaff([]);
     } finally {
@@ -42,7 +43,7 @@ const StaffContent = () => {
     fetchStaff();
   }, []);
 
-  const handleAddStaff = async (formData: any) => {
+  const handleAddStaff = async (formData: Record<string, unknown>) => {
     Swal.fire({
       title: 'Adding Staff Member...',
       allowOutsideClick: false,
@@ -72,7 +73,7 @@ const StaffContent = () => {
     }
   };
 
-  const handleUpdateStaff = async (formData: any) => {
+  const handleUpdateStaff = async (formData: Record<string, unknown>) => {
     // The API schema does not seem to support staff updates, but this is how you would do it.
     console.log("Updating staff not yet supported by this UI.", formData);
     closeStaffModal();

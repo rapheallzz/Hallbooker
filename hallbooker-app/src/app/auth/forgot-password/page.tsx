@@ -17,8 +17,9 @@ const ForgotPasswordPage = () => {
     try {
       await api.post('/auth/forgot-password', { email });
       setSuccess('Password reset link has been sent to your email.');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'An error occurred.');
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string } } };
+      setError(e.response?.data?.message || 'An error occurred.');
     }
   };
 

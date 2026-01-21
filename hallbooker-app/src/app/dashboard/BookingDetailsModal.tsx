@@ -1,8 +1,14 @@
 
 "use client";
 import React from 'react';
+import { Booking, Hall } from '@/types';
 
-const BookingDetailsModal = ({ booking, onClose }) => {
+interface BookingDetailsModalProps {
+  booking: Booking | null;
+  onClose: () => void;
+}
+
+const BookingDetailsModal: React.FC<BookingDetailsModalProps> = ({ booking, onClose }) => {
   if (!booking) {
     return null;
   }
@@ -11,13 +17,15 @@ const BookingDetailsModal = ({ booking, onClose }) => {
     window.print();
   };
 
+  const hall = typeof booking.hall === 'object' ? (booking.hall as Hall) : null;
+
   const handleShare = () => {
     if (navigator.share) {
       navigator.share({
         title: 'Booking Details',
         text: `Check out my booking details:\nBooking ID: ${
           booking.bookingId
-        }\nEvent: ${booking.eventDetails}\nHall: ${booking.hall?.name || "N/A"}`,
+        }\nEvent: ${booking.eventDetails}\nHall: ${hall?.name || "N/A"}`,
         url: window.location.href,
       }).catch((error) => console.error("Error sharing", error));
     } else {
@@ -75,11 +83,11 @@ const BookingDetailsModal = ({ booking, onClose }) => {
               <div className="space-y-2 text-gray-700">
                 <div className="flex justify-between">
                   <span className="font-medium">Hall Name:</span>
-                  <span>{booking.hall?.name || "N/A"}</span>
+                  <span>{hall?.name || "N/A"}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="font-medium">Location:</span>
-                  <span>{booking.hall?.location || "N/A"}</span>
+                  <span>{hall?.location || "N/A"}</span>
                 </div>
               </div>
             </div>

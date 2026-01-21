@@ -4,26 +4,13 @@ import api from '@/services/api';
 import ReservationCard from "@/app/dashboard/ReservationCard";
 import BookingDetailsModal from "@/app/dashboard/BookingDetailsModal";
 import Swal from "sweetalert2";
-
-interface Hall {
-  _id: string;
-  name: string;
-}
-
-interface Reservation {
-  _id: string;
-  hall: Hall | string;
-  bookingDates: { startTime: string, endTime: string }[];
-  status: 'ACTIVE' | 'CONVERTED' | 'EXPIRED';
-  totalPrice: number;
-  reservationId: string;
-}
+import { Booking, Reservation } from '@/types';
 
 const ReservationsList = () => {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedReservation, setSelectedReservation] = useState(null);
+  const [selectedReservation, setSelectedReservation] = useState<Booking | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
@@ -59,7 +46,7 @@ const ReservationsList = () => {
     fetchReservations();
   }, []);
 
-  const [paymentLoading, setPaymentLoading] = useState<string | null>(null);
+  const [, setPaymentLoading] = useState<string | null>(null);
 
   const handleCompleteBooking = async (reservation: Reservation) => {
     setPaymentLoading(reservation.reservationId);
@@ -91,7 +78,7 @@ const ReservationsList = () => {
     return <p className="text-red-500">{error}</p>;
   }
 
-  const handleViewReceipt = async (reservationId) => {
+  const handleViewReceipt = async (reservationId: string) => {
     try {
       const response = await api.get(`/bookings/search/${reservationId}`);
       if (response.data.data) {
@@ -114,9 +101,9 @@ const ReservationsList = () => {
 
   return (
     <div>
-      <h2 className="text-2xl font-semibold mb-6">My Reservations</h2>
+      <h2 className="text-2xl font-semibold mb-6 text-gray-800">My Reservations</h2>
       {reservations.length === 0 ? (
-        <p>You have no reservations.</p>
+        <p className="text-gray-500">You have no reservations.</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {reservations.map((reservation) => (

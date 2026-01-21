@@ -41,8 +41,9 @@ const RegisterPage = () => {
       setTimeout(() => {
         router.push('/auth/verify-email');
       }, 3000);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'An error occurred during registration.');
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string } } };
+      setError(e.response?.data?.message || 'An error occurred during registration.');
     } finally {
       setIsLoading(false);
     }

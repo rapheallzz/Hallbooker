@@ -9,11 +9,19 @@ interface Hall {
   name: string;
 }
 
+interface StaffMember {
+  _id?: string;
+  fullName: string;
+  email: string;
+  phone?: string;
+  hallIds?: string[];
+}
+
 interface StaffModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (formData: any) => void;
-  staff?: any; // For editing existing staff
+  onSubmit: (formData: Record<string, unknown>) => void;
+  staff?: StaffMember; // For editing existing staff
 }
 
 const StaffModal: React.FC<StaffModalProps> = ({ isOpen, onClose, onSubmit, staff }) => {
@@ -78,7 +86,7 @@ const StaffModal: React.FC<StaffModalProps> = ({ isOpen, onClose, onSubmit, staf
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Omit password if it's empty (for editing without changing password)
-    const dataToSubmit: any = { ...formData };
+    const dataToSubmit: Record<string, unknown> = { ...formData };
     if (!dataToSubmit.password) {
       delete dataToSubmit.password;
     }

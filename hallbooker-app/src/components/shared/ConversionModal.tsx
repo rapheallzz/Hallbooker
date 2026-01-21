@@ -45,11 +45,12 @@ const ConversionModal: React.FC<ConversionModalProps> = ({ isOpen, onClose, rese
       }
       onSuccess();
       onClose();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
       Swal.fire({
         icon: 'error',
         title: 'Conversion Failed',
-        text: error.response?.data?.message || 'An unexpected error occurred.',
+        text: err.response?.data?.message || 'An unexpected error occurred.',
       });
     }
   };

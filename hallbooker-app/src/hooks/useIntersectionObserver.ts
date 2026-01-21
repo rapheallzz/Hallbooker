@@ -9,7 +9,7 @@ interface IntersectionObserverOptions {
 }
 
 const useIntersectionObserver = (
-  ref: RefObject<Element>,
+  ref: RefObject<Element | null>,
   options: IntersectionObserverOptions = {}
 ): boolean => {
   const [isVisible, setIsVisible] = useState(false);

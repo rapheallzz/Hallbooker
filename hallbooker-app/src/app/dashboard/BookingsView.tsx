@@ -6,7 +6,7 @@ import BookingDetailsModal from "./BookingDetailsModal";
 import ReviewModal from "./ReviewModal";
 import Swal from "sweetalert2";
 import { useAuth } from "@/context/AuthContext";
-import { Booking, Review } from "@/types";
+import { Booking, Review, Hall } from "@/types";
 
 const BookingsView = () => {
   const { user } = useAuth();
@@ -79,7 +79,8 @@ const BookingsView = () => {
     try {
       Swal.showLoading();
       // Fetch all reviews for this hall to check if one exists for this booking (fallback)
-      const response = await api.get(`/reviews/hall/${booking.hall._id}`);
+      const hallId = typeof booking.hall === 'object' ? (booking.hall as Hall)._id : booking.hall;
+      const response = await api.get(`/reviews/hall/${hallId}`);
       const reviews = (response.data.data || []) as Review[];
 
       const foundReview = reviews.find((r: Review) =>
@@ -111,7 +112,7 @@ const BookingsView = () => {
     }
   };
 
-  const filteredBookings = bookings.filter((booking: { bookingDates: { endTime: string }[] }) => {
+  const filteredBookings = bookings.filter((booking: Booking) => {
     if (!booking.bookingDates || booking.bookingDates.length === 0) return activeTab === "upcoming";
     const latestEndTime = new Date(
       Math.max(...booking.bookingDates.map((d) => new Date(d.endTime).getTime()))
@@ -186,7 +187,7 @@ const BookingsView = () => {
           onClose={handleCloseModal}
         />
       )}
-      {isReviewModalOpen && (
+      {isReviewModalOpen && selectedBookingForReview && (
         <ReviewModal
           booking={selectedBookingForReview}
           existingReview={existingReview}
