@@ -121,9 +121,7 @@ const BookingModal: FC<BookingModalProps> = ({
       const numberOfDays = selectedDates.length;
 
       let calculatedHallCost = 0;
-      if (dailyRate > 0) {
-        calculatedHallCost = dailyRate * numberOfDays;
-      } else if (hourlyRate > 0) {
+      if (hourlyRate > 0) {
         let totalDuration = 0;
         if (usePerDateTimes) {
           selectedDates.forEach(date => {
@@ -139,6 +137,8 @@ const BookingModal: FC<BookingModalProps> = ({
           totalDuration = durationInHours * numberOfDays;
         }
         calculatedHallCost = hourlyRate * totalDuration;
+      } else if (dailyRate > 0) {
+        calculatedHallCost = dailyRate * numberOfDays;
       }
       setHallCost(calculatedHallCost);
 
@@ -566,8 +566,8 @@ const BookingModal: FC<BookingModalProps> = ({
                 </div>
                  {bookingMode === 'reserve' && (
                   <div className="flex justify-between mt-2">
-                    <span className="text-gray-600">Reservation Fee:</span>
-                    <span className="font-medium text-gray-900">₦0</span>
+                    <span className="text-gray-600">Reservation Fee (40%):</span>
+                    <span className="font-medium text-gray-900">₦{(totalPrice * 0.4).toLocaleString()}</span>
                   </div>
                 )}
               </div>

@@ -209,10 +209,10 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
       const hourlyRate = selectedHall.pricing.hourlyRate || 0;
 
       let calculatedHallPrice = 0;
-      if (dailyRate > 0) {
-        calculatedHallPrice = dailyRate * durationInDays;
-      } else {
+      if (hourlyRate > 0) {
         calculatedHallPrice = hourlyRate * durationInHours;
+      } else if (dailyRate > 0) {
+        calculatedHallPrice = dailyRate * durationInDays;
       }
       setHallPrice(calculatedHallPrice);
 
@@ -760,9 +760,10 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
               </div>
               <div className="flex justify-between items-center mt-8">
                 <div>
-                  <div>Hall Price: ₦{hallPrice.toLocaleString()}</div>
-                  <div>Facilities Price: ₦{facilitiesPrice.toLocaleString()}</div>
-                  <div>Total Price: ₦{totalPrice.toLocaleString()}</div>
+                  <div className="text-sm">Hall Price: ₦{hallPrice.toLocaleString()}</div>
+                  <div className="text-sm">Facilities Price: ₦{facilitiesPrice.toLocaleString()}</div>
+                  <div className="text-sm font-semibold">Total Price: ₦{totalPrice.toLocaleString()}</div>
+                  <div className="text-sm font-bold text-[#B68945]">Reservation Fee (40%): ₦{(totalPrice * 0.4).toLocaleString()}</div>
                 </div>
                 <button type="submit" className="px-4 py-2 rounded-md text-white bg-primary hover:bg-primary-dark">
                   Reserve with Part Payment
@@ -991,7 +992,12 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
                 </select>
               </div>
 
-              <div className="flex justify-end mt-8">
+              <div className="flex justify-between items-center mt-8">
+                <div>
+                  <div className="text-sm">Hall Price: ₦{hallPrice.toLocaleString()}</div>
+                  <div className="text-sm">Facilities Price: ₦{facilitiesPrice.toLocaleString()}</div>
+                  <div className="text-sm font-bold">Total Price: ₦{totalPrice.toLocaleString()}</div>
+                </div>
                 <button type="submit" className="px-4 py-2 rounded-md text-white bg-primary hover:bg-primary-dark">
                   Create Recurring Booking
                 </button>
@@ -1168,9 +1174,9 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
               </div>
               <div className="flex justify-between items-center mt-8">
                 <div>
-                  <div>Hall Price: ₦{hallPrice.toLocaleString()}</div>
-                  <div>Facilities Price: ₦{facilitiesPrice.toLocaleString()}</div>
-                  <div>Total Price: ₦{totalPrice.toLocaleString()}</div>
+                  <div className="text-sm">Hall Price: ₦{hallPrice.toLocaleString()}</div>
+                  <div className="text-sm">Facilities Price: ₦{facilitiesPrice.toLocaleString()}</div>
+                  <div className="text-sm font-bold">Total Price: ₦{totalPrice.toLocaleString()}</div>
                 </div>
                 <button type="submit" className="px-4 py-2 rounded-md text-white bg-primary hover:bg-primary-dark">
                   Pay in Full
