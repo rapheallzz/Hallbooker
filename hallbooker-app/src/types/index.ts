@@ -86,6 +86,11 @@ export interface Hall {
     dailyRate?: number;
     hourlyRate?: number;
   };
+  recurringBookingDiscount?: {
+    percentage: number;
+    minBookings: number;
+  };
+  reservationFeePercentage?: number;
   openingHour?: number;
   closingHour?: number;
   bookingBufferInHours?: number;

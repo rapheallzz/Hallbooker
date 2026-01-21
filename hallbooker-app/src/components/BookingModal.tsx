@@ -39,6 +39,7 @@ const BookingModal: FC<BookingModalProps> = ({
   const [selectedFacilities, setSelectedFacilities] = useState<FacilityWithQuantity[]>([]);
   const [totalPrice, setTotalPrice] = useState(0);
   const [hallCost, setHallCost] = useState(0);
+  const [discountAmount, setDiscountAmount] = useState(0);
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
   const [usePerDateTimes, setUsePerDateTimes] = useState(false);
@@ -89,10 +90,10 @@ const BookingModal: FC<BookingModalProps> = ({
 
   const calculateFacilityCost = useCallback((facility: FacilityWithQuantity) => {
     const numberOfDays = selectedDates?.length || 1;
-    const quantity = facility.quantity || 1;
+    const multiplier = facility.chargePerUnit ? (facility.quantity || 1) : 1;
 
     if (facility.chargeMethod === 'per_day') {
-      return facility.cost * numberOfDays * quantity;
+      return facility.cost * numberOfDays * multiplier;
     }
     if (facility.chargeMethod === 'per_hour') {
       let totalDuration = 0;
@@ -109,9 +110,9 @@ const BookingModal: FC<BookingModalProps> = ({
       } else {
         totalDuration = durationInHours * numberOfDays;
       }
-      return facility.cost * totalDuration * quantity;
+      return facility.cost * totalDuration * multiplier;
     }
-    return facility.cost * quantity;
+    return facility.cost * multiplier;
   }, [selectedDates, usePerDateTimes, dateTimes, startTime, endTime, durationInHours]);
 
   useEffect(() => {
@@ -146,10 +147,22 @@ const BookingModal: FC<BookingModalProps> = ({
         return total + calculateFacilityCost(facility);
       }, 0);
 
-      setTotalPrice(calculatedHallCost + facilitiesCost);
+      const subTotal = calculatedHallCost + facilitiesCost;
+      let calculatedDiscount = 0;
+
+      if (hall.recurringBookingDiscount) {
+        const { percentage, minBookings } = hall.recurringBookingDiscount;
+        if (selectedDates.length >= minBookings) {
+          calculatedDiscount = subTotal * (percentage / 100);
+        }
+      }
+
+      setDiscountAmount(calculatedDiscount);
+      setTotalPrice(subTotal - calculatedDiscount);
     } else {
       setHallCost(0);
       setTotalPrice(0);
+      setDiscountAmount(0);
     }
   }, [hall, selectedDates, selectedFacilities, durationInHours, usePerDateTimes, dateTimes, startTime, endTime, calculateFacilityCost]);
 
@@ -560,14 +573,24 @@ const BookingModal: FC<BookingModalProps> = ({
                     ))}
                   </div>
                 )}
-                <div className="flex justify-between font-bold text-lg border-t pt-2 mt-2">
+                {discountAmount > 0 && (
+                  <div className="flex justify-between text-green-600 font-medium pt-2 border-t mt-2">
+                    <span>Discount Applied:</span>
+                    <span>-₦{discountAmount.toLocaleString()}</span>
+                  </div>
+                )}
+                <div className={`flex justify-between font-bold text-lg ${discountAmount > 0 ? '' : 'border-t mt-2'} pt-2`}>
                     <span className="text-gray-800">Total Price:</span>
                     <span className="text-gray-900">₦{totalPrice.toLocaleString()}</span>
                 </div>
                  {bookingMode === 'reserve' && (
                   <div className="flex justify-between mt-2">
-                    <span className="text-gray-600">Reservation Fee (40%):</span>
-                    <span className="font-medium text-gray-900">₦{(totalPrice * 0.4).toLocaleString()}</span>
+                    <span className="text-gray-600">
+                      Reservation Fee ({hall?.reservationFeePercentage || 40}%):
+                    </span>
+                    <span className="font-medium text-gray-900">
+                      ₦{(totalPrice * ((hall?.reservationFeePercentage || 40) / 100)).toLocaleString()}
+                    </span>
                   </div>
                 )}
               </div>

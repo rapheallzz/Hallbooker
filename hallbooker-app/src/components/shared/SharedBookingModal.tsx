@@ -35,6 +35,7 @@ interface FacilityItem {
   cost: number;
   chargeMethod: string;
   quantity: number;
+  chargePerUnit: boolean;
 }
 
 interface HallItem {
@@ -45,6 +46,11 @@ interface HallItem {
     dailyRate?: number;
     hourlyRate?: number;
   };
+  recurringBookingDiscount?: {
+    percentage: number;
+    minBookings: number;
+  };
+  reservationFeePercentage?: number;
 }
 
 interface UnavailableDate {
@@ -74,6 +80,7 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
   const [hallPrice, setHallPrice] = useState(0);
   const [facilitiesPrice, setFacilitiesPrice] = useState(0);
   const [totalPrice, setTotalPrice] = useState(0);
+  const [discountAmount, setDiscountAmount] = useState(0);
   const [usePerDateTimes, setUsePerDateTimes] = useState(false);
   const [dateTimes, setDateTimes] = useState<Record<string, { startTime: string; endTime: string }>>({});
   const [paymentOptions, setPaymentOptions] = useState<{ paymentMethods: string[]; paymentStatuses: string[] }>({ paymentMethods: [], paymentStatuses: [] });
@@ -220,15 +227,16 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
       formData.selectedFacilities.forEach(sf => {
         const facility = (facilities as FacilityItem[]).find(f => (f.facility?._id || f._id) === sf.facilityId);
         if (facility) {
+          const multiplier = facility.chargePerUnit ? sf.quantity : 1;
           switch (facility.chargeMethod) {
             case 'flat':
-              currentFacilitiesPrice += facility.cost * sf.quantity;
+              currentFacilitiesPrice += facility.cost * multiplier;
               break;
             case 'per_hour':
-              currentFacilitiesPrice += facility.cost * sf.quantity * durationInHours;
+              currentFacilitiesPrice += facility.cost * multiplier * durationInHours;
               break;
             case 'per_day':
-              currentFacilitiesPrice += facility.cost * sf.quantity * durationInDays;
+              currentFacilitiesPrice += facility.cost * multiplier * durationInDays;
               break;
             default:
               break;
@@ -236,7 +244,19 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
         }
       });
       setFacilitiesPrice(currentFacilitiesPrice);
-      setTotalPrice(calculatedHallPrice + currentFacilitiesPrice);
+
+      const subTotal = calculatedHallPrice + currentFacilitiesPrice;
+      let calculatedDiscount = 0;
+
+      if (activeTab === 'recurring' && selectedHall.recurringBookingDiscount) {
+        const { percentage, minBookings } = selectedHall.recurringBookingDiscount;
+        if (formData.dates.length >= minBookings) {
+          calculatedDiscount = subTotal * (percentage / 100);
+        }
+      }
+
+      setDiscountAmount(calculatedDiscount);
+      setTotalPrice(subTotal - calculatedDiscount);
     };
 
     calculateTotalPrice();
@@ -763,7 +783,15 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
                   <div className="text-sm">Hall Price: ₦{hallPrice.toLocaleString()}</div>
                   <div className="text-sm">Facilities Price: ₦{facilitiesPrice.toLocaleString()}</div>
                   <div className="text-sm font-semibold">Total Price: ₦{totalPrice.toLocaleString()}</div>
-                  <div className="text-sm font-bold text-[#B68945]">Reservation Fee (40%): ₦{(totalPrice * 0.4).toLocaleString()}</div>
+                  {(() => {
+                    const selectedHall = halls.find(h => h._id === formData.hall);
+                    const feePercentage = selectedHall?.reservationFeePercentage || 40;
+                    return (
+                      <div className="text-sm font-bold text-[#B68945]">
+                        Reservation Fee ({feePercentage}%): ₦{(totalPrice * (feePercentage / 100)).toLocaleString()}
+                      </div>
+                    );
+                  })()}
                 </div>
                 <button type="submit" className="px-4 py-2 rounded-md text-white bg-primary hover:bg-primary-dark">
                   Reserve with Part Payment
@@ -996,6 +1024,9 @@ const SharedBookingModal: React.FC<BookingModalProps> = ({ isOpen, onClose, onSu
                 <div>
                   <div className="text-sm">Hall Price: ₦{hallPrice.toLocaleString()}</div>
                   <div className="text-sm">Facilities Price: ₦{facilitiesPrice.toLocaleString()}</div>
+                  {discountAmount > 0 && (
+                    <div className="text-sm text-green-600 font-medium">Discount Applied: -₦{discountAmount.toLocaleString()}</div>
+                  )}
                   <div className="text-sm font-bold">Total Price: ₦{totalPrice.toLocaleString()}</div>
                 </div>
                 <button type="submit" className="px-4 py-2 rounded-md text-white bg-primary hover:bg-primary-dark">
