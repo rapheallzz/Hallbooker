@@ -3,12 +3,12 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import Image from 'next/image';
 
-const Logo = () => (
+const Logo = ({ className = "text-white w-12 h-12" }: { className?: string }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 24 24"
     fill="currentColor"
-    className="w-12 h-12 text-white"
+    className={className}
   >
     <path d="M4 4h16v2H4V4zm0 14h16v2H4v-2zm0-7h16v2H4v-2z" />
   </svg>
@@ -55,8 +55,9 @@ const AuthLayout = ({ children }: { children: React.ReactNode }) => {
   }, [images.length]);
 
   return (
-    <div className="flex h-screen">
-      <div className="relative w-1/2 h-full">
+    <div className="flex flex-col lg:flex-row min-h-screen">
+      {/* Image Section - Hidden on mobile */}
+      <div className="hidden lg:block relative lg:w-1/2 lg:h-screen lg:sticky lg:top-0">
         {images.map((image, index) => (
           <Image
             key={image}
@@ -76,7 +77,13 @@ const AuthLayout = ({ children }: { children: React.ReactNode }) => {
           <p className="text-lg mt-2">Discover the perfect hall for your next event.</p>
         </div>
       </div>
-      <div className="w-1/2 h-full flex items-center justify-center bg-white">
+
+      {/* Form Section */}
+      <div className="w-full lg:w-1/2 min-h-screen flex flex-col items-center justify-center bg-white p-6 lg:p-0">
+        {/* Mobile Logo */}
+        <div className="lg:hidden mb-8">
+          <Logo className="text-primary w-16 h-16" />
+        </div>
         {children}
       </div>
     </div>
