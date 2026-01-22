@@ -1,6 +1,7 @@
 
 "use client";
 import React from 'react';
+import { X } from 'lucide-react';
 import { Booking, Hall } from '@/types';
 
 interface BookingDetailsModalProps {
@@ -34,14 +35,19 @@ const BookingDetailsModal: React.FC<BookingDetailsModalProps> = ({ booking, onCl
   };
 
   return (
-    <div className="fixed inset-0 flex justify-center items-center z-50">
-      <div className="bg-white p-8 rounded-lg w-11/12 md:w-1/2 max-w-2xl shadow-xl">
-        <div id="booking-details-content">
-          <h2 className="text-3xl font-bold mb-6 text-center border-b pb-4 text-gray-800">Booking Receipt</h2>
+    <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center bg-black/50 p-0 lg:p-4">
+      <div className="bg-white rounded-t-2xl lg:rounded-xl shadow-2xl w-full max-w-2xl transform transition-all duration-300 max-h-[90vh] overflow-y-auto">
+        <div className="p-6 lg:p-10" id="booking-details-content">
+          <div className="flex justify-between items-center mb-6 border-b pb-4">
+            <h2 className="text-2xl lg:text-3xl font-bold text-gray-800">Booking Receipt</h2>
+            <button onClick={onClose} className="lg:hidden text-gray-500">
+              <X className="h-6 w-6" />
+            </button>
+          </div>
           <div className="space-y-6">
             <div>
-              <h3 className="text-xl font-semibold mb-3 border-b pb-2 text-primary">Booking Information</h3>
-              <div className="space-y-2 text-gray-700">
+              <h3 className="text-lg lg:text-xl font-semibold mb-3 border-b pb-2 text-primary">Booking Information</h3>
+              <div className="space-y-3 text-sm lg:text-base text-gray-700">
                 <div className="flex justify-between">
                   <span className="font-medium">Booking ID:</span>
                   <span>{booking.bookingId}</span>
@@ -92,31 +98,37 @@ const BookingDetailsModal: React.FC<BookingDetailsModalProps> = ({ booking, onCl
               </div>
             </div>
             <div className="border-t pt-4">
-              <div className="flex justify-between items-center text-2xl font-bold text-gray-800">
+              <div className="flex justify-between items-center text-xl lg:text-2xl font-bold text-gray-800">
                 <span>Total Price:</span>
                 <span>₦{booking.totalPrice.toLocaleString()}</span>
               </div>
             </div>
           </div>
         </div>
-        <div className="mt-8 flex justify-end space-x-4">
+        <div className="sticky bottom-0 bg-white border-t p-4 lg:p-0 lg:border-t-0 lg:mt-8 flex flex-col lg:flex-row justify-end gap-3 lg:gap-4 px-6 lg:px-10 pb-6 lg:pb-10">
           <button
-            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+            className="w-full lg:w-auto px-6 py-2.5 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
             onClick={handlePrint}
           >
-            Print
+            Print Receipt
           </button>
           <button
-            className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
+            className="w-full lg:w-auto px-6 py-2.5 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors shadow-sm"
             onClick={handleShare}
           >
-            Share
+            Share Details
           </button>
           <button
-            className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition-colors"
+            className="hidden lg:block px-6 py-2.5 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 transition-colors"
             onClick={onClose}
           >
             Close
+          </button>
+          <button
+            className="lg:hidden w-full px-6 py-2.5 bg-gray-800 text-white font-semibold rounded-lg transition-colors"
+            onClick={onClose}
+          >
+            Done
           </button>
         </div>
       </div>

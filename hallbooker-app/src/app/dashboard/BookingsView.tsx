@@ -124,11 +124,11 @@ const BookingsView = () => {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">My Bookings</h2>
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
-        <div className="flex border-b">
+      <h2 className="text-2xl lg:text-3xl font-bold text-gray-800 mb-6">My Bookings</h2>
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-8 gap-6">
+        <div className="flex border-b w-full lg:w-auto">
           <button
-            className={`px-4 py-2 font-medium transition-colors duration-200 ${
+            className={`flex-1 lg:flex-none px-6 py-3 font-semibold transition-colors duration-200 ${
               activeTab === "upcoming"
                 ? "border-b-2 border-primary text-primary"
                 : "text-gray-500 hover:text-gray-700"
@@ -138,7 +138,7 @@ const BookingsView = () => {
             Upcoming
           </button>
           <button
-            className={`px-4 py-2 font-medium transition-colors duration-200 ${
+            className={`flex-1 lg:flex-none px-6 py-3 font-semibold transition-colors duration-200 ${
               activeTab === "past"
                 ? "border-b-2 border-primary text-primary"
                 : "text-gray-500 hover:text-gray-700"
@@ -148,21 +148,21 @@ const BookingsView = () => {
             Past
           </button>
         </div>
-        <div className="flex flex-1 justify-end">
+        <div className="flex items-center w-full lg:max-w-md">
           <input
-          type="text"
-          placeholder="Search by booking ID..."
-          className="p-2 border border-gray-400 rounded-md w-1/2 md:w-1/3 text-gray-800"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-        <button
-          className="ml-2 px-4 py-2 bg-primary text-white rounded-md"
-          onClick={handleSearch}
-        >
-          Search
-        </button>
-      </div>
+            type="text"
+            placeholder="Search by booking ID..."
+            className="flex-grow p-3 border border-gray-300 rounded-l-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <button
+            className="px-6 py-3 bg-primary text-white font-semibold rounded-r-lg hover:bg-opacity-90 transition-all shadow-sm"
+            onClick={handleSearch}
+          >
+            Search
+          </button>
+        </div>
       </div>
       {filteredBookings.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

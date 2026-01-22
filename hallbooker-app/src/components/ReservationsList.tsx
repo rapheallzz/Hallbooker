@@ -101,7 +101,7 @@ const ReservationsList = () => {
 
   return (
     <div>
-      <h2 className="text-2xl font-semibold mb-6 text-gray-800">My Reservations</h2>
+      <h2 className="text-2xl lg:text-3xl font-bold mb-6 text-gray-800">My Reservations</h2>
       {reservations.length === 0 ? (
         <p className="text-gray-500">You have no reservations.</p>
       ) : (
