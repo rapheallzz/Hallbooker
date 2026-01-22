@@ -343,10 +343,10 @@ const BookingModal: FC<BookingModalProps> = ({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center text-gray-800 transition-opacity duration-300">
-      <div className={`bg-white rounded-xl shadow-2xl p-6 w-full ${step === 1 ? 'max-w-2xl' : 'max-w-md'} transform transition-all duration-300`}>
+    <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center bg-black/50 text-gray-800 transition-opacity duration-300">
+      <div className={`bg-white rounded-t-2xl lg:rounded-xl shadow-2xl p-4 lg:p-6 w-full ${step === 1 ? 'max-w-2xl' : 'max-w-md'} transform transition-all duration-300 max-h-[95vh] overflow-y-auto`}>
         <div className="flex justify-between items-center pb-4 mb-4 border-b border-gray-200">
-          <h2 className="text-2xl font-semibold text-gray-900">Book Your Hall</h2>
+          <h2 className="text-xl lg:text-2xl font-semibold text-gray-900">Book Your Hall</h2>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-800">
             <X className="h-6 w-6" />
           </button>
@@ -355,17 +355,19 @@ const BookingModal: FC<BookingModalProps> = ({
           {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
 
           {step === 1 && (
-            <div className="flex justify-center items-start gap-4">
-              <Calendar
-                unavailableDates={[]}
-                selectedDates={selectedDates}
-                onChange={(dates) => setSelectedDates(dates)}
-                getDateAvailability={getDateAvailability}
-                displayedMonth={displayedMonth}
-                onMonthChange={setDisplayedMonth}
-              />
-              <div className="mt-4 p-4 border rounded-lg bg-gray-50">
-                <h3 className="font-semibold text-lg mb-3">Legend</h3>
+            <div className="flex flex-col lg:flex-row justify-center items-center lg:items-start gap-4">
+              <div className="w-full lg:w-auto flex justify-center">
+                <Calendar
+                  unavailableDates={[]}
+                  selectedDates={selectedDates}
+                  onChange={(dates) => setSelectedDates(dates)}
+                  getDateAvailability={getDateAvailability}
+                  displayedMonth={displayedMonth}
+                  onMonthChange={setDisplayedMonth}
+                />
+              </div>
+              <div className="w-full lg:mt-4 p-4 border rounded-lg bg-gray-50">
+                <h3 className="font-semibold text-base lg:text-lg mb-3">Legend</h3>
                 <ul className="space-y-2">
                   <li className="flex items-center">
                     <span className="w-5 h-5 rounded-full bg-red-300 mr-2"></span>
@@ -401,7 +403,7 @@ const BookingModal: FC<BookingModalProps> = ({
               </div>
 
               {!usePerDateTimes && (
-                <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
                   <div>
                     <label htmlFor="startTime" className="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
                     <select
@@ -536,8 +538,8 @@ const BookingModal: FC<BookingModalProps> = ({
           )}
 
           {step === 3 && (
-            <div className="bg-gray-50 p-6 rounded-lg max-h-[60vh] overflow-y-auto">
-              <h3 className="text-xl font-semibold text-gray-900 mb-4 border-b pb-2">Booking Summary</h3>
+            <div className="bg-gray-50 p-4 lg:p-6 rounded-lg max-h-[60vh] overflow-y-auto">
+              <h3 className="text-lg lg:text-xl font-semibold text-gray-900 mb-4 border-b pb-2">Booking Summary</h3>
               <div className="space-y-3 text-sm">
                 <div className="flex flex-col border-b pb-2">
                   <span className="text-gray-600 font-medium mb-1">Dates & Times:</span>

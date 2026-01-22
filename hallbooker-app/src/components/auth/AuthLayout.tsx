@@ -80,9 +80,10 @@ const AuthLayout = ({ children }: { children: React.ReactNode }) => {
 
       {/* Form Section */}
       <div className="w-full lg:w-1/2 min-h-screen flex flex-col items-center justify-center bg-white p-6 lg:p-0">
-        {/* Mobile Logo */}
-        <div className="lg:hidden mb-8">
-          <Logo className="text-primary w-16 h-16" />
+        {/* Mobile Logo and Title */}
+        <div className="lg:hidden flex flex-col items-center mb-8 text-center">
+          <Logo className="text-primary w-12 h-12 mb-2" />
+          <h1 className="text-2xl font-bold text-primary">Hall Booker</h1>
         </div>
         {children}
       </div>
